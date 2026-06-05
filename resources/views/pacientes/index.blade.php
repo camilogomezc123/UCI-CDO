@@ -1,0 +1,163 @@
+@extends('layouts.app')
+@section('title', 'Pacientes')
+@section('page-title', 'Pacientes Activos en UCI')
+
+@section('content')
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="GET" action="{{ route('pacientes.index') }}" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label mb-1" style="font-size:0.8rem;">Buscar paciente</label>
+                <input type="text" name="busqueda" value="{{ request('busqueda') }}" class="form-control form-control-sm" placeholder="Nombre o documento...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label mb-1" style="font-size:0.8rem;">Subunidad</label>
+                <select name="subunidad" class="form-select form-select-sm">
+                    <option value="">Todas las subunidades</option>
+                    @foreach($subunidades as $sub)
+                        <option value="{{ $sub }}" {{ request('subunidad') == $sub ? 'selected' : '' }}>{{ $sub }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label mb-1" style="font-size:0.8rem;">Criterio</label>
+                <select name="criterio" class="form-select form-select-sm">
+                    <option value="">Todos los criterios</option>
+                    @foreach($criterios as $c)
+                        <option value="{{ $c }}" {{ request('criterio') == $c ? 'selected' : '' }}>{{ $c }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-primary flex-fill">
+                    <i class="bi bi-search me-1"></i>Filtrar
+                </button>
+                <a href="{{ route('pacientes.index') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+
+            {{-- Filtros rápidos --}}
+            <div class="col-12 d-flex gap-2 flex-wrap">
+                <a href="{{ route('pacientes.index', ['filtro'=>'pendiente_egreso']) }}"
+                   class="btn btn-sm {{ request('filtro') == 'pendiente_egreso' ? 'btn-danger' : 'btn-outline-danger' }}">
+                    <i class="bi bi-hourglass-split me-1"></i>Pendiente egreso
+                </a>
+                <a href="{{ route('pacientes.index', ['filtro'=>'sin_ingreso']) }}"
+                   class="btn btn-sm {{ request('filtro') == 'sin_ingreso' ? 'btn-warning' : 'btn-outline-warning' }}">
+                    <i class="bi bi-clock me-1"></i>Sin fecha ingreso UCI
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <span><i class="bi bi-people me-2 text-primary"></i>{{ $pacientes->total() }} paciente(s)</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Cama</th>
+                        <th>Subunidad</th>
+                        <th>Paciente</th>
+                        <th>Criterio</th>
+                        <th>Soporte</th>
+                        <th>Ingreso UCI</th>
+                        <th>Tiempo en UCI</th>
+                        <th>Estado egreso</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($pacientes as $p)
+                    <tr>
+                        <td>
+                            <span class="badge bg-secondary rounded-pill" style="font-size:0.8rem;">{{ $p->ubicacion ?? '—' }}</span>
+                        </td>
+                        <td style="font-size:0.8rem;">{{ $p->subunidad ?? '—' }}</td>
+                        <td>
+                            <div class="fw-semibold" style="font-size:0.875rem;">{{ $p->nombre }}</div>
+                            <div class="text-muted" style="font-size:0.72rem;">{{ $p->documento }}</div>
+                        </td>
+                        <td>
+                            @php
+                                $criterio = $p->criterio_atencion ?? '';
+                                $cls = match(true) {
+                                    str_contains($criterio, 'INTENSIVO') => 'criterio-intensivo',
+                                    str_contains($criterio, 'INTERMEDIO') => 'criterio-intermedio',
+                                    default => 'criterio-otros',
+                                };
+                            @endphp
+                            <span class="badge badge-criterio {{ $cls }}">
+                                {{ match(true) {
+                                    str_contains($criterio, 'INTENSIVO') => 'UCI Intensivo',
+                                    str_contains($criterio, 'INTERMEDIO') => 'UCI Intermedio',
+                                    default => 'Otro',
+                                } }}
+                            </span>
+                        </td>
+                        <td style="font-size:0.78rem;">
+                            @if($p->soporte_ventilatorio)
+                                <span class="badge bg-info text-dark me-1" title="Ventilatorio">{{ $p->soporte_ventilatorio }}</span>
+                            @endif
+                            @if($p->soporte_hemodinamico)
+                                <span class="badge bg-danger me-1" title="Hemodinámico">{{ $p->soporte_hemodinamico }}</span>
+                            @endif
+                        </td>
+                        <td style="font-size:0.8rem;">
+                            @if($p->ingreso_uci)
+                                {{ $p->ingreso_uci->format('d/m/Y H:i') }}
+                            @else
+                                <span class="text-warning fw-semibold" style="font-size:0.75rem;">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>Sin registrar
+                                </span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($p->ingreso_uci)
+                                <span class="tiempo-uci" style="font-size:0.85rem;">{{ $p->tiempoEnUciTexto() }}</span>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($p->egreso_uci)
+                                <span class="badge bg-success">Egresado</span>
+                            @elseif($p->salida_hospitalizacion)
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-hourglass-split me-1"></i>Esp. egreso
+                                </span>
+                                <div class="tiempo-espera" style="font-size:0.72rem;">{{ $p->tiempoEsperaHospitalizacion() }}</div>
+                            @else
+                                <span class="badge bg-secondary">En UCI</span>
+                            @endif
+                        </td>
+                        <td>
+                            <a href="{{ route('pacientes.show', $p) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            <i class="bi bi-people display-6 d-block mb-2 opacity-25"></i>
+                            No hay pacientes que coincidan con el filtro.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @if($pacientes->hasPages())
+    <div class="card-footer d-flex justify-content-center">
+        {{ $pacientes->links('pagination::bootstrap-5') }}
+    </div>
+    @endif
+</div>
+@endsection
