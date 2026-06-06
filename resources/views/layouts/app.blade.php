@@ -132,12 +132,17 @@
         </a>
 
         <div class="sidebar-section">Pacientes</div>
-        <a href="{{ route('pacientes.index') }}" class="sidebar-link {{ request()->routeIs('pacientes.*') ? 'active' : '' }}">
+        <a href="{{ route('pacientes.index') }}" class="sidebar-link {{ request()->routeIs('pacientes.index') ? 'active' : '' }}">
             <i class="bi bi-people"></i> Pacientes activos
+        </a>
+        <a href="{{ route('estancias.index') }}" class="sidebar-link {{ request()->routeIs('estancias.*') ? 'active' : '' }}">
+            <i class="bi bi-calendar-x"></i> Estancias prolongadas
+            @php $nEst = \App\Models\Paciente::where('activo',true)->whereNotNull('ingreso_uci')->where('ingreso_uci','<=',now()->subDays(5))->count(); @endphp
+            @if($nEst > 0)<span class="sidebar-badge">{{ $nEst }}</span>@endif
         </a>
 
         <div class="sidebar-section">Gestión</div>
-        <a href="{{ route('carga.index') }}" class="sidebar-link {{ request()->routeIs('carga.*') ? 'active' : '' }}">
+        <a href="{{ route('carga.index') }}" class="sidebar-link {{ request()->routeIs('carga.index') ? 'active' : '' }}">
             <i class="bi bi-cloud-upload"></i> Cargar archivo
         </a>
         <a href="{{ route('carga.historial') }}" class="sidebar-link {{ request()->routeIs('carga.historial') ? 'active' : '' }}">
@@ -145,8 +150,17 @@
         </a>
 
         <div class="sidebar-section">Análisis</div>
-        <a href="{{ route('reportes.index') }}" class="sidebar-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
-            <i class="bi bi-bar-chart"></i> Reportes
+        <a href="{{ route('epidemiologia.index') }}" class="sidebar-link {{ request()->routeIs('epidemiologia.*') ? 'active' : '' }}">
+            <i class="bi bi-heart-pulse"></i> Perfil epidemiológico
+        </a>
+        <a href="{{ route('reportes.index') }}" class="sidebar-link {{ request()->routeIs('reportes.index') ? 'active' : '' }}">
+            <i class="bi bi-bar-chart"></i> Reportes por subunidad
+        </a>
+        <a href="{{ route('reportes.periodicos') }}" class="sidebar-link {{ request()->routeIs('reportes.periodicos*') ? 'active' : '' }}">
+            <i class="bi bi-file-earmark-bar-graph"></i> Reportes periódicos
+        </a>
+        <a href="{{ route('plantilla-diaria') }}" class="sidebar-link {{ request()->routeIs('plantilla-diaria') ? 'active' : '' }}" target="_blank">
+            <i class="bi bi-clipboard2-pulse"></i> Registro diario
         </a>
 
         @if(auth()->user()->esMaster())
@@ -205,6 +219,12 @@
     @if(session('error'))
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
         <i class="bi bi-x-circle-fill me-2"></i>{{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
+    @if(session('warning'))
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ session('warning') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     @endif

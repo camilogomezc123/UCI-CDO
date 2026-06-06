@@ -28,9 +28,13 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-3 d-flex gap-2">
+            <div class="col-md-2">
+                <label class="form-label mb-1" style="font-size:0.8rem;">CIE-10</label>
+                <input type="text" name="cie10" value="{{ request('cie10') }}" class="form-control form-control-sm" placeholder="Ej: J96, K35...">
+            </div>
+            <div class="col-md-1 d-flex gap-2">
                 <button type="submit" class="btn btn-sm btn-primary flex-fill">
-                    <i class="bi bi-search me-1"></i>Filtrar
+                    <i class="bi bi-search"></i>
                 </button>
                 <a href="{{ route('pacientes.index') }}" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-x-lg"></i>

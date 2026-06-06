@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Services\ExcelImportService;
 use App\Models\CargaArchivo;
+use App\Models\Paciente;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class CargaController extends Controller
 {
@@ -18,36 +19,99 @@ class CargaController extends Controller
     public function store(Request $request, ExcelImportService $importService)
     {
         $request->validate([
-            'archivo' => 'required|file|mimes:xlsx,xls|max:10240',
+            'archivos'   => 'required|array|min:1|max:10',
+            'archivos.*' => 'file|extensions:xlsx,xls|max:20480',
         ], [
-            'archivo.required' => 'Debe seleccionar un archivo.',
-            'archivo.mimes' => 'Solo se aceptan archivos Excel (.xlsx, .xls).',
-            'archivo.max' => 'El archivo no debe superar 10 MB.',
+            'archivos.required'   => 'Debe seleccionar al menos un archivo.',
+            'archivos.max'        => 'Puede subir máximo 10 archivos a la vez.',
+            'archivos.*.extensions' => 'Solo se aceptan archivos Excel (.xlsx, .xls).',
+            'archivos.*.max'      => 'Cada archivo no debe superar 20 MB.',
         ]);
 
-        $archivo = $request->file('archivo');
-        $nombreOriginal = $archivo->getClientOriginalName();
-        $rutaTemporal = $archivo->storeAs('cargas_temp', 'import_' . time() . '.xlsx');
-        $rutaAbsoluta = storage_path('app/' . $rutaTemporal);
+        $exitos = [];
+        $errores = [];
+        $infoBarthel = [];
 
-        $resultado = $importService->procesar($rutaAbsoluta, auth()->id());
+        foreach ($request->file('archivos') as $archivo) {
+            $nombreOriginal = $archivo->getClientOriginalName();
+            // Usar la ruta temporal que PHP ya gestionó — no requiere copiar a storage
+            $rutaAbsoluta   = $archivo->getRealPath();
 
-        // Eliminar archivo temporal
-        Storage::delete($rutaTemporal);
+            $resultado = $importService->procesar($rutaAbsoluta, auth()->id(), $nombreOriginal);
 
-        $resumen = "Archivo '{$nombreOriginal}' procesado: {$resultado['nuevos']} nuevos, {$resultado['actualizados']} actualizados, {$resultado['omitidos']} omitidos.";
+            $egresados = $resultado['egresados'] ?? 0;
+            $resumen = "'{$nombreOriginal}': {$resultado['nuevos']} nuevos, {$resultado['actualizados']} actualizados, {$resultado['omitidos']} omitidos"
+                . ($egresados > 0 ? ", {$egresados} egresados automáticamente" : '');
 
-        if (!empty($resultado['errores'])) {
-            return redirect()->route('carga.historial')
-                ->with('error', $resumen . ' Errores: ' . implode(' | ', $resultado['errores']));
+            if (!empty($resultado['errores'])) {
+                $errores[] = $resumen . ' — ' . implode(', ', $resultado['errores']);
+            } else {
+                $exitos[] = $resumen;
+            }
+
+            // Diagnóstico de Barthel: capturar columna detectada y primeras muestras
+            if (!empty($resultado['barthel_col'])) {
+                $muestras = array_filter($resultado['barthel_muestras'] ?? [], fn($v) => $v !== '');
+                $infoBarthel[] = [
+                    'archivo'  => $nombreOriginal,
+                    'columna'  => $resultado['barthel_col'],
+                    'muestras' => array_values($muestras),
+                ];
+            }
         }
 
-        return redirect()->route('carga.historial')->with('success', $resumen);
+        if (!empty($infoBarthel)) {
+            session(['barthel_debug' => $infoBarthel]);
+        }
+
+        if (!empty($errores) && empty($exitos)) {
+            return redirect()->route('carga.historial')
+                ->with('error', implode(' | ', $errores));
+        }
+
+        $flash = implode(' | ', $exitos);
+        if (!empty($errores)) {
+            $flash .= ' — Con errores: ' . implode(' | ', $errores);
+            return redirect()->route('carga.historial')->with('warning', $flash);
+        }
+
+        return redirect()->route('carga.historial')->with('success', $flash);
     }
 
     public function historial()
     {
         $cargas = CargaArchivo::with('usuario')->latest()->paginate(20);
         return view('carga.historial', compact('cargas'));
+    }
+
+    public function destroy(CargaArchivo $carga)
+    {
+        $nombre      = $carga->nombre_archivo;
+        $fechaArchivo = $carga->fecha_archivo;
+
+        DB::transaction(function () use ($carga, $fechaArchivo) {
+            // Pacientes cuyo snapshot viene de esta carga
+            $pacienteIds = $carga->snapshots()->pluck('paciente_id')->unique();
+
+            // Eliminar snapshots de esta carga
+            $carga->snapshots()->delete();
+
+            // Pacientes que quedaron sin ningún snapshot → eliminar el registro
+            Paciente::whereIn('id', $pacienteIds)
+                ->whereDoesntHave('snapshots')
+                ->delete();
+
+            // Restaurar pacientes que fueron desplazados automáticamente por esta carga
+            // (egreso_uci = fecha del archivo + tipo_egreso nulo = fue automático, no manual)
+            Paciente::where('activo', false)
+                ->whereDate('egreso_uci', $fechaArchivo)
+                ->whereNull('tipo_egreso')
+                ->update(['activo' => true, 'egreso_uci' => null]);
+
+            $carga->delete();
+        });
+
+        return redirect()->route('carga.historial')
+            ->with('success', "Carga «{$nombre}» eliminada. Los snapshots importados fueron revertidos.");
     }
 }

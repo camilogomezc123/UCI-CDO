@@ -3,9 +3,30 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Snapshot extends Model
 {
+    /**
+     * Subquery que devuelve el snapshot más reciente por paciente.
+     * Ordena primero por fecha_snapshot DESC y, para empates, por id DESC.
+     * Reemplaza los patrones que usaban MAX(id) a secas.
+     */
+    public static function subqueryUltimoPorPaciente(): \Illuminate\Database\Query\Builder
+    {
+        $maxFechas = DB::table('snapshots')
+            ->select('paciente_id', DB::raw('MAX(fecha_snapshot) as max_fecha'))
+            ->groupBy('paciente_id');
+
+        return DB::table('snapshots as s')
+            ->select('s.paciente_id', DB::raw('MAX(s.id) as snap_id'))
+            ->joinSub($maxFechas, 'mf', fn($j) => $j
+                ->on('s.paciente_id', '=', 'mf.paciente_id')
+                ->on('s.fecha_snapshot', '=', 'mf.max_fecha')
+            )
+            ->groupBy('s.paciente_id');
+    }
+
     protected $fillable = [
         'paciente_id', 'carga_id', 'fecha_snapshot',
         'ubicacion', 'numero_cama', 'subunidad',
