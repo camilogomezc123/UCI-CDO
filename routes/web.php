@@ -32,6 +32,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/pacientes/{paciente}/causa', [PacienteController::class, 'guardarCausa'])->name('pacientes.guardar-causa');
     Route::post('/pacientes/{paciente}/cam-uci', [PacienteController::class, 'guardarCamUci'])->name('pacientes.guardar-cam-uci');
     Route::post('/pacientes/{paciente}/bundle', [PacienteController::class, 'guardarBundle'])->name('pacientes.guardar-bundle');
+    Route::post('/pacientes/{paciente}/transfusion', [PacienteController::class, 'guardarTransfusion'])->name('pacientes.guardar-transfusion');
+    Route::delete('/pacientes/{paciente}/transfusion/{transfusion}', [PacienteController::class, 'eliminarTransfusion'])->name('pacientes.eliminar-transfusion');
 
     // Estancias prolongadas
     Route::get('/estancias-prolongadas', [EstanciaProlongadaController::class, 'index'])->name('estancias.index');

@@ -8,6 +8,7 @@ use App\Models\NotaPaciente;
 use App\Models\CausaEstancia;
 use App\Models\CamUci;
 use App\Models\BundleVentilacion;
+use App\Models\TransfusionDiaria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -63,28 +64,89 @@ class PacienteController extends Controller
         $diasVasopresor = $paciente->diasVasopresor();
         $diasInotropico = $paciente->diasInotropico();
 
-        // CAM-UCI: últimos 14 registros + registro de hoy si existe
-        $camUciRegistros  = $paciente->camUci()->with('usuario')->limit(14)->get();
-        $camUciHoy        = $camUciRegistros->firstWhere('fecha', today()->toDateString());
+        // CAM-UCI
+        $camUciRegistros = $paciente->camUci()->with('usuario')->limit(14)->get();
+        $camUciHoy       = $camUciRegistros->firstWhere('fecha', today()->toDateString());
 
-        // Bundle ventilador: últimos 14 días + hoy
-        $bundleRegistros  = $paciente->bundleVentilacion()->with('usuario')->limit(14)->get();
-        $bundleHoy        = $bundleRegistros->firstWhere('fecha', today()->toDateString());
+        // Bundle ventilador
+        $bundleRegistros    = $paciente->bundleVentilacion()->with('usuario')->limit(14)->get();
+        $bundleHoy          = $bundleRegistros->firstWhere('fecha', today()->toDateString());
         $cumplimientoBundle = $paciente->cumplimientoBundle();
 
         // Tendencia escalas (últimos 30 snapshots)
         $tendencia = $paciente->snapshots()
             ->orderBy('fecha_snapshot')
             ->limit(30)
-            ->get(['fecha_snapshot','news','sofa','rass','eva','barthel']);
+            ->get(['fecha_snapshot','news','sofa','rass','eva','bps','barthel']);
+
+        // Snapshot anterior para detectar dispositivos retirados
+        $snapshotAnterior = null;
+        if ($ultimoSnapshot) {
+            $snapshotAnterior = $paciente->snapshots()
+                ->where('fecha_snapshot', '<', $ultimoSnapshot->fecha_snapshot)
+                ->first();
+        }
+
+        // Detección de dispositivos invasivos
+        $dispositivosStatus = $this->detectarDispositivos(
+            $ultimoSnapshot?->observaciones ?? '',
+            $snapshotAnterior?->observaciones ?? '',
+            $snapshotAnterior !== null
+        );
+
+        // Transfusiones
+        $transfusionHoy        = TransfusionDiaria::where('paciente_id', $paciente->id)
+                                    ->where('fecha', today())->first();
+        $transfusionesRecientes = $paciente->transfusiones()->with('usuario')->limit(10)->get();
 
         return view('pacientes.show', compact(
             'paciente','ultimoSnapshot','historial',
             'notas','causaEstancia','diasVmi','diasVasopresor','diasInotropico',
             'camUciRegistros','camUciHoy','bundleRegistros','bundleHoy',
-            'cumplimientoBundle','tendencia'
+            'cumplimientoBundle','tendencia',
+            'snapshotAnterior','dispositivosStatus',
+            'transfusionHoy','transfusionesRecientes'
         ));
     }
+
+    // ─── Dispositivos invasivos ──────────────────────────────────────────────────
+
+    private function detectarDispositivos(string $obsHoy, string $obsAyer, bool $tieneAyer): array
+    {
+        $hoy  = strtolower($obsHoy);
+        $ayer = strtolower($obsAyer);
+
+        $definiciones = [
+            'sonda_vesical'   => ['Sonda Vesical/Uretral',    'bi-droplet-fill', 'danger',
+                ['sonda vesical','sonda uretral','catéter urinario','cateter urinario','svu','svc','foley']],
+            'cateter_central' => ['Catéter Central (CVC)',    'bi-diagram-3',    'primary',
+                ['catéter central','cateter central','cvc','línea central','linea central','acceso central','subclavia','yugular']],
+            'linea_arterial'  => ['Línea Arterial',           'bi-activity',     'warning',
+                ['línea arterial','linea arterial','catéter arterial','cateter arterial',' la ','l.a.','radial']],
+            'sng'             => ['Sonda Nasogástrica (SNG)', 'bi-arrow-down',   'secondary',
+                ['sonda nasogástrica','sonda nasogastrica','sng','sonda ng']],
+        ];
+
+        $result = [];
+        foreach ($definiciones as $key => [$nombre, $icono, $color, $keywords]) {
+            $enHoy  = collect($keywords)->contains(fn($k) => str_contains($hoy, $k));
+            $enAyer = $tieneAyer && collect($keywords)->contains(fn($k) => str_contains($ayer, $k));
+
+            if ($enHoy || $enAyer) {
+                $result[$key] = [
+                    'nombre'   => $nombre,
+                    'icono'    => $icono,
+                    'color'    => $color,
+                    'activo'   => $enHoy,
+                    'nuevo'    => $enHoy && !$enAyer && $tieneAyer,
+                    'retirado' => !$enHoy && $enAyer,
+                ];
+            }
+        }
+        return $result;
+    }
+
+    // ─── CRUD básico ─────────────────────────────────────────────────────────────
 
     public function actualizarIngreso(Request $request, Paciente $paciente)
     {
@@ -139,7 +201,6 @@ class PacienteController extends Controller
             'homecare'                       => $request->boolean('homecare'),
             'observaciones'                  => $request->observaciones,
         ];
-
         CausaEstancia::updateOrCreate(['paciente_id' => $paciente->id], $data);
         return back()->with('success','Causas de estancia actualizadas.');
     }
@@ -151,7 +212,6 @@ class PacienteController extends Controller
             'rass_momento' => 'nullable|integer|between:-5,4',
             'observacion'  => 'nullable|string|max:500',
         ]);
-
         CamUci::updateOrCreate(
             ['paciente_id' => $paciente->id, 'fecha' => today()],
             [
@@ -171,11 +231,38 @@ class PacienteController extends Controller
         foreach ($items as $item) {
             $data[$item] = $request->boolean($item);
         }
-
         BundleVentilacion::updateOrCreate(
             ['paciente_id' => $paciente->id, 'fecha' => today()],
             $data
         );
         return back()->with('success','Bundle ventilador registrado.');
+    }
+
+    public function guardarTransfusion(Request $request, Paciente $paciente)
+    {
+        $request->validate([
+            'productos'        => 'required|string|max:200',
+            'unidades_totales' => 'required|integer|min:1|max:50',
+            'observaciones'    => 'nullable|string|max:500',
+        ]);
+        TransfusionDiaria::updateOrCreate(
+            ['paciente_id' => $paciente->id, 'fecha' => today()],
+            [
+                'usuario_id'       => auth()->id(),
+                'productos'        => $request->productos,
+                'unidades_totales' => $request->unidades_totales,
+                'observaciones'    => $request->observaciones,
+            ]
+        );
+        return back()->with('success','Transfusión registrada.');
+    }
+
+    public function eliminarTransfusion(Paciente $paciente, TransfusionDiaria $transfusion)
+    {
+        if ($transfusion->paciente_id !== $paciente->id) {
+            return back()->with('error', 'Registro no válido.');
+        }
+        $transfusion->delete();
+        return back()->with('success', 'Registro de transfusión eliminado.');
     }
 }

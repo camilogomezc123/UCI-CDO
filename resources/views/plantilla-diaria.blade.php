@@ -410,6 +410,87 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; }
 </div>
 @endif
 
+{{-- ── 5. TRANSFUSIONES / HEMODERIVADOS ────────────────── --}}
+<div class="section-card">
+    <div class="section-header" data-bs-toggle="collapse" data-bs-target="#secTransfusion">
+        <div class="section-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-droplet-fill"></i></div>
+        <div>
+            <h6>Hemoderivados / Transfusiones del día</h6>
+            <small>Pacientes que recibieron hemoderivados hoy — {{ now()->format('d/m/Y') }}</small>
+        </div>
+        @php $conTransfusionCount = count($conTransfusionHoy); @endphp
+        <span class="badge-count {{ $conTransfusionCount > 0 ? 'bg-danger text-white' : 'bg-light text-muted' }}">
+            {{ $conTransfusionCount }}
+        </span>
+        <i class="bi bi-chevron-down chevron no-print"></i>
+    </div>
+    <div class="collapse show" id="secTransfusion">
+        @if($activos->isEmpty())
+            <div class="empty-state"><i class="bi bi-people text-muted"></i>Sin pacientes activos</div>
+        @else
+        <div class="p-2 bg-light border-bottom" style="font-size:0.75rem;color:#888;">
+            <i class="bi bi-info-circle me-1"></i>Solo complete los pacientes que recibieron hemoderivados hoy.
+        </div>
+        <div class="table-responsive">
+        <table class="table table-hover pt-table mb-0">
+            <thead><tr>
+                <th style="width:210px">Paciente</th>
+                <th>Cama</th>
+                <th>Subunidad</th>
+                <th>Hemoderivados</th>
+                <th>Unidades</th>
+                <th style="min-width:150px">Observación</th>
+            </tr></thead>
+            <tbody>
+            @foreach($activos as $p)
+            @php $yaRegistrado = isset($conTransfusionHoy[$p->id]); @endphp
+            <tr class="{{ $yaRegistrado ? 'table-danger' : '' }}">
+                <td>
+                    <div class="patient-name">{{ $p->nombre }}</div>
+                    <div class="patient-doc">{{ $p->documento }}</div>
+                    @if($yaRegistrado)
+                        <span class="badge bg-danger" style="font-size:0.65rem;"><i class="bi bi-check-circle me-1"></i>Registrado</span>
+                    @endif
+                </td>
+                <td><span class="cama-badge">{{ $p->ubicacion ?? '—' }}</span></td>
+                <td>{{ $p->subunidad ?? '—' }}</td>
+                <td>
+                    <div class="d-flex flex-wrap gap-1">
+                        @foreach($tiposHemoder as $key => $label)
+                        <div class="form-check form-check-inline" style="margin-right:0;">
+                            <input class="form-check-input transfusion-check" type="checkbox"
+                                   name="transfusion_tipos[{{ $p->id }}][]"
+                                   value="{{ $key }}"
+                                   id="tr_{{ $p->id }}_{{ $key }}"
+                                   data-paciente="{{ $p->id }}"
+                                   onchange="syncTransfProductos({{ $p->id }})">
+                            <label class="form-check-label" for="tr_{{ $p->id }}_{{ $key }}" style="font-size:0.78rem;">
+                                {{ $key }}
+                            </label>
+                        </div>
+                        @endforeach
+                    </div>
+                    <input type="hidden" name="transfusion[{{ $p->id }}][productos]"
+                           id="trProd_{{ $p->id }}" value="">
+                </td>
+                <td>
+                    <input type="number" name="transfusion[{{ $p->id }}][unidades]"
+                           min="1" max="50" value="1"
+                           class="form-control form-control-sm" style="width:70px;">
+                </td>
+                <td>
+                    <input type="text" name="transfusion[{{ $p->id }}][observaciones]"
+                           class="form-control form-control-sm" placeholder="Opcional...">
+                </td>
+            </tr>
+            @endforeach
+            </tbody>
+        </table>
+        </div>
+        @endif
+    </div>
+</div>
+
 {{-- ── SAVE BAR ───────────────────────────────────────── --}}
 <div class="save-bar no-print">
     @if($totalPendientes > 0)
@@ -468,5 +549,20 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; }
 </div>{{-- /container --}}
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function syncTransfProductos(pacienteId) {
+    const checkboxes = document.querySelectorAll(`input[name="transfusion_tipos[${pacienteId}][]"]:checked`);
+    const vals = Array.from(checkboxes).map(c => c.value);
+    const hidden = document.getElementById(`trProd_${pacienteId}`);
+    if (hidden) hidden.value = vals.join(', ');
+}
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.transfusion-check').forEach(function(cb) {
+        cb.addEventListener('change', function() {
+            syncTransfProductos(this.dataset.paciente);
+        });
+    });
+});
+</script>
 </body>
 </html>

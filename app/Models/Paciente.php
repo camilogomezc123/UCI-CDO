@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+// TransfusionDiaria is autoloaded via namespace
 
 class Paciente extends Model
 {
@@ -50,6 +51,11 @@ class Paciente extends Model
     public function bundleVentilacion()
     {
         return $this->hasMany(BundleVentilacion::class)->orderByDesc('fecha');
+    }
+
+    public function transfusiones()
+    {
+        return $this->hasMany(TransfusionDiaria::class)->orderByDesc('fecha');
     }
 
     // ─── Tiempo en UCI ────────────────────────────────────────────────────────
@@ -162,6 +168,14 @@ class Paciente extends Model
     {
         $s = $this->ultimoSnapshot;
         return $s && $s->news !== null && $s->news >= 5;
+    }
+
+    public function tieneAlertaDolor(): bool
+    {
+        $s = $this->ultimoSnapshot;
+        if (!$s) return false;
+        return ($s->eva !== null && (float)$s->eva > 4)
+            || ($s->bps !== null && (float)$s->bps > 6);
     }
 
     public function tieneAlertaSofa(): bool

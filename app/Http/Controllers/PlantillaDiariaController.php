@@ -7,6 +7,7 @@ use App\Models\Snapshot;
 use App\Models\CamUci;
 use App\Models\BundleVentilacion;
 use App\Models\CausaEstancia;
+use App\Models\TransfusionDiaria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -39,6 +40,8 @@ class PlantillaDiariaController extends Controller
         $conBundleHoy = BundleVentilacion::whereDate('fecha', today())->pluck('paciente_id')->flip();
         // IDs con causas de estancia registradas
         $conCausas = CausaEstancia::pluck('paciente_id')->flip();
+        // IDs con transfusión registrada hoy
+        $conTransfusionHoy = TransfusionDiaria::whereDate('fecha', today())->pluck('paciente_id')->flip();
 
         // Agrupar pendientes
         $sinIngreso     = $activos->whereNull('ingreso_uci');
@@ -49,11 +52,13 @@ class PlantillaDiariaController extends Controller
         $pendientesEgreso = $activos->whereNotNull('salida_hospitalizacion')->whereNull('egreso_uci');
         $sinCausas      = $activos->filter(fn($p) => !isset($conCausas[$p->id]));
 
-        $bundleItems = BundleVentilacion::items();
+        $bundleItems    = BundleVentilacion::items();
+        $tiposHemoder   = TransfusionDiaria::tiposDisponibles();
 
         return view('plantilla-diaria', compact(
             'activos', 'sinIngreso', 'sinCamUci', 'sinBundle',
-            'pendientesEgreso', 'sinCausas', 'bundleItems'
+            'pendientesEgreso', 'sinCausas', 'bundleItems',
+            'conTransfusionHoy', 'tiposHemoder'
         ));
     }
 
@@ -117,7 +122,22 @@ class PlantillaDiariaController extends Controller
                 $guardados++;
             }
 
-            // ── 5. Causas de estancia prolongada ─────────────────────────────
+            // ── 5. Transfusiones ─────────────────────────────────────────────
+            foreach ($request->transfusion ?? [] as $pacienteId => $datos) {
+                if (empty($datos['productos'])) continue;
+                TransfusionDiaria::updateOrCreate(
+                    ['paciente_id' => $pacienteId, 'fecha' => today()],
+                    [
+                        'usuario_id'       => auth()->id(),
+                        'productos'        => $datos['productos'],
+                        'unidades_totales' => max(1, (int)($datos['unidades'] ?? 1)),
+                        'observaciones'    => $datos['observaciones'] ?? null,
+                    ]
+                );
+                $guardados++;
+            }
+
+            // ── 6. Causas de estancia prolongada ─────────────────────────────
             foreach ($request->causas ?? [] as $pacienteId => $datos) {
                 $tieneAlguna = collect([
                     'pendiente_cirugia', 'condicion_clinica', 'ventilacion_mecanica',
