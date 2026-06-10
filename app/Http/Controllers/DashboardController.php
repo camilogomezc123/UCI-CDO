@@ -61,7 +61,7 @@ class DashboardController extends Controller
 
         // ── Capacidades ───────────────────────────────────────────────────────────
         $capacidades = [
-            'UCI Quirúrgica'     => 8,  'UCI Cardiovascular' => 8,
+            'UCI Quirúrgica'     => 8,  'UCI Cardiovascular' => 7,
             'UCI Respiratoria'   => 6,  'UCI General'        => 11,
             'UCI Neurovascular'  => 8,  'UCIN'               => 6,
             'UCI Torre C'        => 8,  'UCI Torre B'        => 20,

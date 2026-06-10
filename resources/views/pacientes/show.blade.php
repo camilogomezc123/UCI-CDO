@@ -92,7 +92,7 @@
           <div class="mb-3">
             <div class="d-flex align-items-center gap-2 mb-1">
               <div style="width:10px;height:10px;border-radius:50%;background:{{ $paciente->salida_hospitalizacion?'#fd7e14':'#dee2e6' }};"></div>
-              <span class="fw-semibold" style="font-size:0.85rem;">Salida para hospitalización</span>
+              <span class="fw-semibold" style="font-size:0.85rem;">Indicación médica para hospitalización</span>
             </div>
             <div class="ms-3">
               <form method="POST" action="{{ route('pacientes.salida-hospitalizacion', $paciente) }}">

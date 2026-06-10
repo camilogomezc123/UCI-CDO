@@ -134,7 +134,7 @@
                             <tr>
                                 <th>Paciente</th>
                                 <th>Cama</th>
-                                <th>Salida hosp.</th>
+                                <th>Indicación médica</th>
                                 <th>Tiempo espera</th>
                             </tr>
                         </thead>

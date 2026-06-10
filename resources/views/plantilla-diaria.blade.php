@@ -304,7 +304,7 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; }
         <div class="section-icon bg-success bg-opacity-10 text-success"><i class="bi bi-box-arrow-right"></i></div>
         <div>
             <h6>Pendientes de egreso UCI</h6>
-            <small>Tienen salida hospitalaria pero falta registrar egreso UCI</small>
+            <small>Tienen indicación médica para hospitalización pero falta registrar egreso UCI</small>
         </div>
         <span class="badge-count bg-success text-white">{{ $pendientesEgreso->count() }}</span>
         <i class="bi bi-chevron-down chevron no-print"></i>
@@ -316,7 +316,7 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; }
                 <th style="width:210px">Paciente</th>
                 <th>Cama</th>
                 <th>Subunidad</th>
-                <th>Salida hosp.</th>
+                <th>Indicación médica</th>
                 <th>Fecha egreso UCI <span class="text-danger">*</span></th>
                 <th>Tipo de egreso <span class="text-danger">*</span></th>
             </tr></thead>

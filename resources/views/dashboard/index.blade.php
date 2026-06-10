@@ -132,7 +132,7 @@
             <i class="bi bi-hourglass-split kpi-icon"></i>
             <div class="kpi-number">{{ $pendientesEgreso }}</div>
             <div class="kpi-label">Pendientes de egreso UCI</div>
-            <div class="kpi-sub">Con criterio hospitalización activo</div>
+            <div class="kpi-sub">Con indicación médica para hospitalización</div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
@@ -357,12 +357,12 @@
 <div class="card mb-4">
     <div class="card-header d-flex align-items-center gap-2 text-danger">
         <i class="bi bi-exclamation-triangle-fill"></i>
-        Pacientes con espera prolongada para egreso (+4h con criterio hospitalización)
+        Pacientes con espera prolongada para egreso (+4h con indicación médica para hospitalización)
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover mb-0">
-                <thead><tr><th>Paciente</th><th>Cama</th><th>Subunidad</th><th>Salida hosp.</th><th>Tiempo esperando</th><th></th></tr></thead>
+                <thead><tr><th>Paciente</th><th>Cama</th><th>Subunidad</th><th>Indicación médica</th><th>Tiempo esperando</th><th></th></tr></thead>
                 <tbody>
                     @foreach($pacientesEsperaLarga as $p)
                     <tr>
