@@ -28,6 +28,7 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/pacientes/{paciente}/ingreso', [PacienteController::class, 'actualizarIngreso'])->name('pacientes.ingreso');
     Route::patch('/pacientes/{paciente}/salida-hospitalizacion', [PacienteController::class, 'actualizarSalidaHospitalizacion'])->name('pacientes.salida-hospitalizacion');
     Route::patch('/pacientes/{paciente}/egreso-uci', [PacienteController::class, 'actualizarEgresoUci'])->name('pacientes.egreso-uci');
+    Route::patch('/pacientes/{paciente}/reactivar', [PacienteController::class, 'reactivarPaciente'])->name('pacientes.reactivar');
     Route::post('/pacientes/{paciente}/notas', [PacienteController::class, 'guardarNota'])->name('pacientes.guardar-nota');
     Route::post('/pacientes/{paciente}/causa', [PacienteController::class, 'guardarCausa'])->name('pacientes.guardar-causa');
     Route::post('/pacientes/{paciente}/cam-uci', [PacienteController::class, 'guardarCamUci'])->name('pacientes.guardar-cam-uci');

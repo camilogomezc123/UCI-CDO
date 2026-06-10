@@ -151,9 +151,9 @@ class PacienteController extends Controller
     public function actualizarIngreso(Request $request, Paciente $paciente)
     {
         $request->validate(['ingreso_uci' => 'required|date']);
-        if ($paciente->ingreso_uci) return back()->with('error','El ingreso a UCI ya fue registrado.');
         $paciente->update(['ingreso_uci' => $request->ingreso_uci]);
-        return back()->with('success','Fecha de ingreso a UCI registrada correctamente.');
+        $accion = $paciente->wasChanged('ingreso_uci') ? 'actualizada' : 'registrada';
+        return back()->with('success', "Fecha de ingreso a UCI {$accion} correctamente.");
     }
 
     public function actualizarSalidaHospitalizacion(Request $request, Paciente $paciente)
@@ -169,12 +169,24 @@ class PacienteController extends Controller
             'egreso_uci'  => 'required|date',
             'tipo_egreso' => 'required|in:mejoria,traslado,fallecimiento',
         ]);
+        $eraActivo = $paciente->activo;
         $paciente->update([
             'egreso_uci'  => $request->egreso_uci,
             'tipo_egreso' => $request->tipo_egreso,
             'activo'      => false,
         ]);
-        return back()->with('success','Egreso de UCI registrado. Paciente marcado como inactivo.');
+        $msg = $eraActivo ? 'Egreso de UCI registrado. Paciente marcado como inactivo.' : 'Egreso de UCI corregido correctamente.';
+        return back()->with('success', $msg);
+    }
+
+    public function reactivarPaciente(Paciente $paciente)
+    {
+        $paciente->update([
+            'egreso_uci'  => null,
+            'tipo_egreso' => null,
+            'activo'      => true,
+        ]);
+        return back()->with('success', 'Paciente reactivado. Egreso anulado correctamente.');
     }
 
     public function guardarNota(Request $request, Paciente $paciente)

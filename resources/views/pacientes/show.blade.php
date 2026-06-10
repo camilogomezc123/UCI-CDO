@@ -72,21 +72,26 @@
             <div style="width:10px;height:10px;border-radius:50%;background:#198754;"></div>
             <span class="fw-semibold" style="font-size:0.85rem;">Ingreso a UCI</span>
           </div>
-          @if($paciente->ingreso_uci)
-            <div class="ps-4 text-success fw-bold">{{ $paciente->ingreso_uci->format('d/m/Y H:i') }}</div>
-            <div class="ps-4 text-muted" style="font-size:0.78rem;">Tiempo en UCI: <strong class="tiempo-uci">{{ $paciente->tiempoEnUciTexto() }}</strong></div>
-          @else
-            <div class="ps-4">
-              <span class="badge bg-warning text-dark mb-2">Sin registrar</span>
-              <form method="POST" action="{{ route('pacientes.ingreso', $paciente) }}">
-                @csrf @method('PATCH')
-                <div class="input-group input-group-sm">
-                  <input type="datetime-local" name="ingreso_uci" class="form-control" required>
-                  <button class="btn btn-success btn-sm" type="submit"><i class="bi bi-check-lg"></i></button>
-                </div>
-              </form>
-            </div>
-          @endif
+          <div class="ps-4">
+            @if($paciente->ingreso_uci)
+              <div class="text-success fw-bold mb-1">{{ $paciente->ingreso_uci->format('d/m/Y H:i') }}</div>
+              <div class="text-muted mb-1" style="font-size:0.78rem;">Tiempo en UCI: <strong class="tiempo-uci">{{ $paciente->tiempoEnUciTexto() }}</strong></div>
+            @else
+              <span class="badge bg-warning text-dark mb-2 d-block" style="width:fit-content;">Sin registrar</span>
+            @endif
+            <form method="POST" action="{{ route('pacientes.ingreso', $paciente) }}">
+              @csrf @method('PATCH')
+              <div class="input-group input-group-sm" style="max-width:280px;">
+                <input type="datetime-local" name="ingreso_uci"
+                       value="{{ $paciente->ingreso_uci?->format('Y-m-d\TH:i') }}"
+                       class="form-control" required>
+                <button class="btn btn-{{ $paciente->ingreso_uci ? 'outline-success' : 'success' }} btn-sm" type="submit"
+                        title="{{ $paciente->ingreso_uci ? 'Corregir fecha de ingreso' : 'Registrar ingreso' }}">
+                  <i class="bi bi-{{ $paciente->ingreso_uci ? 'pencil' : 'check-lg' }}"></i>
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
         <div style="border-left:2px dashed #dee2e6;margin-left:4px;padding-left:1rem;margin-bottom:0.75rem;">
           <div class="mb-3">
@@ -119,34 +124,47 @@
             <div style="width:10px;height:10px;border-radius:50%;background:{{ $paciente->egreso_uci?'#dc3545':'#dee2e6' }};"></div>
             <span class="fw-semibold" style="font-size:0.85rem;">Egreso efectivo de UCI</span>
           </div>
-          @if($paciente->egreso_uci)
-            <div class="ps-3 text-danger fw-bold">{{ $paciente->egreso_uci->format('d/m/Y H:i') }}</div>
-            @if($paciente->tipo_egreso)
-            @php $te = ['mejoria'=>['success','bi-check-circle','Mejoría'],'traslado'=>['info','bi-arrow-right-circle','Traslado'],'fallecimiento'=>['dark','bi-x-circle','Fallecimiento']][$paciente->tipo_egreso] ?? ['secondary','bi-dash','—'] @endphp
-            <div class="ps-3 mt-1"><span class="badge bg-{{ $te[0] }}"><i class="bi {{ $te[1] }} me-1"></i>{{ $te[2] }}</span></div>
+          @php $te = ['mejoria'=>['success','bi-check-circle','Mejoría'],'traslado'=>['info','bi-arrow-right-circle','Traslado'],'fallecimiento'=>['dark','bi-x-circle','Fallecimiento']][$paciente->tipo_egreso ?? ''] ?? null; @endphp
+          <div class="ps-3">
+            @if($paciente->egreso_uci)
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="text-danger fw-bold">{{ $paciente->egreso_uci->format('d/m/Y H:i') }}</span>
+                @if($te)<span class="badge bg-{{ $te[0] }}"><i class="bi {{ $te[1] }} me-1"></i>{{ $te[2] }}</span>@endif
+              </div>
+              @if($paciente->salida_hospitalizacion)
+              <div class="text-muted mb-2" style="font-size:0.78rem;">Espera: <strong>{{ $paciente->tiempoEsperaHospitalizacion() }}</strong></div>
+              @endif
             @endif
-            @if($paciente->salida_hospitalizacion)
-            <div class="ps-3 text-muted" style="font-size:0.78rem;">Espera: <strong>{{ $paciente->tiempoEsperaHospitalizacion() }}</strong></div>
+            <form method="POST" action="{{ route('pacientes.egreso-uci', $paciente) }}">
+              @csrf @method('PATCH')
+              <div class="mb-2" style="max-width:280px;">
+                <input type="datetime-local" name="egreso_uci"
+                       value="{{ $paciente->egreso_uci?->format('Y-m-d\TH:i') }}"
+                       class="form-control form-control-sm mb-2"
+                       {{ $paciente->egreso_uci ? '' : 'required' }}>
+                <select name="tipo_egreso" class="form-select form-select-sm mb-2"
+                        {{ $paciente->egreso_uci ? '' : 'required' }}>
+                  <option value="">-- Tipo de egreso --</option>
+                  <option value="mejoria"      {{ $paciente->tipo_egreso=='mejoria'      ?'selected':'' }}>Mejoría / Alta a hospitalización</option>
+                  <option value="traslado"     {{ $paciente->tipo_egreso=='traslado'     ?'selected':'' }}>Traslado a otra institución</option>
+                  <option value="fallecimiento"{{ $paciente->tipo_egreso=='fallecimiento'?'selected':'' }}>Fallecimiento</option>
+                </select>
+                <button class="btn btn-{{ $paciente->egreso_uci ? 'outline-danger' : 'danger' }} btn-sm w-100" type="submit">
+                  <i class="bi bi-{{ $paciente->egreso_uci ? 'pencil' : 'check-lg' }} me-1"></i>
+                  {{ $paciente->egreso_uci ? 'Corregir egreso' : 'Registrar egreso' }}
+                </button>
+              </div>
+            </form>
+            @if($paciente->egreso_uci)
+            <form method="POST" action="{{ route('pacientes.reactivar', $paciente) }}"
+                  onsubmit="return confirm('¿Reactivar paciente? Esto anulará el egreso registrado y lo devolverá como activo en UCI.')">
+              @csrf @method('PATCH')
+              <button class="btn btn-sm btn-warning w-100" type="submit" style="max-width:280px;">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>Reactivar / Anular egreso
+              </button>
+            </form>
             @endif
-          @else
-            <div class="ps-3">
-              <form method="POST" action="{{ route('pacientes.egreso-uci', $paciente) }}">
-                @csrf @method('PATCH')
-                <div class="mb-2" style="max-width:280px;">
-                  <input type="datetime-local" name="egreso_uci" class="form-control form-control-sm mb-2" required>
-                  <select name="tipo_egreso" class="form-select form-select-sm mb-2" required>
-                    <option value="">-- Tipo de egreso --</option>
-                    <option value="mejoria">Mejoría / Alta a hospitalización</option>
-                    <option value="traslado">Traslado a otra institución</option>
-                    <option value="fallecimiento">Fallecimiento</option>
-                  </select>
-                  <button class="btn btn-danger btn-sm w-100" type="submit">
-                    <i class="bi bi-check-lg me-1"></i>Registrar egreso
-                  </button>
-                </div>
-              </form>
-            </div>
-          @endif
+          </div>
         </div>
       </div>
     </div>
