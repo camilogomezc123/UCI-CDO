@@ -102,35 +102,35 @@
   </div>
 </div>
 
-{{-- ══ Morbilidad por diagnóstico ══ --}}
+{{-- ══ Distribución por CIE-10 ══ --}}
 @if(count($morbilidad) > 0)
 <div class="card mb-4">
   <div class="card-header d-flex align-items-center gap-2">
-    <i class="bi bi-diagram-3 text-danger"></i>
-    <strong>Distribución por Diagnóstico / Morbilidad</strong>
-    <span class="text-muted ms-1" style="font-size:0.75rem;">(% sobre total de fallecidos)</span>
+    <i class="bi bi-file-medical text-danger"></i>
+    <strong>Distribución por CIE-10</strong>
+    <span class="text-muted ms-1" style="font-size:0.75rem;">(códigos registrados en los pacientes fallecidos · % sobre total)</span>
   </div>
   <div class="card-body">
     <div class="row g-3">
       <div class="col-lg-7">
-        @foreach($morbilidad as $nombre => $datos)
-        <div class="mb-3">
+        @foreach($morbilidad as $cie => $datos)
+        <div class="mb-2">
           <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="fw-semibold" style="font-size:0.85rem;">{{ $nombre }}</span>
-            <div class="d-flex gap-2 align-items-center">
+            <span style="font-size:0.83rem;max-width:65%;word-break:break-word;">{{ $cie }}</span>
+            <div class="d-flex gap-2 align-items-center flex-shrink-0">
               <span class="badge bg-danger rounded-pill">{{ $datos['count'] }} pac.</span>
-              <span class="badge bg-light text-dark border">{{ $datos['estancia_avg'] }}d estancia</span>
-              <span class="fw-bold" style="min-width:40px;text-align:right;font-size:0.85rem;">{{ $datos['pct'] }}%</span>
+              <span class="badge bg-light text-dark border">{{ $datos['estancia_avg'] }}d</span>
+              <span class="fw-bold" style="min-width:38px;text-align:right;font-size:0.83rem;">{{ $datos['pct'] }}%</span>
             </div>
           </div>
-          <div class="progress" style="height:10px;border-radius:4px;">
+          <div class="progress" style="height:8px;border-radius:4px;">
             <div class="progress-bar bg-danger" style="width:{{ $datos['pct'] }}%;"></div>
           </div>
         </div>
         @endforeach
       </div>
-      <div class="col-lg-5">
-        <canvas id="chartMorbilidad" style="max-height:260px;"></canvas>
+      <div class="col-lg-5 d-flex align-items-center">
+        <canvas id="chartMorbilidad" style="max-height:280px;width:100%;"></canvas>
       </div>
     </div>
   </div>
@@ -235,10 +235,10 @@
               @if($d['diasVaso'] > 0)
                 <span class="badge bg-warning text-dark">Vaso {{ $d['diasVaso'] }}d</span>
               @endif
-              {{-- Grupos morbilidad --}}
+              {{-- CIE-10 en el header --}}
               <div class="ms-auto d-flex gap-1 flex-wrap">
-                @foreach(array_slice($d['grupos'], 0, 2) as $g)
-                  <span class="badge" style="background:#fdecea;color:#b71c1c;font-size:0.65rem;">{{ $g }}</span>
+                @foreach($d['cie10s']->take(2) as $cie)
+                  <span class="badge" style="background:#fdecea;color:#b71c1c;font-size:0.65rem;">{{ Str::limit($cie, 30) }}</span>
                 @endforeach
               </div>
             </div>
@@ -478,31 +478,26 @@
                 </div>
               </div>
 
-              {{-- BLOQUE 6: Diagnósticos y grupos --}}
+              {{-- BLOQUE 6: CIE-10 y Diagnósticos --}}
               <div class="col-lg-4">
                 <div class="card h-100">
                   <div class="card-header py-2 bg-dark bg-opacity-10">
-                    <i class="bi bi-file-medical me-1"></i><strong style="font-size:0.82rem;">Diagnósticos · Morbilidad</strong>
+                    <i class="bi bi-file-medical me-1"></i><strong style="font-size:0.82rem;">CIE-10 · Diagnósticos</strong>
                   </div>
                   <div class="card-body py-2">
-                    @if($d['grupos'])
-                    <div class="mb-2">
-                      @foreach($d['grupos'] as $g)
-                        <span class="badge me-1 mb-1" style="background:#fdecea;color:#b71c1c;font-size:0.72rem;">{{ $g }}</span>
-                      @endforeach
-                    </div>
-                    @endif
                     @if($d['cie10s']->isNotEmpty())
-                    <div class="mb-1" style="font-size:0.72rem;color:#888;text-transform:uppercase;letter-spacing:1px;">CIE-10</div>
-                    @foreach($d['cie10s'] as $cie)
-                      <div style="font-size:0.78rem;white-space:pre-line;background:#f8f9fa;padding:3px 8px;border-radius:4px;margin-bottom:3px;">{{ $cie }}</div>
-                    @endforeach
+                      <div class="mb-1" style="font-size:0.72rem;color:#888;text-transform:uppercase;letter-spacing:1px;">Códigos CIE-10</div>
+                      @foreach($d['cie10s'] as $cie)
+                        <div style="font-size:0.8rem;background:#fdecea;color:#b71c1c;padding:3px 8px;border-radius:4px;margin-bottom:3px;font-weight:600;">{{ $cie }}</div>
+                      @endforeach
+                    @else
+                      <div class="text-muted" style="font-size:0.8rem;">Sin CIE-10 registrado</div>
                     @endif
                     @if($d['diags']->isNotEmpty())
-                    <div class="mt-2 mb-1" style="font-size:0.72rem;color:#888;text-transform:uppercase;letter-spacing:1px;">Diagnósticos</div>
-                    @foreach($d['diags']->take(3) as $dg)
-                      <div style="font-size:0.75rem;white-space:pre-line;background:#f8f9fa;padding:3px 8px;border-radius:4px;margin-bottom:3px;">{{ Str::limit($dg, 120) }}</div>
-                    @endforeach
+                      <div class="mt-2 mb-1" style="font-size:0.72rem;color:#888;text-transform:uppercase;letter-spacing:1px;">Diagnósticos</div>
+                      @foreach($d['diags']->take(3) as $dg)
+                        <div style="font-size:0.75rem;background:#f8f9fa;padding:3px 8px;border-radius:4px;margin-bottom:3px;">{{ Str::limit($dg, 120) }}</div>
+                      @endforeach
                     @endif
                   </div>
                 </div>
@@ -537,7 +532,7 @@ new Chart(document.getElementById('chartMorbilidad'), {
         labels: {!! json_encode(array_keys($morbilidad)) !!},
         datasets: [{
             data: {!! json_encode(array_column(array_values($morbilidad), 'count')) !!},
-            backgroundColor: ['#dc3545','#e07000','#ffc107','#6f42c1','#0d6efd','#20c997','#fd7e14','#6c757d','#0dcaf0','#198754'],
+            backgroundColor: ['#dc3545','#e07000','#ffc107','#6f42c1','#0d6efd','#20c997','#fd7e14','#6c757d','#0dcaf0','#198754','#e91e63','#9c27b0','#3f51b5','#009688','#ff5722','#795548','#607d8b','#f06292','#aed581','#4dd0e1'],
             borderWidth: 2, borderColor: '#fff'
         }]
     },

@@ -231,36 +231,48 @@ class ReporteMortalidadController extends Controller
 
     private function calcularMorbilidad(\Illuminate\Support\Collection $fallecidos, int $total): array
     {
-        $result = [];
-        foreach (self::GRUPOS_MORBILIDAD as $nombre => $kws) {
-            $grupo = $fallecidos->filter(function ($p) use ($kws) {
-                $txt = strtolower(
-                    $p->snapshots->pluck('cie10')
-                        ->merge($p->snapshots->pluck('diagnosticos'))
-                        ->filter()->implode(' ')
-                );
-                foreach ($kws as $kw) {
-                    if (str_contains($txt, $kw)) return true;
+        // Collect CIE-10 codes actually present in patients' snapshots
+        $codigoMap = []; // cie10 => ['count' => n, 'pacientes' => [...], 'estancias' => [...]]
+
+        foreach ($fallecidos as $p) {
+            $estancia = ($p->ingreso_uci && $p->egreso_uci)
+                ? (int)$p->ingreso_uci->diffInDays($p->egreso_uci)
+                : $p->snapshots->count();
+
+            // Get unique non-empty CIE-10 values for this patient
+            $codigos = $p->snapshots->pluck('cie10')
+                ->filter(fn($v) => !empty(trim((string)$v)))
+                ->map(fn($v) => trim((string)$v))
+                ->unique()
+                ->values();
+
+            foreach ($codigos as $cie) {
+                if (!isset($codigoMap[$cie])) {
+                    $codigoMap[$cie] = ['count' => 0, 'ids' => [], 'estancias' => []];
                 }
-                return false;
-            });
-            if ($grupo->isEmpty()) continue;
+                // Count each patient only once per code
+                if (!in_array($p->id, $codigoMap[$cie]['ids'])) {
+                    $codigoMap[$cie]['count']++;
+                    $codigoMap[$cie]['ids'][]      = $p->id;
+                    $codigoMap[$cie]['estancias'][] = $estancia;
+                }
+            }
+        }
 
-            $n      = $grupo->count();
-            $estadias = $grupo->map(fn($p) =>
-                ($p->ingreso_uci && $p->egreso_uci)
-                    ? (int)$p->ingreso_uci->diffInDays($p->egreso_uci)
-                    : $p->snapshots->count()
-            );
-
-            $result[$nombre] = [
-                'count'        => $n,
-                'pct'          => $total > 0 ? round($n / $total * 100) : 0,
-                'estancia_avg' => round((float)$estadias->avg(), 1),
-                'ids'          => $grupo->pluck('id')->toArray(),
+        // Build result sorted by count desc
+        $result = [];
+        foreach ($codigoMap as $cie => $data) {
+            $result[$cie] = [
+                'count'        => $data['count'],
+                'pct'          => $total > 0 ? round($data['count'] / $total * 100) : 0,
+                'estancia_avg' => count($data['estancias']) > 0
+                    ? round(array_sum($data['estancias']) / count($data['estancias']), 1)
+                    : 0,
+                'ids'          => $data['ids'],
             ];
         }
-        arsort($result);
+
+        uasort($result, fn($a, $b) => $b['count'] <=> $a['count']);
         return $result;
     }
 }
