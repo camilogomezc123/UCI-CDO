@@ -17,6 +17,38 @@
 </div>
 @endif
 
+{{-- Alerta CAM-UCI positivo --}}
+@if($camPositivosHoy->count() > 0)
+<div class="card border-danger mb-3" style="border-width:2px!important;">
+    <div class="card-header bg-danger text-white py-2 d-flex align-items-center gap-2">
+        <i class="bi bi-brain"></i>
+        <strong>CAM-UCI Positivo — {{ $camPositivosHoy->count() }} paciente(s) con delirium hoy</strong>
+        <span class="ms-auto badge bg-white text-danger" style="font-size:0.78rem;">{{ $camPctHoy }}% de evaluados</span>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+            <tbody>
+                @foreach($camPositivosHoy->take(6) as $cam)
+                @php $p = $cam->paciente; @endphp
+                <tr>
+                    <td style="font-size:0.82rem;" class="ps-3">
+                        <a href="{{ route('pacientes.show', $p) }}" class="text-decoration-none fw-semibold">
+                            {{ $p->nombre }}
+                        </a>
+                    </td>
+                    <td style="font-size:0.82rem; color:#888;">{{ $p->documento }}</td>
+                    <td><span class="badge bg-danger">Delirium +</span></td>
+                    @if($cam->observacion)
+                    <td style="font-size:0.78rem; color:#888;" class="pe-3">{{ $cam->observacion }}</td>
+                    @endif
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
+
 {{-- Alertas clínicas críticas --}}
 @if($alertasNews->count() > 0 || $alertasSofa->count() > 0)
 <div class="row g-2 mb-3">
@@ -320,6 +352,26 @@
                         </div>
                     </div>
                     @endforeach
+                    {{-- CAM-UCI hoy --}}
+                    <div class="col-6 col-xl-4">
+                        <div class="text-center p-3 rounded-3 {{ $camPositivosHoy->count() > 0 ? 'border border-danger' : '' }}"
+                             style="background:{{ $camPositivosHoy->count() > 0 ? '#fff5f5' : '#f8f9fa' }};">
+                            <i class="bi bi-brain text-{{ $camPositivosHoy->count() > 0 ? 'danger' : 'secondary' }}" style="font-size:1.4rem;"></i>
+                            <div class="fw-bold fs-4 mt-1 {{ $camPositivosHoy->count() > 0 ? 'text-danger' : '' }}">
+                                {{ $camPositivosHoy->count() ?: '0' }}
+                            </div>
+                            <div class="fw-semibold" style="font-size:0.82rem;">CAM-UCI+</div>
+                            <div class="text-muted" style="font-size:0.72rem;">Delirium hoy</div>
+                            @if($camTotalHoy > 0)
+                                <div class="text-muted" style="font-size:0.68rem;">{{ $camTotalHoy }} evaluados · {{ $camPctHoy }}%</div>
+                            @else
+                                <div class="text-muted" style="font-size:0.68rem;">Sin evaluar hoy</div>
+                            @endif
+                            @if($camPositivosHoy->count() > 0)
+                                <span class="badge bg-danger mt-1" style="font-size:0.65rem;">DELIRIUM</span>
+                            @endif
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Movilización temprana --}}

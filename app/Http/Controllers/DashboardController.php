@@ -6,6 +6,7 @@ use App\Models\Paciente;
 use App\Models\Snapshot;
 use App\Models\CargaArchivo;
 use App\Models\TransfusionDiaria;
+use App\Models\CamUci;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -157,6 +158,12 @@ class DashboardController extends Controller
         }
         uasort($porRiesgo, fn($a, $b) => $b['count'] - $a['count']);
 
+        // ── CAM-UCI hoy ───────────────────────────────────────────────────────────
+        $camRegistrosHoy    = CamUci::whereDate('fecha', today())->with('paciente')->get();
+        $camPositivosHoy    = $camRegistrosHoy->where('resultado', 'positivo');
+        $camTotalHoy        = $camRegistrosHoy->count();
+        $camPctHoy          = $camTotalHoy > 0 ? round($camPositivosHoy->count() / $camTotalHoy * 100, 1) : 0;
+
         // ── Transfusiones ─────────────────────────────────────────────────────────
         $transfusionesHoy         = TransfusionDiaria::whereDate('fecha', today())->count();
         $transfusionesSemana      = TransfusionDiaria::where('fecha', '>=', now()->subDays(7))->count();
@@ -209,7 +216,8 @@ class DashboardController extends Controller
             'mortalidadCruda', 'estanciaMedia', 'ocupacionPct', 'giroCama',
             'ratioVmUci', 'totalEgresos', 'totalCamas',
             'porRiesgo',
-            'transfusionesHoy', 'transfusionesSemana'
+            'transfusionesHoy', 'transfusionesSemana',
+            'camPositivosHoy', 'camTotalHoy', 'camPctHoy'
         ));
     }
 }
