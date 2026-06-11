@@ -124,7 +124,7 @@
             <div style="width:10px;height:10px;border-radius:50%;background:{{ $paciente->egreso_uci?'#dc3545':'#dee2e6' }};"></div>
             <span class="fw-semibold" style="font-size:0.85rem;">Egreso efectivo de UCI</span>
           </div>
-          @php $te = ['mejoria'=>['success','bi-check-circle','Mejoría'],'traslado'=>['info','bi-arrow-right-circle','Traslado'],'fallecimiento'=>['dark','bi-x-circle','Fallecimiento']][$paciente->tipo_egreso ?? ''] ?? null; @endphp
+          @php $te = ['mejoria'=>['success','bi-check-circle','Mejoría'],'traslado'=>['info','bi-arrow-right-circle','Traslado'],'fallecimiento'=>['dark','bi-x-circle','Fallecimiento'],'alta_casa'=>['primary','bi-house-check','Alta para la casa']][$paciente->tipo_egreso ?? ''] ?? null; @endphp
           <div class="ps-3">
             @if($paciente->egreso_uci)
               <div class="d-flex align-items-center gap-2 mb-1">
@@ -146,6 +146,7 @@
                         {{ $paciente->egreso_uci ? '' : 'required' }}>
                   <option value="">-- Tipo de egreso --</option>
                   <option value="mejoria"      {{ $paciente->tipo_egreso=='mejoria'      ?'selected':'' }}>Mejoría / Alta a hospitalización</option>
+                  <option value="alta_casa"    {{ $paciente->tipo_egreso=='alta_casa'    ?'selected':'' }}>Alta para la casa</option>
                   <option value="traslado"     {{ $paciente->tipo_egreso=='traslado'     ?'selected':'' }}>Traslado a otra institución</option>
                   <option value="fallecimiento"{{ $paciente->tipo_egreso=='fallecimiento'?'selected':'' }}>Fallecimiento</option>
                 </select>

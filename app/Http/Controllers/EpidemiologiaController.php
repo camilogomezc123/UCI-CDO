@@ -96,7 +96,7 @@ class EpidemiologiaController extends Controller
         $totalEgresados  = $egresados->count();
         $fallecidos      = $egresados->where('tipo_egreso', 'fallecimiento')->count();
         $traslados       = $egresados->where('tipo_egreso', 'traslado')->count();
-        $mejoria         = $egresados->where('tipo_egreso', 'mejoria')->count();
+        $mejoria         = $egresados->whereIn('tipo_egreso', ['mejoria', 'alta_casa'])->count();
         $mortalidadBruta = $totalEgresados > 0 ? round($fallecidos / $totalEgresados * 100, 1) : 0;
 
         // Mortalidad esperada por SOFA — promedio de todos los pacientes con SOFA registrado

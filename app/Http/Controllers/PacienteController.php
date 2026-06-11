@@ -167,7 +167,7 @@ class PacienteController extends Controller
     {
         $request->validate([
             'egreso_uci'  => 'required|date',
-            'tipo_egreso' => 'required|in:mejoria,traslado,fallecimiento',
+            'tipo_egreso' => 'required|in:mejoria,alta_casa,traslado,fallecimiento',
         ]);
         $eraActivo = $paciente->activo;
         $paciente->update([

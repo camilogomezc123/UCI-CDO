@@ -340,6 +340,7 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; }
                     <select name="egreso[{{ $p->id }}][tipo]" class="form-select form-select-sm" style="min-width:175px">
                         <option value="">— seleccionar —</option>
                         <option value="mejoria">Alta por mejoría</option>
+                        <option value="alta_casa">Alta para la casa</option>
                         <option value="traslado">Traslado</option>
                         <option value="fallecimiento">Fallecimiento</option>
                         <option value="voluntario">Retiro voluntario</option>
