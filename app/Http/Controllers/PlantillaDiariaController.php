@@ -112,8 +112,10 @@ class PlantillaDiariaController extends Controller
             }
 
             // ── 4. Egresos UCI ───────────────────────────────────────────────
+            $tiposValidos = ['mejoria', 'alta_casa', 'traslado', 'fallecimiento'];
             foreach ($request->egreso ?? [] as $pacienteId => $datos) {
                 if (empty($datos['fecha']) || empty($datos['tipo'])) continue;
+                if (!in_array($datos['tipo'], $tiposValidos)) continue;
                 Paciente::where('id', $pacienteId)->update([
                     'egreso_uci'  => $datos['fecha'],
                     'tipo_egreso' => $datos['tipo'],

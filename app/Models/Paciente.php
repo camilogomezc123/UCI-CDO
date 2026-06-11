@@ -84,6 +84,7 @@ class Paciente extends Model
         if (!$this->salida_hospitalizacion) return null;
         $fin  = $this->egreso_uci ?? now();
         $diff = $this->salida_hospitalizacion->diff($fin);
+        if ($diff->invert) return null; // egreso registrado antes de la indicación: dato inconsistente
         $p = [];
         if ($diff->days > 0) $p[] = $diff->days . 'd';
         if ($diff->h > 0)    $p[] = $diff->h . 'h';
@@ -94,8 +95,10 @@ class Paciente extends Model
     public function tiempoEsperaHoras(): ?float
     {
         if (!$this->salida_hospitalizacion) return null;
-        $fin = $this->egreso_uci ?? now();
-        return round($this->salida_hospitalizacion->diffInMinutes($fin) / 60, 1);
+        $fin     = $this->egreso_uci ?? now();
+        $minutos = $this->salida_hospitalizacion->diffInMinutes($fin, false);
+        if ($minutos < 0) return null;
+        return round($minutos / 60, 1);
     }
 
     // ─── Días-dispositivo ─────────────────────────────────────────────────────

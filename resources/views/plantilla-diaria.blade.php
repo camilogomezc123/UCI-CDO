@@ -316,8 +316,8 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; }
                 <th style="width:210px">Paciente</th>
                 <th>Cama</th>
                 <th>Subunidad</th>
-                <th>Indicación médica</th>
-                <th>Fecha egreso UCI <span class="text-danger">*</span></th>
+                <th>Indicación médica (hora)</th>
+                <th>Fecha y hora egreso UCI <span class="text-danger">*</span></th>
                 <th>Tipo de egreso <span class="text-danger">*</span></th>
             </tr></thead>
             <tbody>
@@ -329,12 +329,12 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; }
                 </td>
                 <td><span class="cama-badge">{{ $p->ubicacion ?? '—' }}</span></td>
                 <td>{{ $p->subunidad ?? '—' }}</td>
-                <td>{{ $p->salida_hospitalizacion ? \Carbon\Carbon::parse($p->salida_hospitalizacion)->format('d/m/Y') : '—' }}</td>
+                <td>{{ $p->salida_hospitalizacion ? \Carbon\Carbon::parse($p->salida_hospitalizacion)->format('d/m/Y H:i') : '—' }}</td>
                 <td>
-                    <input type="date" name="egreso[{{ $p->id }}][fecha]"
-                           class="form-control form-control-sm" style="width:155px"
-                           value="{{ $p->salida_hospitalizacion ? \Carbon\Carbon::parse($p->salida_hospitalizacion)->format('Y-m-d') : '' }}"
-                           max="{{ now()->format('Y-m-d') }}">
+                    <input type="datetime-local" name="egreso[{{ $p->id }}][fecha]"
+                           class="form-control form-control-sm" style="width:195px"
+                           value="{{ $p->salida_hospitalizacion ? \Carbon\Carbon::parse($p->salida_hospitalizacion)->format('Y-m-d\TH:i') : '' }}"
+                           max="{{ now()->format('Y-m-d\TH:i') }}">
                 </td>
                 <td>
                     <select name="egreso[{{ $p->id }}][tipo]" class="form-select form-select-sm" style="min-width:175px">
@@ -343,8 +343,6 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; }
                         <option value="alta_casa">Alta para la casa</option>
                         <option value="traslado">Traslado</option>
                         <option value="fallecimiento">Fallecimiento</option>
-                        <option value="voluntario">Retiro voluntario</option>
-                        <option value="otro">Otro</option>
                     </select>
                 </td>
             </tr>
