@@ -117,6 +117,20 @@
                         </div>
                     </div>
                     @endforeach
+                    {{-- CAM-UCI --}}
+                    @php $cam = $datos['camUci']; @endphp
+                    <div class="col-6">
+                        <div class="text-center p-3 rounded" style="background:{{ $cam['positivos'] > 0 ? '#fff5f5' : '#f8f9fa' }};border:1px solid {{ $cam['positivos'] > 0 ? '#f5c6cb' : '#f0f0f0' }};">
+                            <div class="fw-bold {{ $cam['positivos'] > 0 ? 'text-danger' : '' }}" style="font-size:1.4rem;">{{ $cam['positivos'] ?: '0' }}</div>
+                            <div style="font-size:0.78rem;color:#6c757d;">CAM+ Delirium</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center p-3 rounded" style="background:#f8f9fa;">
+                            <div class="fw-bold" style="font-size:1.4rem;">{{ $cam['pct_delirium'] ?: '0' }}%</div>
+                            <div style="font-size:0.78rem;color:#6c757d;">% Delirium</div>
+                        </div>
+                    </div>
                 </div>
                 <hr class="my-3">
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -126,6 +140,10 @@
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <span style="font-size:0.85rem;"><i class="bi bi-activity text-warning me-2"></i>Pacientes SOFA ≥ 10</span>
                     <span class="badge bg-warning text-dark rounded-pill fs-6">{{ $datos['alertasSofa'] }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span style="font-size:0.85rem;"><i class="bi bi-brain text-danger me-2"></i>CAM-UCI positivo (delirium)</span>
+                    <span class="badge {{ $cam['positivos'] > 0 ? 'bg-danger' : 'bg-secondary' }} rounded-pill fs-6">{{ $cam['positivos'] }}</span>
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <span style="font-size:0.85rem;"><i class="bi bi-lungs text-info me-2"></i>Pacientes con VMI</span>
@@ -215,6 +233,8 @@
                         <th class="text-center">Ocup. prom./día</th>
                         <th class="text-center">NEWS ≥ 5</th>
                         <th class="text-center">SOFA ≥ 10</th>
+                        <th class="text-center">CAM+ Delirium</th>
+                        <th class="text-center">% Delirium</th>
                         <th class="text-center">VMI</th>
                         <th class="text-center">Moviliz. &lt;48h</th>
                         <th class="text-center">NEWS prom.</th>
@@ -249,6 +269,12 @@
                                 <span class="badge bg-warning text-dark rounded-pill">{{ $d['alertasSofa'] }}</span>
                             @else <span class="text-muted">0</span> @endif
                         </td>
+                        <td class="text-center">
+                            @if($d['camUci']['positivos'] > 0)
+                                <span class="badge bg-danger rounded-pill">{{ $d['camUci']['positivos'] }}</span>
+                            @else <span class="text-muted">0</span> @endif
+                        </td>
+                        <td class="text-center">{{ $d['camUci']['pct_delirium'] > 0 ? $d['camUci']['pct_delirium'].'%' : '—' }}</td>
                         <td class="text-center">{{ $d['conVmi'] ?: '—' }}</td>
                         <td class="text-center">{{ $d['movilizacionTemprana'] ?: '—' }}</td>
                         <td class="text-center">{{ $d['promediosEscalas']['NEWS'] ?: '—' }}</td>
@@ -267,6 +293,8 @@
                         <td class="text-center">{{ $datos['avgOcupacion'] }}</td>
                         <td class="text-center">{{ $datos['alertasNews'] }}</td>
                         <td class="text-center">{{ $datos['alertasSofa'] }}</td>
+                        <td class="text-center fw-bold {{ $datos['camUci']['positivos'] > 0 ? 'text-danger' : '' }}">{{ $datos['camUci']['positivos'] }}</td>
+                        <td class="text-center">{{ $datos['camUci']['pct_delirium'] > 0 ? $datos['camUci']['pct_delirium'].'%' : '—' }}</td>
                         <td class="text-center">{{ $datos['conVmi'] }}</td>
                         <td class="text-center">{{ $datos['movilizacionTemprana'] }}</td>
                         <td class="text-center">{{ $datos['promediosEscalas']['NEWS'] }}</td>
