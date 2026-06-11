@@ -162,6 +162,9 @@
         <a href="{{ route('reportes.mortalidad') }}" class="sidebar-link {{ request()->routeIs('reportes.mortalidad') ? 'active' : '' }}">
             <i class="bi bi-person-x-fill"></i> Informe de mortalidad
         </a>
+        <a href="{{ route('reportes.descargas') }}" class="sidebar-link {{ request()->routeIs('reportes.descargas*') ? 'active' : '' }}">
+            <i class="bi bi-file-earmark-arrow-down"></i> Descargas Excel
+        </a>
         <a href="{{ route('plantilla-diaria') }}" class="sidebar-link {{ request()->routeIs('plantilla-diaria') ? 'active' : '' }}" target="_blank">
             <i class="bi bi-clipboard2-pulse"></i> Registro diario
         </a>

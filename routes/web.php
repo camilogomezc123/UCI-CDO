@@ -12,6 +12,7 @@ use App\Http\Controllers\EpidemiologiaController;
 use App\Http\Controllers\PlantillaDiariaController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ReporteMortalidadController;
+use App\Http\Controllers\ReporteDescargasController;
 
 // Autenticación
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -52,6 +53,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reportes/periodicos/datos', [ReportePeriodicoController::class, 'datos'])->name('reportes.periodicos.datos');
     Route::get('/reportes/periodicos/descargar', [ReportePeriodicoController::class, 'descargar'])->name('reportes.periodicos.descargar');
     Route::get('/reportes/mortalidad', [ReporteMortalidadController::class, 'index'])->name('reportes.mortalidad');
+    Route::get('/reportes/descargas', [ReporteDescargasController::class, 'index'])->name('reportes.descargas');
+    Route::get('/reportes/descargas/generar', [ReporteDescargasController::class, 'descargar'])->name('reportes.descargas.descargar');
 
     // Epidemiología
     Route::get('/epidemiologia', [EpidemiologiaController::class, 'index'])->name('epidemiologia.index');
