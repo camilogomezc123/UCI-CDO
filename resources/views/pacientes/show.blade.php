@@ -102,10 +102,13 @@
             <div class="ms-3">
               <form method="POST" action="{{ route('pacientes.salida-hospitalizacion', $paciente) }}">
                 @csrf @method('PATCH')
+                @error('salida_hospitalizacion')
+                  <div class="alert alert-danger py-1 px-2 mb-1" style="font-size:0.75rem;"><i class="bi bi-exclamation-triangle me-1"></i>{{ $message }}</div>
+                @enderror
                 <div class="input-group input-group-sm" style="max-width:280px;">
                   <input type="datetime-local" name="salida_hospitalizacion"
-                         value="{{ $paciente->salida_hospitalizacion?->format('Y-m-d\TH:i') }}"
-                         class="form-control">
+                         value="{{ old('salida_hospitalizacion', $paciente->salida_hospitalizacion?->format('Y-m-d\TH:i')) }}"
+                         class="form-control {{ $errors->has('salida_hospitalizacion') ? 'is-invalid' : '' }}">
                   <button class="btn btn-{{ $paciente->salida_hospitalizacion?'outline-warning':'warning' }} btn-sm" type="submit">
                     <i class="bi bi-{{ $paciente->salida_hospitalizacion?'pencil':'check-lg' }}"></i>
                   </button>
@@ -138,17 +141,23 @@
             <form method="POST" action="{{ route('pacientes.egreso-uci', $paciente) }}">
               @csrf @method('PATCH')
               <div class="mb-2" style="max-width:280px;">
+                @error('egreso_uci')
+                  <div class="alert alert-danger py-1 px-2 mb-1" style="font-size:0.75rem;"><i class="bi bi-exclamation-triangle me-1"></i>{{ $message }}</div>
+                @enderror
+                @error('tipo_egreso')
+                  <div class="alert alert-danger py-1 px-2 mb-1" style="font-size:0.75rem;"><i class="bi bi-exclamation-triangle me-1"></i>{{ $message }}</div>
+                @enderror
                 <input type="datetime-local" name="egreso_uci"
-                       value="{{ $paciente->egreso_uci?->format('Y-m-d\TH:i') }}"
-                       class="form-control form-control-sm mb-2"
+                       value="{{ old('egreso_uci', $paciente->egreso_uci?->format('Y-m-d\TH:i')) }}"
+                       class="form-control form-control-sm mb-2 {{ $errors->has('egreso_uci') ? 'is-invalid' : '' }}"
                        {{ $paciente->egreso_uci ? '' : 'required' }}>
-                <select name="tipo_egreso" class="form-select form-select-sm mb-2"
+                <select name="tipo_egreso" class="form-select form-select-sm mb-2 {{ $errors->has('tipo_egreso') ? 'is-invalid' : '' }}"
                         {{ $paciente->egreso_uci ? '' : 'required' }}>
                   <option value="">-- Tipo de egreso --</option>
-                  <option value="mejoria"      {{ $paciente->tipo_egreso=='mejoria'      ?'selected':'' }}>Mejoría / Alta a hospitalización</option>
-                  <option value="alta_casa"    {{ $paciente->tipo_egreso=='alta_casa'    ?'selected':'' }}>Alta para la casa</option>
-                  <option value="traslado"     {{ $paciente->tipo_egreso=='traslado'     ?'selected':'' }}>Traslado a otra institución</option>
-                  <option value="fallecimiento"{{ $paciente->tipo_egreso=='fallecimiento'?'selected':'' }}>Fallecimiento</option>
+                  <option value="mejoria"      {{ old('tipo_egreso', $paciente->tipo_egreso)=='mejoria'      ?'selected':'' }}>Mejoría / Alta a hospitalización</option>
+                  <option value="alta_casa"    {{ old('tipo_egreso', $paciente->tipo_egreso)=='alta_casa'    ?'selected':'' }}>Alta para la casa</option>
+                  <option value="traslado"     {{ old('tipo_egreso', $paciente->tipo_egreso)=='traslado'     ?'selected':'' }}>Traslado a otra institución</option>
+                  <option value="fallecimiento"{{ old('tipo_egreso', $paciente->tipo_egreso)=='fallecimiento'?'selected':'' }}>Fallecimiento</option>
                 </select>
                 <button class="btn btn-{{ $paciente->egreso_uci ? 'outline-danger' : 'danger' }} btn-sm w-100" type="submit">
                   <i class="bi bi-{{ $paciente->egreso_uci ? 'pencil' : 'check-lg' }} me-1"></i>
