@@ -6,6 +6,7 @@ use App\Models\Paciente;
 use App\Models\Snapshot;
 use App\Models\CargaArchivo;
 use App\Models\CausaEstancia;
+use App\Models\CamUci;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -203,6 +204,36 @@ class ReportePeriodicoController extends Controller
             'Homecare'               => $causas->where('homecare', true)->count(),
         ];
 
+        // CAM-UCI
+        $camRegistros = CamUci::whereBetween('fecha', [$inicio->toDateString(), $fin->toDateString()])->get();
+        $camPositivos   = $camRegistros->where('resultado', 'positivo')->count();
+        $camNegativos   = $camRegistros->where('resultado', 'negativo')->count();
+        $camNoEval      = $camRegistros->where('resultado', 'no_evaluable')->count();
+        $camTotal       = $camRegistros->count();
+        $camPctDelirium = $camTotal > 0 ? round($camPositivos / $camTotal * 100, 1) : 0;
+        $camPacientesConDelirium = $camRegistros->where('resultado', 'positivo')->unique('paciente_id')->count();
+        $camPorDia = $camRegistros
+            ->groupBy(fn($c) => $c->fecha->format('Y-m-d'))
+            ->map(fn($g) => [
+                'fecha'     => $g->first()->fecha->format('d/m/Y'),
+                'positivos' => $g->where('resultado', 'positivo')->count(),
+                'negativos' => $g->where('resultado', 'negativo')->count(),
+                'no_eval'   => $g->where('resultado', 'no_evaluable')->count(),
+                'total'     => $g->count(),
+            ])
+            ->sortKeys()
+            ->values()
+            ->toArray();
+        $camDatos = [
+            'total'            => $camTotal,
+            'positivos'        => $camPositivos,
+            'negativos'        => $camNegativos,
+            'no_evaluables'    => $camNoEval,
+            'pct_delirium'     => $camPctDelirium,
+            'pac_con_delirium' => $camPacientesConDelirium,
+            'por_dia'          => $camPorDia,
+        ];
+
         $numerico = fn($val) => preg_match('/(-?\d+(?:\.\d+)?)/', (string)$val, $m) ? (float)$m[1] : null;
         $avgEscala = function (string $campo) use ($snapshotsPeriodo, $numerico): float {
             $valores = $snapshotsPeriodo
@@ -240,6 +271,7 @@ class ReportePeriodicoController extends Controller
             'porCriterio'          => $porCriterio->toArray(),
             'distribucionCausas'   => $distribucionCausas,
             'promediosEscalas'     => $promediosEscalas,
+            'camUci'               => $camDatos,
             'ocupacionDiaria'      => $ocupacionDiaria->map(
                 fn($v, $k) => ['fecha' => Carbon::parse($k)->format('d/m'), 'total' => $v]
             )->values()->toArray(),
@@ -262,6 +294,10 @@ class ReportePeriodicoController extends Controller
             $hojaMes->setTitle('Mes a Mes');
             $this->hojaMesMes($hojaMes, $mesMes);
         }
+
+        $hojaCam = $spreadsheet->createSheet();
+        $hojaCam->setTitle('CAM-UCI Delirium');
+        $this->hojaCamUci($hojaCam, $datos, $etiquetaPeriodo);
 
         return $spreadsheet;
     }
@@ -332,6 +368,26 @@ class ReportePeriodicoController extends Controller
             $row++;
         }
 
+        // CAM-UCI
+        $row += 2;
+        $hoja->setCellValue('A' . $row, 'CAM-UCI — Evaluación de Delirium');
+        $hoja->getStyle('A' . $row)->getFont()->setBold(true);
+        $row++;
+        $cam = $datos['camUci'];
+        $filasCAM = [
+            ['Total evaluaciones CAM-UCI',      $cam['total']],
+            ['Positivo — Delirium presente',    $cam['positivos']],
+            ['Negativo — Sin delirium',          $cam['negativos']],
+            ['No evaluable (RASS ≤ -3)',         $cam['no_evaluables']],
+            ['% Evaluaciones con delirium',      $cam['pct_delirium'] . '%'],
+            ['Pacientes únicos con delirium',    $cam['pac_con_delirium']],
+        ];
+        foreach ($filasCAM as $fila) {
+            $hoja->setCellValue('A' . $row, $fila[0]);
+            $hoja->setCellValue('B' . $row, $fila[1]);
+            $row++;
+        }
+
         $hoja->getColumnDimension('A')->setWidth(40);
         $hoja->getColumnDimension('B')->setWidth(20);
     }
@@ -343,24 +399,22 @@ class ReportePeriodicoController extends Controller
             'Estancia Prom. (d)', 'Ocup. Prom./Día', 'Rotación',
             'NEWS ≥ 5', 'SOFA ≥ 10', 'VMI', 'Moviliz. < 48h',
             'NEWS prom.', 'SOFA prom.', 'RASS prom.',
+            'CAM+ (Delirium)', 'CAM- (Sin delirium)', 'CAM no eval.', '% Delirium',
         ];
 
-        // Cabecera
         foreach ($encabezados as $col => $enc) {
             $letra = chr(65 + $col);
             $hoja->setCellValue($letra . '1', $enc);
         }
-        $hoja->getStyle('A1:' . chr(64 + count($encabezados)) . '1')->getFont()->setBold(true);
-        $hoja->getStyle('A1:' . chr(64 + count($encabezados)) . '1')
-            ->getFill()->setFillType(Fill::FILL_SOLID)
-            ->getStartColor()->setARGB('FF0D6EFD');
-        $hoja->getStyle('A1:' . chr(64 + count($encabezados)) . '1')
-            ->getFont()->getColor()->setARGB('FFFFFFFF');
+        $rango = 'A1:' . chr(64 + count($encabezados)) . '1';
+        $hoja->getStyle($rango)->getFont()->setBold(true);
+        $hoja->getStyle($rango)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF0D6EFD');
+        $hoja->getStyle($rango)->getFont()->getColor()->setARGB('FFFFFFFF');
 
-        // Datos por mes
         foreach ($mesMes as $i => $entrada) {
             $row = $i + 2;
             $d   = $entrada['datos'];
+            $cam = $d['camUci'];
             $hoja->setCellValue('A' . $row, $entrada['mes']);
             $hoja->setCellValue('B' . $row, $d['nuevosIngresos']);
             $hoja->setCellValue('C' . $row, $d['totalEgresados']);
@@ -375,10 +429,80 @@ class ReportePeriodicoController extends Controller
             $hoja->setCellValue('L' . $row, $d['promediosEscalas']['NEWS']);
             $hoja->setCellValue('M' . $row, $d['promediosEscalas']['SOFA']);
             $hoja->setCellValue('N' . $row, $d['promediosEscalas']['RASS']);
+            $hoja->setCellValue('O' . $row, $cam['positivos']);
+            $hoja->setCellValue('P' . $row, $cam['negativos']);
+            $hoja->setCellValue('Q' . $row, $cam['no_evaluables']);
+            $hoja->setCellValue('R' . $row, $cam['pct_delirium'] . '%');
         }
 
-        foreach (range('A', chr(64 + count($encabezados))) as $letra) {
+        foreach (range('A', 'R') as $letra) {
             $hoja->getColumnDimension($letra)->setAutoSize(true);
+        }
+    }
+
+    private function hojaCamUci($hoja, array $datos, string $titulo): void
+    {
+        $hoja->setCellValue('A1', 'CAM-UCI — Evaluación Diaria de Delirium');
+        $hoja->setCellValue('A2', $titulo);
+        $hoja->getStyle('A1')->getFont()->setBold(true)->setSize(13);
+        $hoja->getStyle('A2')->getFont()->setSize(11);
+
+        // Resumen
+        $cam = $datos['camUci'];
+        $row = 4;
+        $hoja->setCellValue('A' . $row, 'Resumen del período');
+        $hoja->getStyle('A' . $row)->getFont()->setBold(true);
+        $row++;
+        $resumen = [
+            ['Total evaluaciones',            $cam['total']],
+            ['Positivo — Delirium presente',  $cam['positivos']],
+            ['Negativo — Sin delirium',        $cam['negativos']],
+            ['No evaluable (RASS ≤ -3)',       $cam['no_evaluables']],
+            ['% días con delirium',            $cam['pct_delirium'] . '%'],
+            ['Pacientes únicos con delirium',  $cam['pac_con_delirium']],
+        ];
+        foreach ($resumen as $fila) {
+            $hoja->setCellValue('A' . $row, $fila[0]);
+            $hoja->setCellValue('B' . $row, $fila[1]);
+            $row++;
+        }
+
+        // Detalle por día
+        if (!empty($cam['por_dia'])) {
+            $row += 2;
+            $hoja->setCellValue('A' . $row, 'Detalle por Fecha');
+            $hoja->getStyle('A' . $row)->getFont()->setBold(true);
+            $row++;
+
+            $cabeceras = ['Fecha', 'Positivos', 'Negativos', 'No evaluables', 'Total'];
+            foreach ($cabeceras as $col => $cab) {
+                $hoja->setCellValue(chr(65 + $col) . $row, $cab);
+            }
+            $hoja->getStyle('A' . $row . ':E' . $row)->getFont()->setBold(true);
+            $hoja->getStyle('A' . $row . ':E' . $row)
+                ->getFill()->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FF198754');
+            $hoja->getStyle('A' . $row . ':E' . $row)
+                ->getFont()->getColor()->setARGB('FFFFFFFF');
+            $row++;
+
+            foreach ($cam['por_dia'] as $dia) {
+                $hoja->setCellValue('A' . $row, $dia['fecha']);
+                $hoja->setCellValue('B' . $row, $dia['positivos']);
+                $hoja->setCellValue('C' . $row, $dia['negativos']);
+                $hoja->setCellValue('D' . $row, $dia['no_eval']);
+                $hoja->setCellValue('E' . $row, $dia['total']);
+                if ($dia['positivos'] > 0) {
+                    $hoja->getStyle('B' . $row)->getFont()->getColor()->setARGB('FFDC3545');
+                    $hoja->getStyle('B' . $row)->getFont()->setBold(true);
+                }
+                $row++;
+            }
+        }
+
+        $hoja->getColumnDimension('A')->setWidth(18);
+        foreach (range('B', 'E') as $letra) {
+            $hoja->getColumnDimension($letra)->setWidth(16);
         }
     }
 }
