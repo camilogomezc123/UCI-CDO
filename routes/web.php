@@ -11,6 +11,7 @@ use App\Http\Controllers\EstanciaProlongadaController;
 use App\Http\Controllers\EpidemiologiaController;
 use App\Http\Controllers\PlantillaDiariaController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\ReporteMortalidadController;
 
 // Autenticación
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -50,6 +51,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reportes/periodicos', [ReportePeriodicoController::class, 'index'])->name('reportes.periodicos');
     Route::get('/reportes/periodicos/datos', [ReportePeriodicoController::class, 'datos'])->name('reportes.periodicos.datos');
     Route::get('/reportes/periodicos/descargar', [ReportePeriodicoController::class, 'descargar'])->name('reportes.periodicos.descargar');
+    Route::get('/reportes/mortalidad', [ReporteMortalidadController::class, 'index'])->name('reportes.mortalidad');
 
     // Epidemiología
     Route::get('/epidemiologia', [EpidemiologiaController::class, 'index'])->name('epidemiologia.index');
