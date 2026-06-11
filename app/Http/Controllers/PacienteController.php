@@ -51,7 +51,9 @@ class PacienteController extends Controller
 
         $pacientes = $query->orderBy('snap.subunidad')->orderBy('snap.ubicacion')->paginate(30)->withQueryString();
 
-        return view('pacientes.index', compact('pacientes','subunidades','criterios'));
+        $camHoy = CamUci::whereDate('fecha', today())->pluck('resultado', 'paciente_id');
+
+        return view('pacientes.index', compact('pacientes','subunidades','criterios','camHoy'));
     }
 
     public function show(Paciente $paciente)

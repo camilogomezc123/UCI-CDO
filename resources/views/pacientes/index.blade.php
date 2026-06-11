@@ -73,6 +73,7 @@
                         <th>Ingreso UCI</th>
                         <th>Tiempo en UCI</th>
                         <th>Estado egreso</th>
+                        <th>CAM-UCI hoy</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -141,6 +142,26 @@
                             @endif
                         </td>
                         <td>
+                            @php $cam = $camHoy[$p->id] ?? null; @endphp
+                            @if($cam === 'positivo')
+                                <span class="badge bg-danger" style="font-size:0.7rem;" title="Delirium presente">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>POSITIVO
+                                </span>
+                            @elseif($cam === 'negativo')
+                                <span class="badge bg-success" style="font-size:0.7rem;" title="Sin delirium">
+                                    <i class="bi bi-check-circle-fill me-1"></i>NEGATIVO
+                                </span>
+                            @elseif($cam === 'no_evaluable')
+                                <span class="badge bg-secondary" style="font-size:0.7rem;" title="RASS ≤ -3">
+                                    <i class="bi bi-dash-circle me-1"></i>No eval.
+                                </span>
+                            @else
+                                <span class="text-muted" style="font-size:0.72rem;">
+                                    <i class="bi bi-clock me-1"></i>Pendiente
+                                </span>
+                            @endif
+                        </td>
+                        <td>
                             <a href="{{ route('pacientes.show', $p) }}" class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-eye"></i>
                             </a>
@@ -148,7 +169,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="text-center text-muted py-4">
+                        <td colspan="10" class="text-center text-muted py-4">
                             <i class="bi bi-people display-6 d-block mb-2 opacity-25"></i>
                             No hay pacientes que coincidan con el filtro.
                         </td>
