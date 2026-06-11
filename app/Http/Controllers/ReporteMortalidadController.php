@@ -139,17 +139,12 @@ class ReporteMortalidadController extends Controller
         $bundlePct  = $bundleDias > 0 ? round($bundles->avg(fn($b) => $b->cumplimiento())) : null;
 
         // ── CIE-10 y diagnósticos ────────────────────────────────────────
-        $cie10s = $snaps->pluck('cie10')->unique()->filter()->values();
-        $diags  = $snaps->pluck('diagnosticos')->unique()->filter()->values();
-
-        // ── Grupo morbilidad ─────────────────────────────────────────────
-        $txt    = strtolower($cie10s->merge($diags)->implode(' '));
-        $grupos = [];
-        foreach (self::GRUPOS_MORBILIDAD as $nombre => $kws) {
-            foreach ($kws as $kw) {
-                if (str_contains($txt, $kw)) { $grupos[] = $nombre; break; }
-            }
-        }
+        $cie10s = $snaps->pluck('cie10')
+            ->filter(fn($v) => !empty(trim((string)$v)))
+            ->flatMap(fn($raw) => $this->parsearCie10((string)$raw))
+            ->unique('code')
+            ->values();
+        $diags = $snaps->pluck('diagnosticos')->unique()->filter()->values();
 
         return [
             'p'            => $p,
@@ -197,7 +192,6 @@ class ReporteMortalidadController extends Controller
             // Diagnósticos
             'cie10s'       => $cie10s,
             'diags'        => $diags,
-            'grupos'       => $grupos,
         ];
     }
 
@@ -231,38 +225,36 @@ class ReporteMortalidadController extends Controller
 
     private function calcularMorbilidad(\Illuminate\Support\Collection $fallecidos, int $total): array
     {
-        // Collect CIE-10 codes actually present in patients' snapshots
-        $codigoMap = []; // cie10 => ['count' => n, 'pacientes' => [...], 'estancias' => [...]]
+        $codigoMap = [];
 
         foreach ($fallecidos as $p) {
             $estancia = ($p->ingreso_uci && $p->egreso_uci)
                 ? (int)$p->ingreso_uci->diffInDays($p->egreso_uci)
                 : $p->snapshots->count();
 
-            // Get unique non-empty CIE-10 values for this patient
             $codigos = $p->snapshots->pluck('cie10')
                 ->filter(fn($v) => !empty(trim((string)$v)))
-                ->map(fn($v) => trim((string)$v))
-                ->unique()
+                ->flatMap(fn($raw) => $this->parsearCie10((string)$raw))
+                ->unique('code')
                 ->values();
 
-            foreach ($codigos as $cie) {
-                if (!isset($codigoMap[$cie])) {
-                    $codigoMap[$cie] = ['count' => 0, 'ids' => [], 'estancias' => []];
+            foreach ($codigos as $item) {
+                $code = $item['code'];
+                if (!isset($codigoMap[$code])) {
+                    $codigoMap[$code] = ['desc' => $item['desc'], 'count' => 0, 'ids' => [], 'estancias' => []];
                 }
-                // Count each patient only once per code
-                if (!in_array($p->id, $codigoMap[$cie]['ids'])) {
-                    $codigoMap[$cie]['count']++;
-                    $codigoMap[$cie]['ids'][]      = $p->id;
-                    $codigoMap[$cie]['estancias'][] = $estancia;
+                if (!in_array($p->id, $codigoMap[$code]['ids'])) {
+                    $codigoMap[$code]['count']++;
+                    $codigoMap[$code]['ids'][]      = $p->id;
+                    $codigoMap[$code]['estancias'][] = $estancia;
                 }
             }
         }
 
-        // Build result sorted by count desc
         $result = [];
-        foreach ($codigoMap as $cie => $data) {
-            $result[$cie] = [
+        foreach ($codigoMap as $code => $data) {
+            $result[$code] = [
+                'desc'         => $data['desc'],
                 'count'        => $data['count'],
                 'pct'          => $total > 0 ? round($data['count'] / $total * 100) : 0,
                 'estancia_avg' => count($data['estancias']) > 0
@@ -274,5 +266,24 @@ class ReporteMortalidadController extends Controller
 
         uasort($result, fn($a, $b) => $b['count'] <=> $a['count']);
         return $result;
+    }
+
+    private function parsearCie10(string $raw): array
+    {
+        // Split concatenated CIE-10 string into individual code+description pairs
+        // Format: "J189-NEUMONIA, NO ESPECIFICADA N178-INSUFICIENCIA RENAL..."
+        $parts = preg_split('/\s+(?=[A-Z]\d{2,4}[A-Z0-9]?-)/', trim($raw));
+        $codes = [];
+        foreach ($parts as $part) {
+            $part = trim($part);
+            if (empty($part)) continue;
+            if (preg_match('/^([A-Z]\d{2,4}[A-Z0-9]?)-(.+)$/s', $part, $m)) {
+                $codes[] = [
+                    'code' => $m[1],
+                    'desc' => mb_convert_case(trim($m[2]), MB_CASE_TITLE, 'UTF-8'),
+                ];
+            }
+        }
+        return $codes;
     }
 }

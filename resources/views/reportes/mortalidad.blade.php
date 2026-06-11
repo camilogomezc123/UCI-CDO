@@ -113,10 +113,13 @@
   <div class="card-body">
     <div class="row g-3">
       <div class="col-lg-7">
-        @foreach($morbilidad as $cie => $datos)
+        @foreach($morbilidad as $code => $datos)
         <div class="mb-2">
           <div class="d-flex justify-content-between align-items-center mb-1">
-            <span style="font-size:0.83rem;max-width:65%;word-break:break-word;">{{ $cie }}</span>
+            <div style="max-width:62%;display:flex;align-items:baseline;gap:6px;">
+              <span class="badge fw-bold" style="background:#b71c1c;font-size:0.78rem;letter-spacing:0.5px;flex-shrink:0;">{{ $code }}</span>
+              <span class="text-truncate" style="font-size:0.82rem;" title="{{ $datos['desc'] }}">{{ $datos['desc'] }}</span>
+            </div>
             <div class="d-flex gap-2 align-items-center flex-shrink-0">
               <span class="badge bg-danger rounded-pill">{{ $datos['count'] }} pac.</span>
               <span class="badge bg-light text-dark border">{{ $datos['estancia_avg'] }}d</span>
@@ -237,8 +240,8 @@
               @endif
               {{-- CIE-10 en el header --}}
               <div class="ms-auto d-flex gap-1 flex-wrap">
-                @foreach($d['cie10s']->take(2) as $cie)
-                  <span class="badge" style="background:#fdecea;color:#b71c1c;font-size:0.65rem;">{{ Str::limit($cie, 30) }}</span>
+                @foreach($d['cie10s']->take(2) as $item)
+                  <span class="badge" style="background:#fdecea;color:#b71c1c;font-size:0.65rem;">{{ $item['code'] }}</span>
                 @endforeach
               </div>
             </div>
@@ -487,8 +490,11 @@
                   <div class="card-body py-2">
                     @if($d['cie10s']->isNotEmpty())
                       <div class="mb-1" style="font-size:0.72rem;color:#888;text-transform:uppercase;letter-spacing:1px;">Códigos CIE-10</div>
-                      @foreach($d['cie10s'] as $cie)
-                        <div style="font-size:0.8rem;background:#fdecea;color:#b71c1c;padding:3px 8px;border-radius:4px;margin-bottom:3px;font-weight:600;">{{ $cie }}</div>
+                      @foreach($d['cie10s'] as $item)
+                        <div style="margin-bottom:5px;display:flex;align-items:baseline;gap:6px;">
+                          <span class="badge fw-bold flex-shrink-0" style="background:#b71c1c;font-size:0.75rem;letter-spacing:0.5px;">{{ $item['code'] }}</span>
+                          <span style="font-size:0.78rem;line-height:1.3;">{{ $item['desc'] }}</span>
+                        </div>
                       @endforeach
                     @else
                       <div class="text-muted" style="font-size:0.8rem;">Sin CIE-10 registrado</div>
@@ -539,7 +545,17 @@ new Chart(document.getElementById('chartMorbilidad'), {
     options: {
         responsive: true,
         plugins: {
-            legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 14, padding: 10 } }
+            legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 14, padding: 8 } },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        const descs = {!! json_encode(array_column(array_values($morbilidad), 'desc', 0)) !!};
+                        const keys  = {!! json_encode(array_keys($morbilidad)) !!};
+                        const desc  = keys[ctx.dataIndex] ? (descs[ctx.dataIndex] || '') : '';
+                        return ' ' + ctx.parsed + ' pac.' + (desc ? ' · ' + desc.substring(0,40) : '');
+                    }
+                }
+            }
         },
         cutout: '55%'
     }
