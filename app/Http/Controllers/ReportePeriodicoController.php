@@ -234,6 +234,77 @@ class ReportePeriodicoController extends Controller
             'por_dia'          => $camPorDia,
         ];
 
+        // ── Espera egreso estadísticas ────────────────────────────────────────────
+        $tipoEgresoNombres = [
+            'mejoria'       => 'Mejoría',
+            'alta_casa'     => 'Alta a casa',
+            'traslado'      => 'Traslado',
+            'fallecimiento' => 'Fallecimiento',
+        ];
+
+        $egresadosConEspera = $egresados->filter(
+            fn($p) => $p->salida_hospitalizacion && $p->egreso_uci
+                   && $p->salida_hospitalizacion->lte($p->egreso_uci)
+        );
+        $tiemposH = $egresadosConEspera
+            ->map(fn($p) => round($p->salida_hospitalizacion->diffInMinutes($p->egreso_uci) / 60, 1))
+            ->values();
+        $nEspera = $tiemposH->count();
+
+        $promedioH = $nEspera > 0 ? round($tiemposH->avg(), 1) : null;
+        $sortedH   = $tiemposH->sort()->values();
+        $mediana   = null;
+        if ($nEspera > 0) {
+            $mid     = intdiv($nEspera, 2);
+            $mediana = $nEspera % 2 === 0
+                ? round(((float)$sortedH[$mid - 1] + (float)$sortedH[$mid]) / 2, 1)
+                : round((float)$sortedH[$mid], 1);
+        }
+        $stddevH = null;
+        if ($nEspera > 1) {
+            $variance = $tiemposH->sum(fn($v) => pow($v - $promedioH, 2)) / ($nEspera - 1);
+            $stddevH  = round(sqrt($variance), 1);
+        }
+
+        $tipoEgresoDistrib = $egresados
+            ->groupBy(fn($p) => $tipoEgresoNombres[$p->tipo_egreso] ?? ($p->tipo_egreso ?? 'Sin tipo'))
+            ->map->count()
+            ->sortDesc()
+            ->toArray();
+
+        $tiempoPorTipo = $egresadosConEspera
+            ->groupBy(fn($p) => $tipoEgresoNombres[$p->tipo_egreso] ?? ($p->tipo_egreso ?? 'Sin tipo'))
+            ->map(fn($g) => round(
+                $g->avg(fn($p) => $p->salida_hospitalizacion->diffInMinutes($p->egreso_uci) / 60), 1
+            ))
+            ->toArray();
+
+        $pendientesActuales = Paciente::whereNotNull('salida_hospitalizacion')
+            ->whereNull('egreso_uci')
+            ->where('activo', true)
+            ->with('ultimoSnapshot')
+            ->get()
+            ->map(fn($p) => [
+                'nombre'       => $p->nombre,
+                'documento'    => $p->documento,
+                'subunidad'    => $p->ultimoSnapshot?->subunidad ?? '—',
+                'horas_espera' => round($p->salida_hospitalizacion->diffInMinutes(now()) / 60, 1),
+            ])
+            ->sortByDesc('horas_espera')
+            ->values()
+            ->toArray();
+
+        $esperaEgresoDatos = [
+            'promedio_horas'   => $promedioH,
+            'mediana_horas'    => $mediana,
+            'stddev_horas'     => $stddevH,
+            'total_con_espera' => $nEspera,
+            'pendiente_n'      => count($pendientesActuales),
+            'pendientes_lista' => $pendientesActuales,
+            'tipo_egreso'      => $tipoEgresoDistrib,
+            'tiempo_por_tipo'  => $tiempoPorTipo,
+        ];
+
         $numerico = fn($val) => preg_match('/(-?\d+(?:\.\d+)?)/', (string)$val, $m) ? (float)$m[1] : null;
         $avgEscala = function (string $campo) use ($snapshotsPeriodo, $numerico): float {
             $valores = $snapshotsPeriodo
@@ -272,6 +343,7 @@ class ReportePeriodicoController extends Controller
             'distribucionCausas'   => $distribucionCausas,
             'promediosEscalas'     => $promediosEscalas,
             'camUci'               => $camDatos,
+            'esperaEgreso'         => $esperaEgresoDatos,
             'ocupacionDiaria'      => $ocupacionDiaria->map(
                 fn($v, $k) => ['fecha' => Carbon::parse($k)->format('d/m'), 'total' => $v]
             )->values()->toArray(),
@@ -298,6 +370,10 @@ class ReportePeriodicoController extends Controller
         $hojaCam = $spreadsheet->createSheet();
         $hojaCam->setTitle('CAM-UCI Delirium');
         $this->hojaCamUci($hojaCam, $datos, $etiquetaPeriodo);
+
+        $hojaEspera = $spreadsheet->createSheet();
+        $hojaEspera->setTitle('Espera Egreso');
+        $this->hojaEsperaEgreso($hojaEspera, $datos, $etiquetaPeriodo);
 
         return $spreadsheet;
     }
@@ -504,5 +580,97 @@ class ReportePeriodicoController extends Controller
         foreach (range('B', 'E') as $letra) {
             $hoja->getColumnDimension($letra)->setWidth(16);
         }
+    }
+
+    private function hojaEsperaEgreso($hoja, array $datos, string $titulo): void
+    {
+        $e = $datos['esperaEgreso'];
+
+        $hoja->setCellValue('A1', 'Estadísticas de Espera para Egreso UCI');
+        $hoja->setCellValue('A2', $titulo);
+        $hoja->getStyle('A1')->getFont()->setBold(true)->setSize(13);
+        $hoja->getStyle('A2')->getFont()->setSize(11);
+
+        // ── Resumen estadístico ───────────────────────────────────────────────
+        $row = 4;
+        $hoja->setCellValue('A' . $row, 'Estadística');
+        $hoja->setCellValue('B' . $row, 'Horas');
+        $hoja->getStyle('A' . $row . ':B' . $row)->getFont()->setBold(true);
+        $hoja->getStyle('A' . $row . ':B' . $row)
+            ->getFill()->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setARGB('FF0D6EFD');
+        $hoja->getStyle('A' . $row . ':B' . $row)->getFont()->getColor()->setARGB('FFFFFFFF');
+        $row++;
+
+        $estadisticas = [
+            ['Promedio espera',                  $e['promedio_horas'] ?? '—'],
+            ['Mediana espera',                   $e['mediana_horas']  ?? '—'],
+            ['Desviación estándar',              $e['stddev_horas']   ?? '—'],
+            ['Pacientes con espera registrada',  $e['total_con_espera']],
+            ['Pacientes pendientes egreso (ahora)', $e['pendiente_n']],
+        ];
+        foreach ($estadisticas as $stat) {
+            $hoja->setCellValue('A' . $row, $stat[0]);
+            $hoja->setCellValue('B' . $row, $stat[1]);
+            $row++;
+        }
+
+        // ── Top causas de egreso ─────────────────────────────────────────────
+        $row += 2;
+        $hoja->setCellValue('A' . $row, 'Distribución por tipo de egreso');
+        $hoja->getStyle('A' . $row)->getFont()->setBold(true);
+        $row++;
+        $hoja->setCellValue('A' . $row, 'Tipo de egreso');
+        $hoja->setCellValue('B' . $row, 'Pacientes');
+        $hoja->setCellValue('C' . $row, 'Espera prom. (h)');
+        $hoja->getStyle('A' . $row . ':C' . $row)->getFont()->setBold(true);
+        $hoja->getStyle('A' . $row . ':C' . $row)
+            ->getFill()->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setARGB('FF198754');
+        $hoja->getStyle('A' . $row . ':C' . $row)->getFont()->getColor()->setARGB('FFFFFFFF');
+        $row++;
+        foreach ($e['tipo_egreso'] as $tipo => $n) {
+            $hoja->setCellValue('A' . $row, $tipo);
+            $hoja->setCellValue('B' . $row, $n);
+            $hoja->setCellValue('C' . $row, $e['tiempo_por_tipo'][$tipo] ?? '—');
+            if (strtolower($tipo) === 'fallecimiento') {
+                $hoja->getStyle('A' . $row . ':C' . $row)->getFont()->getColor()->setARGB('FFDC3545');
+            }
+            $row++;
+        }
+
+        // ── Pacientes pendientes egreso ───────────────────────────────────────
+        if (!empty($e['pendientes_lista'])) {
+            $row += 2;
+            $hoja->setCellValue('A' . $row, 'Pacientes actualmente pendientes de egreso UCI');
+            $hoja->getStyle('A' . $row)->getFont()->setBold(true);
+            $row++;
+            $hoja->setCellValue('A' . $row, 'Paciente');
+            $hoja->setCellValue('B' . $row, 'Documento');
+            $hoja->setCellValue('C' . $row, 'Subunidad');
+            $hoja->setCellValue('D' . $row, 'Horas en espera');
+            $hoja->getStyle('A' . $row . ':D' . $row)->getFont()->setBold(true);
+            $hoja->getStyle('A' . $row . ':D' . $row)
+                ->getFill()->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FFFD7E14');
+            $hoja->getStyle('A' . $row . ':D' . $row)->getFont()->getColor()->setARGB('FFFFFFFF');
+            $row++;
+            foreach ($e['pendientes_lista'] as $p) {
+                $hoja->setCellValue('A' . $row, $p['nombre']);
+                $hoja->setCellValue('B' . $row, $p['documento']);
+                $hoja->setCellValue('C' . $row, $p['subunidad']);
+                $hoja->setCellValue('D' . $row, $p['horas_espera']);
+                if ($p['horas_espera'] > 12) {
+                    $hoja->getStyle('D' . $row)->getFont()->getColor()->setARGB('FFDC3545');
+                    $hoja->getStyle('D' . $row)->getFont()->setBold(true);
+                }
+                $row++;
+            }
+        }
+
+        $hoja->getColumnDimension('A')->setWidth(35);
+        $hoja->getColumnDimension('B')->setWidth(15);
+        $hoja->getColumnDimension('C')->setWidth(20);
+        $hoja->getColumnDimension('D')->setWidth(18);
     }
 }

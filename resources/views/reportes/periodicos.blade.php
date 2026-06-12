@@ -307,6 +307,134 @@
 </div>
 @endif
 
+{{-- ── Estadísticas de Espera para Egreso ── --}}
+@php $ee = $datos['esperaEgreso']; @endphp
+<div class="card mb-4">
+    <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-hourglass-split text-warning"></i>
+        <span class="fw-semibold">Estadísticas de Espera para Egreso UCI</span>
+        @if($ee['pendiente_n'] > 0)
+            <span class="badge bg-warning text-dark ms-1">{{ $ee['pendiente_n'] }} pendiente(s) ahora</span>
+        @endif
+    </div>
+    <div class="card-body">
+
+        {{-- KPIs estadísticos --}}
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="text-center p-3 rounded-3" style="background:#fff3cd;">
+                    <i class="bi bi-stopwatch text-warning" style="font-size:1.3rem;"></i>
+                    <div class="fw-bold fs-4 mt-1">{{ $ee['promedio_horas'] ?? '—' }}</div>
+                    <div style="font-size:0.78rem;color:#6c757d;">Promedio (horas)</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="text-center p-3 rounded-3" style="background:#d1ecf1;">
+                    <i class="bi bi-distribute-vertical text-info" style="font-size:1.3rem;"></i>
+                    <div class="fw-bold fs-4 mt-1">{{ $ee['mediana_horas'] ?? '—' }}</div>
+                    <div style="font-size:0.78rem;color:#6c757d;">Mediana (horas)</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="text-center p-3 rounded-3" style="background:#e2e3e5;">
+                    <i class="bi bi-bar-chart text-secondary" style="font-size:1.3rem;"></i>
+                    <div class="fw-bold fs-4 mt-1">{{ $ee['stddev_horas'] ?? '—' }}</div>
+                    <div style="font-size:0.78rem;color:#6c757d;">Desv. estándar (h)</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="text-center p-3 rounded-3" style="background:{{ $ee['pendiente_n'] > 0 ? '#f8d7da' : '#d4edda' }};">
+                    <i class="bi bi-person-exclamation {{ $ee['pendiente_n'] > 0 ? 'text-danger' : 'text-success' }}" style="font-size:1.3rem;"></i>
+                    <div class="fw-bold fs-4 mt-1 {{ $ee['pendiente_n'] > 0 ? 'text-danger' : '' }}">{{ $ee['pendiente_n'] }}</div>
+                    <div style="font-size:0.78rem;color:#6c757d;">Pendientes egreso</div>
+                    <div style="font-size:0.68rem;color:#6c757d;">(ahora en UCI)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            {{-- Gráfica: tipo de egreso --}}
+            <div class="col-md-5">
+                <div class="fw-semibold mb-2" style="font-size:0.88rem;">
+                    <i class="bi bi-pie-chart me-1 text-primary"></i>Top causas de egreso en el período
+                </div>
+                @if(!empty($ee['tipo_egreso']) && array_sum($ee['tipo_egreso']) > 0)
+                    <canvas id="chartTipoEgreso" style="max-height:210px;"></canvas>
+                    <div class="mt-2">
+                        @php
+                            $coloresTipo = ['Mejoría'=>'#198754','Alta a casa'=>'#0d6efd','Traslado'=>'#fd7e14','Fallecimiento'=>'#dc3545','Sin tipo'=>'#6c757d'];
+                        @endphp
+                        @foreach($ee['tipo_egreso'] as $tipo => $n)
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span style="font-size:0.8rem;">
+                                <span class="badge me-1" style="background:{{ $coloresTipo[$tipo] ?? '#6c757d' }};font-size:0.65rem;">&nbsp;</span>
+                                {{ $tipo }}
+                                @if(isset($ee['tiempo_por_tipo'][$tipo]))
+                                    <span class="text-muted" style="font-size:0.72rem;">({{ $ee['tiempo_por_tipo'][$tipo] }}h prom.)</span>
+                                @endif
+                            </span>
+                            <strong style="font-size:0.85rem;">{{ $n }}</strong>
+                        </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-muted text-center py-4" style="font-size:0.85rem;">Sin egresos en el período.</div>
+                @endif
+            </div>
+
+            {{-- Tabla de pendientes --}}
+            <div class="col-md-7">
+                <div class="fw-semibold mb-2" style="font-size:0.88rem;">
+                    <i class="bi bi-list-ul me-1 text-warning"></i>Pacientes actualmente pendientes de egreso UCI
+                </div>
+                @if(empty($ee['pendientes_lista']))
+                    <div class="alert alert-success py-2 mb-0" style="font-size:0.85rem;">
+                        <i class="bi bi-check-circle me-1"></i>No hay pacientes pendientes de egreso en este momento.
+                    </div>
+                @else
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0" style="font-size:0.8rem;">
+                            <thead class="table-warning">
+                                <tr>
+                                    <th>Paciente</th>
+                                    <th>Subunidad</th>
+                                    <th class="text-center">Espera (h)</th>
+                                    <th class="text-center">Alerta</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($ee['pendientes_lista'] as $p)
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">{{ $p['nombre'] }}</div>
+                                        <div class="text-muted" style="font-size:0.72rem;">{{ $p['documento'] }}</div>
+                                    </td>
+                                    <td style="font-size:0.78rem;">{{ $p['subunidad'] }}</td>
+                                    <td class="text-center fw-bold {{ $p['horas_espera'] > 12 ? 'text-danger' : ($p['horas_espera'] > 4 ? 'text-warning' : '') }}">
+                                        {{ $p['horas_espera'] }}h
+                                    </td>
+                                    <td class="text-center">
+                                        @if($p['horas_espera'] > 24)
+                                            <span class="badge bg-danger" style="font-size:0.65rem;">+24h</span>
+                                        @elseif($p['horas_espera'] > 12)
+                                            <span class="badge bg-warning text-dark" style="font-size:0.65rem;">+12h</span>
+                                        @elseif($p['horas_espera'] > 4)
+                                            <span class="badge bg-secondary" style="font-size:0.65rem;">+4h</span>
+                                        @else
+                                            <span class="text-muted" style="font-size:0.72rem;">—</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Resumen narrativo --}}
 <div class="card mb-4">
     <div class="card-header d-flex align-items-center gap-2">
@@ -363,6 +491,20 @@
             ({{ $datos['distribucionCausas'][$causaPrincipal] }} caso(s)).
         </p>
         @endif
+        @if($datos['esperaEgreso']['total_con_espera'] > 0)
+        <p>
+            El tiempo de espera entre la decisión de salida a hospitalización y el egreso efectivo de UCI
+            tuvo un promedio de <strong>{{ $datos['esperaEgreso']['promedio_horas'] }} horas</strong>
+            (mediana: <strong>{{ $datos['esperaEgreso']['mediana_horas'] }}h</strong>,
+            desviación estándar: <strong>{{ $datos['esperaEgreso']['stddev_horas'] }}h</strong>)
+            para los <strong>{{ $datos['esperaEgreso']['total_con_espera'] }}</strong> paciente(s) con registro completo.
+            @if(!empty($datos['esperaEgreso']['tipo_egreso']))
+                @php $topTipo = array_key_first($datos['esperaEgreso']['tipo_egreso']); @endphp
+                El tipo de egreso más frecuente fue <strong>{{ strtolower($topTipo) }}</strong>
+                ({{ $datos['esperaEgreso']['tipo_egreso'][$topTipo] }} caso(s)).
+            @endif
+        </p>
+        @endif
     </div>
 </div>
 
@@ -382,6 +524,34 @@ new Chart(document.getElementById('chartCausasPeriodo'), {
         }]
     },
     options: { responsive: true, plugins: { legend: { display: false } }, cutout: '60%' }
+});
+@endif
+
+@if(!empty($datos['esperaEgreso']['tipo_egreso']) && array_sum($datos['esperaEgreso']['tipo_egreso']) > 0)
+@php
+    $colMapJs = ['Mejoría'=>'#198754','Alta a casa'=>'#0d6efd','Traslado'=>'#fd7e14','Fallecimiento'=>'#dc3545','Sin tipo'=>'#6c757d'];
+    $teLabels  = array_keys($datos['esperaEgreso']['tipo_egreso']);
+    $teData    = array_values($datos['esperaEgreso']['tipo_egreso']);
+    $teColors  = array_map(fn($l) => $colMapJs[$l] ?? '#6c757d', $teLabels);
+@endphp
+new Chart(document.getElementById('chartTipoEgreso'), {
+    type: 'doughnut',
+    data: {
+        labels: {!! json_encode($teLabels) !!},
+        datasets: [{
+            data: {!! json_encode($teData) !!},
+            backgroundColor: {!! json_encode($teColors) !!},
+            borderWidth: 2,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + ctx.raw + ' pte(s)' } }
+        },
+        cutout: '55%'
+    }
 });
 @endif
 
