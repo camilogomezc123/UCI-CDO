@@ -153,16 +153,21 @@ class PacienteController extends Controller
     public function actualizarIngreso(Request $request, Paciente $paciente)
     {
         $request->validate(['ingreso_uci' => 'required|date']);
-        $paciente->update(['ingreso_uci' => $request->ingreso_uci]);
-        $accion = $paciente->wasChanged('ingreso_uci') ? 'actualizada' : 'registrada';
-        return back()->with('success', "Fecha de ingreso a UCI {$accion} correctamente.");
+        DB::table('pacientes')->where('id', $paciente->id)->update([
+            'ingreso_uci' => \Carbon\Carbon::parse($request->ingreso_uci)->format('Y-m-d H:i:s'),
+            'updated_at'  => now()->format('Y-m-d H:i:s'),
+        ]);
+        return back()->with('success', 'Fecha de ingreso a UCI actualizada correctamente.');
     }
 
     public function actualizarSalidaHospitalizacion(Request $request, Paciente $paciente)
     {
         $request->validate(['salida_hospitalizacion' => 'required|date']);
-        $paciente->update(['salida_hospitalizacion' => $request->salida_hospitalizacion]);
-        return back()->with('success','Fecha de salida para hospitalización registrada.');
+        DB::table('pacientes')->where('id', $paciente->id)->update([
+            'salida_hospitalizacion' => \Carbon\Carbon::parse($request->salida_hospitalizacion)->format('Y-m-d H:i:s'),
+            'updated_at'             => now()->format('Y-m-d H:i:s'),
+        ]);
+        return back()->with('success', 'Indicación médica para hospitalización actualizada correctamente.');
     }
 
     public function actualizarEgresoUci(Request $request, Paciente $paciente)
@@ -172,10 +177,11 @@ class PacienteController extends Controller
             'tipo_egreso' => 'required|in:mejoria,alta_casa,traslado,fallecimiento',
         ]);
         $eraActivo = $paciente->activo;
-        $paciente->update([
-            'egreso_uci'  => $request->egreso_uci,
+        DB::table('pacientes')->where('id', $paciente->id)->update([
+            'egreso_uci'  => \Carbon\Carbon::parse($request->egreso_uci)->format('Y-m-d H:i:s'),
             'tipo_egreso' => $request->tipo_egreso,
-            'activo'      => false,
+            'activo'      => 0,
+            'updated_at'  => now()->format('Y-m-d H:i:s'),
         ]);
         $msg = $eraActivo ? 'Egreso de UCI registrado. Paciente marcado como inactivo.' : 'Egreso de UCI corregido correctamente.';
         return back()->with('success', $msg);

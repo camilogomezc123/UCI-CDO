@@ -108,7 +108,8 @@
                 <div class="input-group input-group-sm" style="max-width:280px;">
                   <input type="datetime-local" name="salida_hospitalizacion"
                          value="{{ old('salida_hospitalizacion', $paciente->salida_hospitalizacion?->format('Y-m-d\TH:i')) }}"
-                         class="form-control {{ $errors->has('salida_hospitalizacion') ? 'is-invalid' : '' }}">
+                         class="form-control {{ $errors->has('salida_hospitalizacion') ? 'is-invalid' : '' }}"
+                         required>
                   <button class="btn btn-{{ $paciente->salida_hospitalizacion?'outline-warning':'warning' }} btn-sm" type="submit">
                     <i class="bi bi-{{ $paciente->salida_hospitalizacion?'pencil':'check-lg' }}"></i>
                   </button>
