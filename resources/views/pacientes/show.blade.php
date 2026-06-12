@@ -84,7 +84,7 @@
               <div class="input-group input-group-sm" style="max-width:280px;">
                 <input type="datetime-local" name="ingreso_uci"
                        value="{{ $paciente->ingreso_uci?->format('Y-m-d\TH:i') }}"
-                       class="form-control" required>
+                       class="form-control">
                 <button class="btn btn-{{ $paciente->ingreso_uci ? 'outline-success' : 'success' }} btn-sm" type="submit"
                         title="{{ $paciente->ingreso_uci ? 'Corregir fecha de ingreso' : 'Registrar ingreso' }}">
                   <i class="bi bi-{{ $paciente->ingreso_uci ? 'pencil' : 'check-lg' }}"></i>
@@ -108,8 +108,7 @@
                 <div class="input-group input-group-sm" style="max-width:280px;">
                   <input type="datetime-local" name="salida_hospitalizacion"
                          value="{{ old('salida_hospitalizacion', $paciente->salida_hospitalizacion?->format('Y-m-d\TH:i')) }}"
-                         class="form-control {{ $errors->has('salida_hospitalizacion') ? 'is-invalid' : '' }}"
-                         required>
+                         class="form-control {{ $errors->has('salida_hospitalizacion') ? 'is-invalid' : '' }}">
                   <button class="btn btn-{{ $paciente->salida_hospitalizacion?'outline-warning':'warning' }} btn-sm" type="submit">
                     <i class="bi bi-{{ $paciente->salida_hospitalizacion?'pencil':'check-lg' }}"></i>
                   </button>

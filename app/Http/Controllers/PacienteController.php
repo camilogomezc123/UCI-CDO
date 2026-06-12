@@ -152,22 +152,28 @@ class PacienteController extends Controller
 
     public function actualizarIngreso(Request $request, Paciente $paciente)
     {
-        $request->validate(['ingreso_uci' => 'required|date']);
+        $request->validate(['ingreso_uci' => 'nullable|date']);
+        $fecha = $request->filled('ingreso_uci')
+            ? \Carbon\Carbon::parse($request->ingreso_uci)->format('Y-m-d H:i:s')
+            : null;
         DB::table('pacientes')->where('id', $paciente->id)->update([
-            'ingreso_uci' => \Carbon\Carbon::parse($request->ingreso_uci)->format('Y-m-d H:i:s'),
+            'ingreso_uci' => $fecha,
             'updated_at'  => now()->format('Y-m-d H:i:s'),
         ]);
-        return back()->with('success', 'Fecha de ingreso a UCI actualizada correctamente.');
+        return back()->with('success', $fecha ? 'Fecha de ingreso a UCI actualizada correctamente.' : 'Fecha de ingreso a UCI borrada.');
     }
 
     public function actualizarSalidaHospitalizacion(Request $request, Paciente $paciente)
     {
-        $request->validate(['salida_hospitalizacion' => 'required|date']);
+        $request->validate(['salida_hospitalizacion' => 'nullable|date']);
+        $fecha = $request->filled('salida_hospitalizacion')
+            ? \Carbon\Carbon::parse($request->salida_hospitalizacion)->format('Y-m-d H:i:s')
+            : null;
         DB::table('pacientes')->where('id', $paciente->id)->update([
-            'salida_hospitalizacion' => \Carbon\Carbon::parse($request->salida_hospitalizacion)->format('Y-m-d H:i:s'),
+            'salida_hospitalizacion' => $fecha,
             'updated_at'             => now()->format('Y-m-d H:i:s'),
         ]);
-        return back()->with('success', 'Indicación médica para hospitalización actualizada correctamente.');
+        return back()->with('success', $fecha ? 'Indicación médica para hospitalización actualizada correctamente.' : 'Indicación médica para hospitalización borrada.');
     }
 
     public function actualizarEgresoUci(Request $request, Paciente $paciente)
