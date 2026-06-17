@@ -39,9 +39,11 @@ class CargaController extends Controller
 
             $resultado = $importService->procesar($rutaAbsoluta, auth()->id(), $nombreOriginal);
 
-            $egresados = $resultado['egresados'] ?? 0;
+            $egresados  = $resultado['egresados']  ?? 0;
+            $reingresos = $resultado['reingresos'] ?? 0;
             $resumen = "'{$nombreOriginal}': {$resultado['nuevos']} nuevos, {$resultado['actualizados']} actualizados, {$resultado['omitidos']} omitidos"
-                . ($egresados > 0 ? ", {$egresados} egresados automáticamente" : '');
+                . ($egresados  > 0 ? ", {$egresados} egresados automáticamente" : '')
+                . ($reingresos > 0 ? ", {$reingresos} reingreso(s) a UCI detectado(s)" : '');
 
             if (!empty($resultado['errores'])) {
                 $errores[] = $resumen . ' — ' . implode(', ', $resultado['errores']);

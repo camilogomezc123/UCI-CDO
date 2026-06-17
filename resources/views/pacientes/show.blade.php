@@ -166,13 +166,27 @@
               </div>
             </form>
             @if($paciente->egreso_uci)
-            <form method="POST" action="{{ route('pacientes.reactivar', $paciente) }}"
-                  onsubmit="return confirm('¿Reactivar paciente? Esto anulará el egreso registrado y lo devolverá como activo en UCI.')">
-              @csrf @method('PATCH')
-              <button class="btn btn-sm btn-warning w-100" type="submit" style="max-width:280px;">
-                <i class="bi bi-arrow-counterclockwise me-1"></i>Reactivar / Anular egreso
-              </button>
-            </form>
+            <div class="d-flex gap-2 flex-wrap mt-1">
+              <form method="POST" action="{{ route('pacientes.reactivar', $paciente) }}"
+                    onsubmit="return confirm('¿Anular egreso? Esto revierte el egreso sin crear nuevo episodio (úsalo si el egreso fue un error).')">
+                @csrf @method('PATCH')
+                <button class="btn btn-sm btn-warning" type="submit">
+                  <i class="bi bi-arrow-counterclockwise me-1"></i>Anular egreso
+                </button>
+              </form>
+              <form method="POST" action="{{ route('pacientes.reingreso', $paciente) }}"
+                    onsubmit="return confirm('¿Registrar reingreso a UCI? El episodio anterior se archivará y se iniciará un nuevo episodio para este paciente.')">
+                @csrf @method('PATCH')
+                <button class="btn btn-sm btn-danger" type="submit">
+                  <i class="bi bi-arrow-repeat me-1"></i>Registrar Reingreso UCI
+                </button>
+              </form>
+            </div>
+            @endif
+            @if($paciente->esReingreso())
+            <div class="mt-2">
+              <span class="badge bg-danger"><i class="bi bi-arrow-repeat me-1"></i>Reingreso — Episodio N° {{ $paciente->numero_ingresos }}</span>
+            </div>
             @endif
           </div>
         </div>

@@ -140,6 +140,11 @@
             @php $nEst = \App\Models\Paciente::where('activo',true)->whereNotNull('ingreso_uci')->where('ingreso_uci','<=',now()->subDays(5))->count(); @endphp
             @if($nEst > 0)<span class="sidebar-badge">{{ $nEst }}</span>@endif
         </a>
+        <a href="{{ route('reingresos.index') }}" class="sidebar-link {{ request()->routeIs('reingresos.*') ? 'active' : '' }}">
+            <i class="bi bi-arrow-repeat"></i> Reingresos a UCI
+            @php $nRei = \App\Models\Paciente::where('activo',true)->where('numero_ingresos','>',1)->count(); @endphp
+            @if($nRei > 0)<span class="sidebar-badge" style="background:#dc3545;">{{ $nRei }}</span>@endif
+        </a>
 
         <div class="sidebar-section">Gestión</div>
         <a href="{{ route('carga.index') }}" class="sidebar-link {{ request()->routeIs('carga.index') ? 'active' : '' }}">

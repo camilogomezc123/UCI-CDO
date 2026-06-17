@@ -10,7 +10,8 @@ class Paciente extends Model
 {
     protected $fillable = [
         'documento', 'nombre', 'edad', 'sexo', 'eapb',
-        'ingreso_uci', 'salida_hospitalizacion', 'egreso_uci', 'tipo_egreso', 'activo',
+        'ingreso_uci', 'salida_hospitalizacion', 'egreso_uci', 'tipo_egreso',
+        'activo', 'numero_ingresos',
     ];
 
     protected function casts(): array
@@ -56,6 +57,16 @@ class Paciente extends Model
     public function transfusiones()
     {
         return $this->hasMany(TransfusionDiaria::class)->orderByDesc('fecha');
+    }
+
+    public function episodios()
+    {
+        return $this->hasMany(EpisodioUci::class)->orderBy('numero_episodio');
+    }
+
+    public function esReingreso(): bool
+    {
+        return ($this->numero_ingresos ?? 1) > 1;
     }
 
     // ─── Tiempo en UCI ────────────────────────────────────────────────────────

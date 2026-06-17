@@ -200,7 +200,35 @@ class PacienteController extends Controller
             'tipo_egreso' => null,
             'activo'      => true,
         ]);
-        return back()->with('success', 'Paciente reactivado. Egreso anulado correctamente.');
+        return back()->with('success', 'Egreso anulado. Paciente reactivado en UCI (sin crear nuevo episodio).');
+    }
+
+    public function registrarReingreso(Paciente $paciente)
+    {
+        if (!$paciente->egreso_uci) {
+            return back()->with('error', 'El paciente no tiene un egreso registrado para archivar.');
+        }
+
+        \App\Models\EpisodioUci::create([
+            'paciente_id'            => $paciente->id,
+            'numero_episodio'        => $paciente->numero_ingresos ?? 1,
+            'es_reingreso'           => ($paciente->numero_ingresos ?? 1) > 1,
+            'ingreso_uci'            => $paciente->ingreso_uci,
+            'salida_hospitalizacion' => $paciente->salida_hospitalizacion,
+            'egreso_uci'             => $paciente->egreso_uci,
+            'tipo_egreso'            => $paciente->tipo_egreso,
+        ]);
+
+        $paciente->update([
+            'activo'                 => true,
+            'ingreso_uci'            => null,
+            'salida_hospitalizacion' => null,
+            'egreso_uci'             => null,
+            'tipo_egreso'            => null,
+            'numero_ingresos'        => ($paciente->numero_ingresos ?? 1) + 1,
+        ]);
+
+        return back()->with('success', 'Reingreso registrado. El episodio anterior quedó archivado. Registre la nueva fecha de ingreso a UCI.');
     }
 
     public function guardarNota(Request $request, Paciente $paciente)

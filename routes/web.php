@@ -13,6 +13,7 @@ use App\Http\Controllers\PlantillaDiariaController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ReporteMortalidadController;
 use App\Http\Controllers\ReporteDescargasController;
+use App\Http\Controllers\ReingresosController;
 
 // Autenticación
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -31,6 +32,7 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/pacientes/{paciente}/salida-hospitalizacion', [PacienteController::class, 'actualizarSalidaHospitalizacion'])->name('pacientes.salida-hospitalizacion');
     Route::patch('/pacientes/{paciente}/egreso-uci', [PacienteController::class, 'actualizarEgresoUci'])->name('pacientes.egreso-uci');
     Route::patch('/pacientes/{paciente}/reactivar', [PacienteController::class, 'reactivarPaciente'])->name('pacientes.reactivar');
+    Route::patch('/pacientes/{paciente}/reingreso', [PacienteController::class, 'registrarReingreso'])->name('pacientes.reingreso');
     Route::post('/pacientes/{paciente}/notas', [PacienteController::class, 'guardarNota'])->name('pacientes.guardar-nota');
     Route::post('/pacientes/{paciente}/causa', [PacienteController::class, 'guardarCausa'])->name('pacientes.guardar-causa');
     Route::post('/pacientes/{paciente}/cam-uci', [PacienteController::class, 'guardarCamUci'])->name('pacientes.guardar-cam-uci');
@@ -55,6 +57,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reportes/mortalidad', [ReporteMortalidadController::class, 'index'])->name('reportes.mortalidad');
     Route::get('/reportes/descargas', [ReporteDescargasController::class, 'index'])->name('reportes.descargas');
     Route::get('/reportes/descargas/generar', [ReporteDescargasController::class, 'descargar'])->name('reportes.descargas.descargar');
+
+    // Reingresos
+    Route::get('/reingresos', [ReingresosController::class, 'index'])->name('reingresos.index');
+    Route::get('/reingresos/descargar', [ReingresosController::class, 'descargar'])->name('reingresos.descargar');
 
     // Epidemiología
     Route::get('/epidemiologia', [EpidemiologiaController::class, 'index'])->name('epidemiologia.index');

@@ -6,6 +6,7 @@ use App\Models\Paciente;
 use App\Models\Snapshot;
 use App\Models\CargaArchivo;
 use App\Models\CambioSnapshot;
+use App\Models\EpisodioUci;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -39,7 +40,7 @@ class ExcelImportService
 
     public function procesar(string $rutaArchivo, int $usuarioId, string $nombreOriginal = 'datos.xlsx'): array
     {
-        $resultado = ['nuevos' => 0, 'actualizados' => 0, 'omitidos' => 0, 'egresados' => 0, 'errores' => [], 'barthel_col' => null, 'barthel_muestras' => []];
+        $resultado = ['nuevos' => 0, 'actualizados' => 0, 'omitidos' => 0, 'egresados' => 0, 'reingresos' => 0, 'errores' => [], 'barthel_col' => null, 'barthel_muestras' => []];
 
         $this->errorLectura       = null;
         $this->barthelColDetectada = null;
@@ -110,7 +111,29 @@ class ExcelImportService
                     $esNuevo = true;
                     $resultado['nuevos']++;
                 } else {
-                    $paciente->update(array_merge($datosPaciente, ['activo' => true]));
+                    // Detectar reingreso: paciente previamente egresado vuelve a la UCI
+                    if (!$paciente->activo && $paciente->egreso_uci) {
+                        EpisodioUci::create([
+                            'paciente_id'            => $paciente->id,
+                            'numero_episodio'        => $paciente->numero_ingresos ?? 1,
+                            'es_reingreso'           => ($paciente->numero_ingresos ?? 1) > 1,
+                            'ingreso_uci'            => $paciente->ingreso_uci,
+                            'salida_hospitalizacion' => $paciente->salida_hospitalizacion,
+                            'egreso_uci'             => $paciente->egreso_uci,
+                            'tipo_egreso'            => $paciente->tipo_egreso,
+                        ]);
+                        $paciente->update(array_merge($datosPaciente, [
+                            'activo'                 => true,
+                            'ingreso_uci'            => null,
+                            'salida_hospitalizacion' => null,
+                            'egreso_uci'             => null,
+                            'tipo_egreso'            => null,
+                            'numero_ingresos'        => ($paciente->numero_ingresos ?? 1) + 1,
+                        ]));
+                        $resultado['reingresos']++;
+                    } else {
+                        $paciente->update(array_merge($datosPaciente, ['activo' => true]));
+                    }
                     $resultado['actualizados']++;
                 }
 
