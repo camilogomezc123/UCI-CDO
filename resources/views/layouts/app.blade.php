@@ -142,7 +142,7 @@
         </a>
         <a href="{{ route('reingresos.index') }}" class="sidebar-link {{ request()->routeIs('reingresos.*') ? 'active' : '' }}">
             <i class="bi bi-arrow-repeat"></i> Reingresos a UCI
-            @php $nRei = \App\Models\Paciente::where('activo',true)->where('numero_ingresos','>',1)->count(); @endphp
+            @php $nRei = \Illuminate\Support\Facades\Schema::hasColumn('pacientes','numero_ingresos') ? \App\Models\Paciente::where('activo',true)->where('numero_ingresos','>',1)->count() : 0; @endphp
             @if($nRei > 0)<span class="sidebar-badge" style="background:#dc3545;">{{ $nRei }}</span>@endif
         </a>
 

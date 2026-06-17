@@ -4,6 +4,16 @@
 
 @section('content')
 
+@if(!empty($necesitaMigracion))
+<div class="alert alert-warning d-flex align-items-center gap-3 mb-4">
+    <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+    <div>
+        <strong>Migraciones pendientes</strong><br>
+        La tabla de reingresos aún no existe en esta base de datos.
+        Ejecuta <code>php artisan migrate</code> en el servidor para activar este módulo.
+    </div>
+</div>
+@else
 {{-- Filtro de período --}}
 <div class="card mb-4">
     <div class="card-body py-2">
@@ -266,5 +276,7 @@
         @endif
     </div>
 </div>
+
+@endif
 
 @endsection

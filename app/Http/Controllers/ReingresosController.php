@@ -6,6 +6,7 @@ use App\Models\EpisodioUci;
 use App\Models\Paciente;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -21,6 +22,21 @@ class ReingresosController extends Controller
         $hasta = $request->get('hasta')
             ? Carbon::parse($request->get('hasta'))->endOfDay()
             : now()->endOfDay();
+
+        $tablaLista = Schema::hasTable('episodios_uci')
+                   && Schema::hasColumn('pacientes', 'numero_ingresos');
+
+        if (!$tablaLista) {
+            return view('reingresos.index', [
+                'necesitaMigracion' => true,
+                'desde' => $desde, 'hasta' => $hasta,
+                'episodiosEnPeriodo' => collect(), 'reingresos' => collect(),
+                'historialCompleto'  => collect(), 'activosReingreso' => collect(),
+                'totalPacientes' => 0, 'conReingreso' => 0,
+                'totalEpisodios' => 0, 'pctReingreso'  => 0,
+                'pacientesActivos' => 0,
+            ]);
+        }
 
         // Episodios archivados en el período (= reingresos detectados)
         $episodiosEnPeriodo = EpisodioUci::with('paciente')
