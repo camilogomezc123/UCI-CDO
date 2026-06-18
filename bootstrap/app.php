@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'rol' => \App\Http\Middleware\RolMiddleware::class,
         ]);
+        $middleware->appendToGroup('web', \App\Http\Middleware\SoloDashboard::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

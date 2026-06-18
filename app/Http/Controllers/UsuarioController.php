@@ -20,7 +20,7 @@ class UsuarioController extends Controller
             'name'     => 'required|string|max:100',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:6|confirmed',
-            'rol'      => 'required|in:master,operativo',
+            'rol'      => 'required|in:master,operativo,visual',
         ], [
             'name.required'      => 'El nombre es obligatorio.',
             'email.required'     => 'El correo es obligatorio.',

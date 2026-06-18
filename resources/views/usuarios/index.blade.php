@@ -25,10 +25,15 @@
                     <div class="mb-3">
                         <label class="form-label" style="font-size:0.85rem;">Rol</label>
                         <select name="rol" class="form-select form-select-sm @error('rol') is-invalid @enderror" required>
-                            <option value="operativo" {{ old('rol') == 'operativo' ? 'selected' : '' }}>Operativo</option>
-                            <option value="master" {{ old('rol') == 'master' ? 'selected' : '' }}>Master</option>
+                            <option value="operativo" {{ old('rol') == 'operativo' ? 'selected' : '' }}>Operativo — acceso completo</option>
+                            <option value="master" {{ old('rol') == 'master' ? 'selected' : '' }}>Master — gestión de usuarios</option>
+                            <option value="visual" {{ old('rol') == 'visual' ? 'selected' : '' }}>Visual — solo dashboard</option>
                         </select>
                         @error('rol')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <div class="form-text" style="font-size:0.75rem;">
+                            <i class="bi bi-eye me-1 text-secondary"></i>
+                            <strong>Visual:</strong> solo puede ver el dashboard, sin acceso a ningún otro módulo.
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label" style="font-size:0.85rem;">Contraseña</label>
@@ -74,9 +79,21 @@
                                 </td>
                                 <td style="font-size:0.85rem;">{{ $u->email }}</td>
                                 <td>
-                                    <span class="badge {{ $u->rol === 'master' ? 'bg-primary' : 'bg-secondary' }}">
-                                        {{ strtoupper($u->rol) }}
-                                    </span>
+                                    @php
+                                        $rolColor = match($u->rol) {
+                                            'master'    => 'bg-primary',
+                                            'operativo' => 'bg-secondary',
+                                            'visual'    => 'bg-info text-dark',
+                                            default     => 'bg-secondary',
+                                        };
+                                        $rolLabel = match($u->rol) {
+                                            'master'    => 'Master',
+                                            'operativo' => 'Operativo',
+                                            'visual'    => 'Visual',
+                                            default     => strtoupper($u->rol),
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $rolColor }}">{{ $rolLabel }}</span>
                                 </td>
                                 <td>
                                     <span class="badge {{ $u->activo ? 'bg-success' : 'bg-danger' }}">

@@ -131,6 +131,7 @@
             <i class="bi bi-grid-1x2"></i> Dashboard
         </a>
 
+        @if(auth()->user()->rol !== 'visual')
         <div class="sidebar-section">Pacientes</div>
         <a href="{{ route('pacientes.index') }}" class="sidebar-link {{ request()->routeIs('pacientes.index') ? 'active' : '' }}">
             <i class="bi bi-people"></i> Pacientes activos
@@ -180,13 +181,22 @@
             <i class="bi bi-person-gear"></i> Usuarios
         </a>
         @endif
+        @endif {{-- fin @if rol !== visual --}}
     </div>
 
     <div style="padding:1rem; border-top:1px solid rgba(255,255,255,0.08);">
         <div style="color:rgba(255,255,255,0.5); font-size:0.75rem; margin-bottom:0.5rem;">
             <i class="bi bi-person-circle me-1"></i>
             {{ auth()->user()->name }}<br>
-            <span class="badge ms-0 mt-1" style="background:{{ auth()->user()->esMaster() ? '#0d6efd' : '#6c757d' }}; font-size:0.65rem;">
+            @php
+                $badgeColor = match(auth()->user()->rol) {
+                    'master'    => '#0d6efd',
+                    'operativo' => '#6c757d',
+                    'visual'    => '#0dcaf0',
+                    default     => '#6c757d',
+                };
+            @endphp
+            <span class="badge ms-0 mt-1" style="background:{{ $badgeColor }}; font-size:0.65rem; color:{{ auth()->user()->rol === 'visual' ? '#000' : '#fff' }};">
                 {{ strtoupper(auth()->user()->rol) }}
             </span>
         </div>
