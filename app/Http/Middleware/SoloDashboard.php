@@ -9,7 +9,7 @@ class SoloDashboard
 {
     public function handle(Request $request, Closure $next): mixed
     {
-        if (auth()->check() && auth()->user()->rol === 'visual') {
+        if (auth()->check() && auth()->user()->esVisual()) {
             if (!$request->routeIs('dashboard')) {
                 return redirect()->route('dashboard');
             }

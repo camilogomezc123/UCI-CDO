@@ -79,21 +79,13 @@
                                 </td>
                                 <td style="font-size:0.85rem;">{{ $u->email }}</td>
                                 <td>
-                                    @php
-                                        $rolColor = match($u->rol) {
-                                            'master'    => 'bg-primary',
-                                            'operativo' => 'bg-secondary',
-                                            'visual'    => 'bg-info text-dark',
-                                            default     => 'bg-secondary',
-                                        };
-                                        $rolLabel = match($u->rol) {
-                                            'master'    => 'Master',
-                                            'operativo' => 'Operativo',
-                                            'visual'    => 'Visual',
-                                            default     => strtoupper($u->rol),
-                                        };
-                                    @endphp
-                                    <span class="badge {{ $rolColor }}">{{ $rolLabel }}</span>
+                                    @if($u->esVisual())
+                                        <span class="badge bg-info text-dark">Visual</span>
+                                    @elseif($u->esMaster())
+                                        <span class="badge bg-primary">Master</span>
+                                    @else
+                                        <span class="badge bg-secondary">Operativo</span>
+                                    @endif
                                 </td>
                                 <td>
                                     <span class="badge {{ $u->activo ? 'bg-success' : 'bg-danger' }}">

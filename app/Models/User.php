@@ -9,15 +9,16 @@ class User extends Authenticatable
 {
     use Notifiable;
 
-    protected $fillable = ['name', 'email', 'password', 'rol', 'activo'];
+    protected $fillable = ['name', 'email', 'password', 'rol', 'activo', 'solo_dashboard'];
 
     protected $hidden = ['password', 'remember_token'];
 
     protected function casts(): array
     {
         return [
-            'password' => 'hashed',
-            'activo' => 'boolean',
+            'password'       => 'hashed',
+            'activo'         => 'boolean',
+            'solo_dashboard' => 'boolean',
         ];
     }
 
@@ -29,6 +30,11 @@ class User extends Authenticatable
     public function esOperativo(): bool
     {
         return $this->rol === 'operativo';
+    }
+
+    public function esVisual(): bool
+    {
+        return (bool) $this->solo_dashboard;
     }
 
     public function cargas()

@@ -21,6 +21,7 @@ class UsuarioController extends Controller
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:6|confirmed',
             'rol'      => 'required|in:master,operativo,visual',
+            // 'visual' se guarda como operativo con solo_dashboard=true (evita restricción ENUM en DB)
         ], [
             'name.required'      => 'El nombre es obligatorio.',
             'email.required'     => 'El correo es obligatorio.',
@@ -31,12 +32,14 @@ class UsuarioController extends Controller
             'rol.required'       => 'El rol es obligatorio.',
         ]);
 
+        $esVisual = $request->rol === 'visual';
         User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-            'rol'      => $request->rol,
-            'activo'   => true,
+            'name'           => $request->name,
+            'email'          => $request->email,
+            'password'       => Hash::make($request->password),
+            'rol'            => $esVisual ? 'operativo' : $request->rol,
+            'activo'         => true,
+            'solo_dashboard' => $esVisual,
         ]);
 
         return back()->with('success', 'Usuario creado correctamente.');
