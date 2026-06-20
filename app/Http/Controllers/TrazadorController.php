@@ -24,14 +24,60 @@ class TrazadorController extends Controller
             ->where('fecha_objetivo_despues', '<=', now())
             ->update(['estado' => 'PENDIENTE_DESPUES']);
 
-        $activos          = Trazador::activos()->with('paciente')->latest()->get();
-        $estadisticas     = Trazador::estadisticas()->with('paciente')->latest('fecha_guardado_inicial')->get();
-        $pendientesDespues = Trazador::pendientesDespues()->with('paciente')->orderBy('fecha_objetivo_despues')->get();
-        $cerrados         = Trazador::cerrados()->with('paciente')->latest('fecha_cierre')->get();
+        // ── Catálogo de patologías activas (extensible sin tocar código) ──────
+        $tiposActivos = Trazador::distinct()->pluck('tipo_trazador')->sort()->values();
+        $etiquetas = ['sepsis' => 'Sepsis']; // registro de nombres amigables
 
-        return view('trazadores.index', compact(
-            'activos', 'estadisticas', 'pendientesDespues', 'cerrados'
-        ));
+        // ── Datos agrupados por patología ────────────────────────────────────
+        $grupos = [];
+        foreach ($tiposActivos as $tipo) {
+            $cerr = Trazador::cerrados()->where('tipo_trazador', $tipo)->with('paciente')->latest('fecha_cierre')->get();
+
+            $grupos[$tipo] = [
+                'activos'           => Trazador::activos()->where('tipo_trazador', $tipo)->with('paciente')->latest()->get(),
+                'estadisticas'      => Trazador::estadisticas()->where('tipo_trazador', $tipo)->with('paciente')->latest('fecha_guardado_inicial')->get(),
+                'pendientesDespues' => Trazador::pendientesDespues()->where('tipo_trazador', $tipo)->with('paciente')->orderBy('fecha_objetivo_despues')->get(),
+                'cerrados'          => $cerr,
+                'cumplimiento_prom' => $cerr->avg(fn($t) => $t->resultados['puntuacion_global_pct'] ?? null),
+            ];
+        }
+
+        // ── KPIs globales ────────────────────────────────────────────────────
+        $global = [
+            'total_activos'    => Trazador::activos()->count(),
+            'total_pendientes' => Trazador::pendientesDespues()->count(),
+            'total_seguimiento'=> Trazador::estadisticas()->count(),
+            'total_cerrados'   => Trazador::cerrados()->count(),
+        ];
+
+        // Promedio global de cumplimiento (cerrados con resultados)
+        $cerradosTodos = Trazador::cerrados()->get();
+        $global['cumplimiento_prom'] = round(
+            $cerradosTodos->avg(fn($t) => $t->resultados['puntuacion_global_pct'] ?? null) ?? 0,
+            1
+        );
+
+        // ── Tendencia mensual — últimos 6 meses (PHP grouping, SQLite safe) ──
+        $tendencia = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $mes    = now()->subMonths($i);
+            $count  = Trazador::cerrados()
+                ->whereYear('fecha_cierre',  $mes->year)
+                ->whereMonth('fecha_cierre', $mes->month)
+                ->count();
+            $cumProm = Trazador::cerrados()
+                ->whereYear('fecha_cierre',  $mes->year)
+                ->whereMonth('fecha_cierre', $mes->month)
+                ->get()
+                ->avg(fn($t) => $t->resultados['puntuacion_global_pct'] ?? null);
+            $tendencia[] = [
+                'label'     => $mes->translatedFormat('M Y'),
+                'cerrados'  => $count,
+                'cumplimiento' => $cumProm ? round($cumProm, 1) : null,
+            ];
+        }
+
+        return view('trazadores.index', compact('grupos', 'tiposActivos', 'etiquetas', 'global', 'tendencia'));
     }
 
     // ─── Marcar paciente como trazador ────────────────────────────────────────
