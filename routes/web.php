@@ -14,6 +14,7 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ReporteMortalidadController;
 use App\Http\Controllers\ReporteDescargasController;
 use App\Http\Controllers\ReingresosController;
+use App\Http\Controllers\TrazadorController;
 
 // Autenticación
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -68,6 +69,16 @@ Route::middleware(['auth'])->group(function () {
     // Plantilla de registro diario
     Route::get('/plantilla-diaria', [PlantillaDiariaController::class, 'index'])->name('plantilla-diaria');
     Route::post('/plantilla-diaria/guardar', [PlantillaDiariaController::class, 'guardar'])->name('plantilla-diaria.guardar');
+
+    // Trazadores
+    Route::get('/trazadores', [TrazadorController::class, 'index'])->name('trazadores.index');
+    Route::post('/trazadores/marcar/{paciente}', [TrazadorController::class, 'marcar'])->name('trazadores.marcar');
+    Route::get('/trazadores/{trazador}/editar', [TrazadorController::class, 'edit'])->name('trazadores.edit');
+    Route::post('/trazadores/{trazador}', [TrazadorController::class, 'store'])->name('trazadores.store');
+    Route::get('/trazadores/{trazador}', [TrazadorController::class, 'show'])->name('trazadores.show');
+    Route::get('/trazadores/{trazador}/despues', [TrazadorController::class, 'editDespues'])->name('trazadores.despues.edit');
+    Route::post('/trazadores/{trazador}/despues', [TrazadorController::class, 'storeDespues'])->name('trazadores.despues.store');
+    Route::patch('/trazadores/{trazador}', [TrazadorController::class, 'update'])->name('trazadores.update');
 
     // Usuarios (solo master)
     Route::middleware(['rol:master'])->group(function () {

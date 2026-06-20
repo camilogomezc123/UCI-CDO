@@ -162,9 +162,25 @@
                             @endif
                         </td>
                         <td>
+                            <div class="d-flex gap-1">
                             <a href="{{ route('pacientes.show', $p) }}" class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-eye"></i>
                             </a>
+                            @if(!$p->trazadorSepsis || $p->trazadorSepsis->estado === 'CERRADO')
+                            <form method="POST" action="{{ route('trazadores.marcar', $p) }}" class="d-inline">
+                                @csrf
+                                <input type="hidden" name="tipo_trazador" value="sepsis">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Marcar como trazador Sepsis">
+                                    <i class="bi bi-clipboard2-pulse"></i>
+                                </button>
+                            </form>
+                            @else
+                            <a href="{{ route('trazadores.edit', $p->trazadorSepsis) }}"
+                               class="btn btn-sm btn-danger" title="Trazador Sepsis abierto">
+                                <i class="bi bi-clipboard2-pulse"></i>
+                            </a>
+                            @endif
+                            </div>
                         </td>
                     </tr>
                     @empty

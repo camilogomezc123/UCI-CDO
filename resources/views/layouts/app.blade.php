@@ -147,6 +147,12 @@
             @if($nRei > 0)<span class="sidebar-badge" style="background:#dc3545;">{{ $nRei }}</span>@endif
         </a>
 
+        <a href="{{ route('trazadores.index') }}" class="sidebar-link {{ request()->routeIs('trazadores.*') ? 'active' : '' }}">
+            <i class="bi bi-clipboard2-pulse"></i> Pacientes Trazadores
+            @php $nTrazActivos = \App\Models\Trazador::activos()->count(); @endphp
+            @if($nTrazActivos > 0)<span class="sidebar-badge">{{ $nTrazActivos }}</span>@endif
+        </a>
+
         <div class="sidebar-section">Gestión</div>
         <a href="{{ route('carga.index') }}" class="sidebar-link {{ request()->routeIs('carga.index') ? 'active' : '' }}">
             <i class="bi bi-cloud-upload"></i> Cargar archivo

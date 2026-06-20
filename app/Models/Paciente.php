@@ -64,6 +64,16 @@ class Paciente extends Model
         return $this->hasMany(EpisodioUci::class)->orderBy('numero_episodio');
     }
 
+    public function trazadores()
+    {
+        return $this->hasMany(Trazador::class);
+    }
+
+    public function trazadorSepsis()
+    {
+        return $this->hasOne(Trazador::class)->where('tipo_trazador', 'sepsis')->latestOfMany();
+    }
+
     public function esReingreso(): bool
     {
         return ($this->numero_ingresos ?? 1) > 1;

@@ -1,0 +1,1567 @@
+{
+ "meta": {
+  "nombre": "Paciente Trazador — Sepsis (Código Sepsis + Bundle ABCDEF) + Encuesta de funcionalidad",
+  "descripcion": "Modelo extraído leyendo el Excel real (opciones de las listas tomadas del propio archivo). Un paciente por registro.",
+  "version": "6 (modular + export consolidado)",
+  "regla_no_evidenciado": "Lo no documentado = 'no evidenciado' = no cumplido."
+ },
+ "fidelidad_excel": [
+  "Desenlace: Vivo - egreso UCI / Vivo - traslado / Fallecido.",
+  "Metas de manejo: 8 metas nombradas (llenado capilar, PAM, diuresis, lactato/aclaramiento, SatO₂, glucometría, temperatura, EVA); % automático.",
+  "Elemento F (educación): unificado — Médico, Fisioterapia y Auxiliar usan numerador/denominador igual que el resto del ABCDEF.",
+  "Erratas corregidas en el Excel: 'Turmo' -> presencia de delirium; 'FASTHUB' -> FAST-HUG.",
+  "Fechas/horas se guardan como texto en el Excel; en la app usar selector de fecha-hora."
+ ],
+ "catalogos": {
+  "SEXO": [
+   "Masculino",
+   "Femenino",
+   "Otro"
+  ],
+  "SERVICIO": [
+   "Urgencias",
+   "Hospitalización",
+   "UCI",
+   "UTMO"
+  ],
+  "SI_NO": [
+   "Sí",
+   "No"
+  ],
+  "SI_NO_NA": [
+   "Sí",
+   "No",
+   "No aplica"
+  ],
+  "DESENLACE": [
+   "Vivo - egreso UCI",
+   "Vivo - traslado",
+   "Fallecido"
+  ],
+  "METODO_VOLUMEN": [
+   "Elevación pasiva de piernas",
+   "Ecocardiografía",
+   "Mini-bolo de cristaloide",
+   "Variables dinámicas",
+   "No realizada"
+  ],
+  "VASOPRESOR": [
+   "Norepinefrina",
+   "Vasopresina",
+   "Adrenalina",
+   "Dobutamina",
+   "Otro",
+   "Ninguno"
+  ],
+  "FENOTIPO": [
+   "Respondedor a volumen",
+   "Vasopléjico",
+   "Bajo gasto/disfunción cardíaca",
+   "Congestión/falla derecha",
+   "No documentado"
+  ],
+  "SI_NO_NE": [
+   "Sí",
+   "No",
+   "No evidenciado"
+  ],
+  "CUMPLIMIENTO_ELEMENTO": [
+   "Cumple",
+   "Cumple parcial",
+   "No cumple",
+   "No evidenciado"
+  ],
+  "SUBTIPO_DELIRIUM": [
+   "Hiperactivo",
+   "Hipoactivo",
+   "Mixto",
+   "No presentó",
+   "No evaluado"
+  ],
+  "AYUDA5": [
+   {
+    "code": 1,
+    "label": "Lo hace solo sin dificultad",
+    "texto_excel": "1 Lo hace solo sin dificultad"
+   },
+   {
+    "code": 2,
+    "label": "Lo hace solo con algo de dificultad",
+    "texto_excel": "2 Lo hace solo con algo de dificultad"
+   },
+   {
+    "code": 3,
+    "label": "Necesita algo de ayuda",
+    "texto_excel": "3 Necesita algo de ayuda"
+   },
+   {
+    "code": 4,
+    "label": "Necesita mucha ayuda",
+    "texto_excel": "4 Necesita mucha ayuda"
+   },
+   {
+    "code": 5,
+    "label": "No puede / depende por completo",
+    "texto_excel": "5 No puede / depende por completo"
+   }
+  ],
+  "DIF5": [
+   {
+    "code": 1,
+    "label": "Ninguna",
+    "texto_excel": "1 Ninguna"
+   },
+   {
+    "code": 2,
+    "label": "Leve",
+    "texto_excel": "2 Leve"
+   },
+   {
+    "code": 3,
+    "label": "Moderada",
+    "texto_excel": "3 Moderada"
+   },
+   {
+    "code": 4,
+    "label": "Severa",
+    "texto_excel": "4 Severa"
+   },
+   {
+    "code": 5,
+    "label": "Extrema / no puede",
+    "texto_excel": "5 Extrema / no puede"
+   }
+  ],
+  "BART_TRAS": [
+   {
+    "code": 15,
+    "label": "Pasa cama-silla solo",
+    "texto_excel": "15 Pasa cama-silla solo"
+   },
+   {
+    "code": 10,
+    "label": "Necesita poca ayuda (supervisión)",
+    "texto_excel": "10 Necesita poca ayuda (supervisión)"
+   },
+   {
+    "code": 5,
+    "label": "Necesita mucha ayuda (puede sentarse)",
+    "texto_excel": "5 Necesita mucha ayuda (puede sentarse)"
+   },
+   {
+    "code": 0,
+    "label": "No se sostiene / no puede",
+    "texto_excel": "0 No se sostiene / no puede"
+   }
+  ],
+  "BART_ESCAL": [
+   {
+    "code": 10,
+    "label": "Sube y baja escaleras solo",
+    "texto_excel": "10 Sube y baja escaleras solo"
+   },
+   {
+    "code": 5,
+    "label": "Necesita ayuda",
+    "texto_excel": "5 Necesita ayuda"
+   },
+   {
+    "code": 0,
+    "label": "No puede subir escaleras",
+    "texto_excel": "0 No puede subir escaleras"
+   }
+  ],
+  "BART_ASEO": [
+   {
+    "code": 5,
+    "label": "Se asea solo (cara, peine, dientes)",
+    "texto_excel": "5 Se asea solo (cara, peine, dientes)"
+   },
+   {
+    "code": 0,
+    "label": "Necesita ayuda para asearse",
+    "texto_excel": "0 Necesita ayuda para asearse"
+   }
+  ],
+  "BART_ALIM": [
+   {
+    "code": 10,
+    "label": "Come solo sin ayuda",
+    "texto_excel": "10 Come solo sin ayuda"
+   },
+   {
+    "code": 5,
+    "label": "Necesita ayuda (cortar, untar)",
+    "texto_excel": "5 Necesita ayuda (cortar, untar)"
+   },
+   {
+    "code": 0,
+    "label": "No puede comer solo",
+    "texto_excel": "0 No puede comer solo"
+   }
+  ],
+  "BART_RETR": [
+   {
+    "code": 10,
+    "label": "Usa el inodoro solo",
+    "texto_excel": "10 Usa el inodoro solo"
+   },
+   {
+    "code": 5,
+    "label": "Necesita algo de ayuda",
+    "texto_excel": "5 Necesita algo de ayuda"
+   },
+   {
+    "code": 0,
+    "label": "No puede usar el inodoro solo",
+    "texto_excel": "0 No puede usar el inodoro solo"
+   }
+  ],
+  "BART_DEPOS": [
+   {
+    "code": 10,
+    "label": "Controla siempre",
+    "texto_excel": "10 Controla siempre"
+   },
+   {
+    "code": 5,
+    "label": "Accidente ocasional",
+    "texto_excel": "5 Accidente ocasional"
+   },
+   {
+    "code": 0,
+    "label": "No controla (incontinente)",
+    "texto_excel": "0 No controla (incontinente)"
+   }
+  ],
+  "BART_MICC": [
+   {
+    "code": 10,
+    "label": "Controla siempre",
+    "texto_excel": "10 Controla siempre"
+   },
+   {
+    "code": 5,
+    "label": "Accidente ocasional",
+    "texto_excel": "5 Accidente ocasional"
+   },
+   {
+    "code": 0,
+    "label": "No controla / usa sonda",
+    "texto_excel": "0 No controla / usa sonda"
+   }
+  ],
+  "DOLOR5": [
+   {
+    "code": 1,
+    "label": "Sin dolor ni malestar",
+    "texto_excel": "1 Sin dolor ni malestar"
+   },
+   {
+    "code": 2,
+    "label": "Leve",
+    "texto_excel": "2 Leve"
+   },
+   {
+    "code": 3,
+    "label": "Moderado",
+    "texto_excel": "3 Moderado"
+   },
+   {
+    "code": 4,
+    "label": "Fuerte",
+    "texto_excel": "4 Fuerte"
+   },
+   {
+    "code": 5,
+    "label": "Extremo",
+    "texto_excel": "5 Extremo"
+   }
+  ],
+  "ANIMO5": [
+   {
+    "code": 1,
+    "label": "Nada",
+    "texto_excel": "1 Nada"
+   },
+   {
+    "code": 2,
+    "label": "Un poco",
+    "texto_excel": "2 Un poco"
+   },
+   {
+    "code": 3,
+    "label": "Moderadamente",
+    "texto_excel": "3 Moderadamente"
+   },
+   {
+    "code": 4,
+    "label": "Mucho",
+    "texto_excel": "4 Mucho"
+   },
+   {
+    "code": 5,
+    "label": "Extremadamente",
+    "texto_excel": "5 Extremadamente"
+   }
+  ],
+  "CFS_L": [
+   {
+    "code": 1,
+    "label": "Muy en forma",
+    "texto_excel": "1 - Muy en forma"
+   },
+   {
+    "code": 2,
+    "label": "En forma",
+    "texto_excel": "2 - En forma"
+   },
+   {
+    "code": 3,
+    "label": "Se maneja bien",
+    "texto_excel": "3 - Se maneja bien"
+   },
+   {
+    "code": 4,
+    "label": "Vulnerable",
+    "texto_excel": "4 - Vulnerable"
+   },
+   {
+    "code": 5,
+    "label": "Levemente frágil",
+    "texto_excel": "5 - Levemente frágil"
+   },
+   {
+    "code": 6,
+    "label": "Moderadamente frágil",
+    "texto_excel": "6 - Moderadamente frágil"
+   },
+   {
+    "code": 7,
+    "label": "Severamente frágil",
+    "texto_excel": "7 - Severamente frágil"
+   },
+   {
+    "code": 8,
+    "label": "Muy severamente frágil",
+    "texto_excel": "8 - Muy severamente frágil"
+   },
+   {
+    "code": 9,
+    "label": "Enfermo terminal",
+    "texto_excel": "9 - Enfermo terminal"
+   }
+  ]
+ },
+ "secciones": [
+  {
+   "id": "datos_paciente",
+   "titulo": "1 · Datos del paciente",
+   "hoja_excel": "1. Datos del Paciente",
+   "derivados": [
+    {
+     "id": "datos.estancia_uci_dias",
+     "etiqueta": "Estancia en UCI (días)",
+     "calculo": "(egreso_uci - ingreso_uci) en días"
+    },
+    {
+     "id": "datos.dias_vm",
+     "etiqueta": "Días de ventilación mecánica",
+     "calculo": "(fin_vm - inicio_vm) en días si requirió VM"
+    }
+   ],
+   "campos": [
+    {
+     "id": "datos.identificador_iniciales_B5",
+     "etiqueta": "Identificador / iniciales",
+     "tipo": "text",
+     "excel_celda": "B5"
+    },
+    {
+     "id": "datos.edad_anos_B6",
+     "etiqueta": "Edad (años)",
+     "tipo": "number",
+     "excel_celda": "B6"
+    },
+    {
+     "id": "datos.sexo_B7",
+     "etiqueta": "Sexo",
+     "tipo": "select",
+     "excel_celda": "B7",
+     "catalogo": "SEXO"
+    },
+    {
+     "id": "datos.servicio_de_ingreso_B8",
+     "etiqueta": "Servicio de ingreso",
+     "tipo": "select",
+     "excel_celda": "B8",
+     "catalogo": "SERVICIO"
+    },
+    {
+     "id": "datos.fecha_y_hora_de_ingreso_a_la_clinica_B9",
+     "etiqueta": "Fecha y hora de ingreso a la clinica",
+     "tipo": "datetime",
+     "excel_celda": "B9",
+     "formato": "DD/MM/AAAA HH:MM"
+    },
+    {
+     "id": "datos.fecha_y_hora_de_sospecha_de_infeccion_B10",
+     "etiqueta": "Fecha y hora de sospecha de infección",
+     "tipo": "datetime",
+     "excel_celda": "B10",
+     "formato": "DD/MM/AAAA HH:MM"
+    },
+    {
+     "id": "datos.foco_infeccioso_probable_B11",
+     "etiqueta": "Foco infeccioso probable",
+     "tipo": "text",
+     "excel_celda": "B11"
+    },
+    {
+     "id": "datos.comorbilidades_relevantes_B12",
+     "etiqueta": "Comorbilidades relevantes",
+     "tipo": "text",
+     "excel_celda": "B12"
+    },
+    {
+     "id": "datos.alergias_B13",
+     "etiqueta": "Alergias",
+     "tipo": "text",
+     "excel_celda": "B13"
+    },
+    {
+     "id": "datos.diagnostico_principal_cie_10_B14",
+     "etiqueta": "Diagnóstico principal CIE 10",
+     "tipo": "text",
+     "excel_celda": "B14"
+    },
+    {
+     "id": "datos.fecha_y_hora_de_ingreso_a_uci_B17",
+     "etiqueta": "Fecha y hora de ingreso a UCI",
+     "tipo": "datetime",
+     "excel_celda": "B17",
+     "formato": "DD/MM/AAAA HH:MM"
+    },
+    {
+     "id": "datos.fecha_y_hora_de_egreso_de_uci_B18",
+     "etiqueta": "Fecha y hora de egreso de UCI",
+     "tipo": "datetime",
+     "excel_celda": "B18",
+     "formato": "DD/MM/AAAA HH:MM"
+    },
+    {
+     "id": "datos.sofa_al_ingreso_uci_B20",
+     "etiqueta": "SOFA al ingreso UCI",
+     "tipo": "number",
+     "excel_celda": "B20"
+    },
+    {
+     "id": "datos.news_score_al_ingreso_uci_B21",
+     "etiqueta": "NEWS SCORE al ingreso UCI",
+     "tipo": "number",
+     "excel_celda": "B21"
+    },
+    {
+     "id": "datos.requirio_ventilacion_mecanica_al_ingre_B22",
+     "etiqueta": "Requirió ventilación mecánica al ingreso",
+     "tipo": "select",
+     "excel_celda": "B22",
+     "catalogo": "SI_NO"
+    },
+    {
+     "id": "datos.fecha_y_hora_de_inicio_de_vm_B23",
+     "etiqueta": "Fecha y hora de inicio de VM",
+     "tipo": "datetime",
+     "excel_celda": "B23",
+     "formato": "DD/MM/AAAA HH:MM"
+    },
+    {
+     "id": "datos.fecha_y_hora_de_fin_de_vm_extubacion_B24",
+     "etiqueta": "Fecha y hora de fin de VM / extubación",
+     "tipo": "datetime",
+     "excel_celda": "B24",
+     "formato": "DD/MM/AAAA HH:MM"
+    },
+    {
+     "id": "datos.reintubacion_48_h_B26",
+     "etiqueta": "¿Reintubación < 48 h?",
+     "tipo": "select",
+     "excel_celda": "B26",
+     "catalogo": "SI_NO_NA"
+    },
+    {
+     "id": "datos.reingreso_a_uci_72_h_B27",
+     "etiqueta": "¿Reingreso a UCI ≤ 72 h?",
+     "tipo": "select",
+     "excel_celda": "B27",
+     "catalogo": "SI_NO_NA"
+    },
+    {
+     "id": "datos.desenlace_crear_lista_desplegable_muer_B28",
+     "etiqueta": "Desenlace (crear lista desplegable)(Muerto,egreso, traslado)",
+     "tipo": "select",
+     "excel_celda": "B28",
+     "catalogo": "DESENLACE"
+    },
+    {
+     "id": "datos.auditor_es_B31",
+     "etiqueta": "Auditor(es)",
+     "tipo": "text",
+     "excel_celda": "B31"
+    },
+    {
+     "id": "datos.fecha_de_auditoria_B32",
+     "etiqueta": "Fecha de auditoría",
+     "tipo": "text",
+     "excel_celda": "B32"
+    },
+    {
+     "id": "datos.servicio_uci_B33",
+     "etiqueta": "Servicio / UCI",
+     "tipo": "text",
+     "excel_celda": "B33"
+    }
+   ]
+  },
+  {
+   "id": "fase1_activacion",
+   "titulo": "Fase I · Reconocimiento y activación",
+   "hoja_excel": "2. Evaluación Integrada",
+   "campos": [
+    {
+     "id": "fase1_activacion.fecha_y_hora_de_activacion_tiempo_cero_B4",
+     "etiqueta": "Fecha y hora de ACTIVACIÓN (TIEMPO CERO)",
+     "tipo": "datetime",
+     "excel_celda": "B4",
+     "formato": "DD/MM/AAAA HH:MM"
+    },
+    {
+     "id": "fase1_activacion.news2_a_la_sospecha_B5",
+     "etiqueta": "NEWS2 (a la sospecha)",
+     "tipo": "number",
+     "excel_celda": "B5"
+    },
+    {
+     "id": "fase1_activacion.sofa_si_disponible_B6",
+     "etiqueta": "SOFA (si disponible)",
+     "tipo": "number",
+     "excel_celda": "B6"
+    },
+    {
+     "id": "fase1_activacion.pam_al_activar_mmhg_B7",
+     "etiqueta": "PAM al activar (mmHg)",
+     "tipo": "number",
+     "excel_celda": "B7"
+    },
+    {
+     "id": "fase1_activacion.pad_al_activar_mmhg_B8",
+     "etiqueta": "PAD al activar (mmHg)",
+     "tipo": "number",
+     "excel_celda": "B8"
+    },
+    {
+     "id": "fase1_activacion.tiempo_de_llenado_capilar_B9",
+     "etiqueta": "Tiempo de llenado capilar",
+     "tipo": "number",
+     "excel_celda": "B9"
+    },
+    {
+     "id": "fase1_activacion.lactato_valor_mmol_l_B10",
+     "etiqueta": "Lactato valor (mmol/L)",
+     "tipo": "number",
+     "excel_celda": "B10"
+    }
+   ]
+  },
+  {
+   "id": "fase2_bundle_1h",
+   "titulo": "Fase II · Bundle de la primera hora",
+   "hoja_excel": "2. Evaluación Integrada",
+   "campos": [
+    {
+     "id": "fase2_bundle_1h.lactato_serico_toma_B13",
+     "etiqueta": "Lactato sérico — toma",
+     "tipo": "datetime",
+     "excel_celda": "B13",
+     "formato": "DD/MM/AAAA HH:MM"
+    },
+    {
+     "id": "fase2_bundle_1h.lactato_valor_mmol_l_B14",
+     "etiqueta": "Lactato valor (mmol/L)",
+     "tipo": "number",
+     "excel_celda": "B14"
+    },
+    {
+     "id": "fase2_bundle_1h.llenado_capilar_toma_B15",
+     "etiqueta": "Llenado capilar - toma",
+     "tipo": "text",
+     "excel_celda": "B15"
+    },
+    {
+     "id": "fase2_bundle_1h.llenado_capilar_valor_B16",
+     "etiqueta": "Llenado capilar - valor",
+     "tipo": "number",
+     "excel_celda": "B16"
+    },
+    {
+     "id": "fase2_bundle_1h.hemocultivos_tomados_B17",
+     "etiqueta": "Hemocultivos — Tomados",
+     "tipo": "select",
+     "excel_celda": "B17",
+     "catalogo": "SI_NO"
+    },
+    {
+     "id": "fase2_bundle_1h.hemocultivos_solicitados_B18",
+     "etiqueta": "Hemocultivos — Solicitados",
+     "tipo": "select",
+     "excel_celda": "B18",
+     "catalogo": "SI_NO"
+    },
+    {
+     "id": "fase2_bundle_1h.antibiotico_empirico_1_dosis_B19",
+     "etiqueta": "Antibiótico empírico — 1ª dosis",
+     "tipo": "datetime",
+     "excel_celda": "B19",
+     "formato": "DD/MM/AAAA HH:MM"
+    },
+    {
+     "id": "fase2_bundle_1h.antibiotico_administrado_cual_B20",
+     "etiqueta": "Antibiótico administrado (cuál)",
+     "tipo": "text",
+     "excel_celda": "B20"
+    },
+    {
+     "id": "fase2_bundle_1h.liquidos_endovenosos_indicados_B21",
+     "etiqueta": "Liquidos endovenosos indicados",
+     "tipo": "select",
+     "excel_celda": "B21",
+     "catalogo": "SI_NO"
+    },
+    {
+     "id": "fase2_bundle_1h.volumen_de_cristaloides_ml_B22",
+     "etiqueta": "Volumen de cristaloides (mL)",
+     "tipo": "number",
+     "excel_celda": "B22"
+    },
+    {
+     "id": "fase2_bundle_1h.evaluacion_de_respuesta_a_volumen_B23",
+     "etiqueta": "¿Evaluación de respuesta a volumen?",
+     "tipo": "select",
+     "excel_celda": "B23",
+     "catalogo": "SI_NO"
+    },
+    {
+     "id": "fase2_bundle_1h.metodo_de_evaluacion_de_volumen_B24",
+     "etiqueta": "Método de evaluación de volumen",
+     "tipo": "select",
+     "excel_celda": "B24",
+     "catalogo": "METODO_VOLUMEN"
+    },
+    {
+     "id": "fase2_bundle_1h.formulacion_vasopresor_pam_65_pad_50_B25",
+     "etiqueta": "Formulacion vasopresor  (PAM<65 / PAD < 50)",
+     "tipo": "select",
+     "excel_celda": "B25",
+     "catalogo": "SI_NO"
+    },
+    {
+     "id": "fase2_bundle_1h.vasopresor_hora_de_inicio_B26",
+     "etiqueta": "Vasopresor — hora de inicio",
+     "tipo": "datetime",
+     "excel_celda": "B26",
+     "formato": "DD/MM/AAAA HH:MM"
+    },
+    {
+     "id": "fase2_bundle_1h.farmaco_vasopresor_1_B27",
+     "etiqueta": "Fármaco vasopresor  1 ",
+     "tipo": "select",
+     "excel_celda": "B27",
+     "catalogo": "VASOPRESOR"
+    },
+    {
+     "id": "fase2_bundle_1h.dosis_vasopresor_B28",
+     "etiqueta": "Dosis vasopresor",
+     "tipo": "text",
+     "excel_celda": "B28"
+    },
+    {
+     "id": "fase2_bundle_1h.farmaco_vasopresor_2_B29",
+     "etiqueta": "Fármaco vasopresor  2 ",
+     "tipo": "select",
+     "excel_celda": "B29",
+     "catalogo": "VASOPRESOR"
+    },
+    {
+     "id": "fase2_bundle_1h.dosis_vasopresor_2_B30",
+     "etiqueta": "Dosis vasopresor 2",
+     "tipo": "text",
+     "excel_celda": "B30"
+    },
+    {
+     "id": "fase2_bundle_1h.uso_de_azul_de_metileno_B31",
+     "etiqueta": "Uso de azul de metileno",
+     "tipo": "select",
+     "excel_celda": "B31",
+     "catalogo": "SI_NO"
+    }
+   ]
+  },
+  {
+   "id": "fase3_reeval",
+   "titulo": "Fase III · Reevaluación 3–6 h y fenotipo",
+   "hoja_excel": "2. Evaluación Integrada",
+   "campos": [
+    {
+     "id": "fase3_reeval.lactato_serico_toma_B33",
+     "etiqueta": "Lactato sérico — toma",
+     "tipo": "datetime",
+     "excel_celda": "B33",
+     "formato": "DD/MM/AAAA HH:MM"
+    },
+    {
+     "id": "fase3_reeval.lactato_valor_mmol_l_B34",
+     "etiqueta": "Lactato valor (mmol/L)",
+     "tipo": "number",
+     "excel_celda": "B34"
+    },
+    {
+     "id": "fase3_reeval.llenado_capilar_toma_B35",
+     "etiqueta": "Llenado capilar - toma",
+     "tipo": "text",
+     "excel_celda": "B35"
+    },
+    {
+     "id": "fase3_reeval.llenado_capilar_valor_B36",
+     "etiqueta": "Llenado capilar - valor",
+     "tipo": "number",
+     "excel_celda": "B36"
+    },
+    {
+     "id": "fase3_reeval.fenotipo_hemodinamico_cardiogenico_o_v_B37",
+     "etiqueta": "Fenotipo hemodinámico/cardiogenico o vasoplejico",
+     "tipo": "select",
+     "excel_celda": "B37",
+     "catalogo": "FENOTIPO"
+    },
+    {
+     "id": "fase3_reeval.ecografia_a_la_cabecera_toma_B38",
+     "etiqueta": "Ecografía a la cabecera -toma",
+     "tipo": "datetime",
+     "excel_celda": "B38",
+     "formato": "DD/MM/AAAA HH:MM"
+    },
+    {
+     "id": "fase3_reeval.calculo_de_vti_B39",
+     "etiqueta": "Calculo de VTI",
+     "tipo": "select",
+     "excel_celda": "B39",
+     "catalogo": "SI_NO"
+    },
+    {
+     "id": "fase3_reeval.valor_de_vti_B40",
+     "etiqueta": "Valor de VTI",
+     "tipo": "number",
+     "excel_celda": "B40"
+    },
+    {
+     "id": "fase3_reeval.calculo_vexus_B41",
+     "etiqueta": "Calculo VEXUS",
+     "tipo": "select",
+     "excel_celda": "B41",
+     "catalogo": "SI_NO"
+    },
+    {
+     "id": "fase3_reeval.valor_vexus_B42",
+     "etiqueta": "Valor VEXUS",
+     "tipo": "text",
+     "excel_celda": "B42"
+    },
+    {
+     "id": "fase3_reeval.ajuste_antimicrobiano_infectologia_B43",
+     "etiqueta": "¿Ajuste antimicrobiano / infectología?",
+     "tipo": "select",
+     "excel_celda": "B43",
+     "catalogo": "SI_NO"
+    },
+    {
+     "id": "fase3_reeval.control_del_foco_identificado_B44",
+     "etiqueta": "¿Control del foco identificado?",
+     "tipo": "select",
+     "excel_celda": "B44",
+     "catalogo": "SI_NO"
+    },
+    {
+     "id": "fase3_reeval.control_del_foco_realizado_menor_a_6_h_B45",
+     "etiqueta": "¿Control del foco realizado menor a 6 horas?",
+     "tipo": "select",
+     "excel_celda": "B45",
+     "catalogo": "SI_NO_NA"
+    }
+   ]
+  },
+  {
+   "id": "metas_manejo",
+   "titulo": "Metas de manejo (informativo)",
+   "hoja_excel": "2. Evaluación Integrada",
+   "nota": "8 metas clínicas (Sí/No/No evidenciado). El % de metas cumplidas se calcula automáticamente.",
+   "metas": [
+    {
+     "id": "metas.meta_48",
+     "excel_celda": "D48",
+     "catalogo": "SI_NO_NE",
+     "etiqueta": "Llenado capilar < 3 s",
+     "nombrada": true
+    },
+    {
+     "id": "metas.meta_49",
+     "excel_celda": "D49",
+     "catalogo": "SI_NO_NE",
+     "etiqueta": "PAM 65–95 mmHg",
+     "nombrada": true
+    },
+    {
+     "id": "metas.meta_50",
+     "excel_celda": "D50",
+     "catalogo": "SI_NO_NE",
+     "etiqueta": "Diuresis 0.5–1 mL/kg/h",
+     "nombrada": true
+    },
+    {
+     "id": "metas.meta_51",
+     "excel_celda": "D51",
+     "catalogo": "SI_NO_NE",
+     "etiqueta": "Lactato < 2 o aclaramiento ≥ 20%",
+     "nombrada": true
+    },
+    {
+     "id": "metas.meta_52",
+     "excel_celda": "D52",
+     "catalogo": "SI_NO_NE",
+     "etiqueta": "SatO₂ > 90%",
+     "nombrada": true
+    },
+    {
+     "id": "metas.meta_53",
+     "excel_celda": "D53",
+     "catalogo": "SI_NO_NE",
+     "etiqueta": "Glucometría 110–180 mg/dL",
+     "nombrada": true
+    },
+    {
+     "id": "metas.meta_54",
+     "excel_celda": "D54",
+     "catalogo": "SI_NO_NE",
+     "etiqueta": "Temperatura < 37.3 °C",
+     "nombrada": true
+    },
+    {
+     "id": "metas.meta_55",
+     "excel_celda": "D55",
+     "catalogo": "SI_NO_NE",
+     "etiqueta": "EVA < 4",
+     "nombrada": true
+    }
+   ]
+  },
+  {
+   "id": "abcdef",
+   "titulo": "Bundle ABCDEF (Fase IV)",
+   "hoja_excel": "2. Evaluación Integrada",
+   "entrada_comun": "Indicadores 'ratio' = numerador/denominador (enteros) → valor% = num/den*100. 'informativo_valor' solo registra un número. Cada elemento A–E tiene 'cumplimiento_elemento' (CUMPLIMIENTO_ELEMENTO).",
+   "indicadores": [
+    {
+     "id_row": 60,
+     "indicador": "Evaluación del dolor con escala validada cada turno (EVA/BPS/CPOT)",
+     "tipo": "ratio",
+     "num": "B60",
+     "den": "C60",
+     "codigo": "A1",
+     "meta_pct": 90,
+     "piso_pct": 80
+    },
+    {
+     "id_row": 61,
+     "indicador": "Dolor en meta terapéutica (EVA<4 · BPS≤5 · CPOT<3)",
+     "tipo": "ratio",
+     "num": "B61",
+     "den": "C61",
+     "codigo": "A2",
+     "meta_pct": 80,
+     "piso_pct": 65
+    },
+    {
+     "id_row": 62,
+     "indicador": "Analgesia previa a procedimientos dolorosos",
+     "tipo": "ratio",
+     "num": "B62",
+     "den": "C62",
+     "codigo": "A3",
+     "meta_pct": 85,
+     "piso_pct": 70
+    },
+    {
+     "id_row": 66,
+     "indicador": "SAT realizado en pacientes elegibles",
+     "tipo": "ratio",
+     "num": "B66",
+     "den": "C66",
+     "codigo": "B1",
+     "meta_pct": 80,
+     "piso_pct": 60
+    },
+    {
+     "id_row": 67,
+     "indicador": "SBT realizado tras SAT exitoso",
+     "tipo": "ratio",
+     "num": "B67",
+     "den": "C67",
+     "codigo": "B2",
+     "meta_pct": 85,
+     "piso_pct": 70
+    },
+    {
+     "id_row": 68,
+     "indicador": "Extubación exitosa (sin reintubación a 48 h)",
+     "tipo": "ratio",
+     "num": "B68",
+     "den": "C68",
+     "codigo": "B3",
+     "meta_pct": 85,
+     "piso_pct": 80
+    },
+    {
+     "id_row": 72,
+     "indicador": "Horas con RASS en la meta prescrita (0 a -2)",
+     "tipo": "ratio",
+     "num": "B72",
+     "den": "C72",
+     "codigo": "C1",
+     "meta_pct": 70,
+     "piso_pct": 55
+    },
+    {
+     "id_row": 73,
+     "indicador": "Días libres de benzodiacepinas (Benzodiacepina)",
+     "tipo": "ratio",
+     "num": "B73",
+     "den": "C73",
+     "codigo": "C2",
+     "meta_pct": 80,
+     "piso_pct": 60
+    },
+    {
+     "id_row": 74,
+     "indicador": "Propofol/dexmedetomidina como sedante principal",
+     "tipo": "ratio",
+     "num": "B74",
+     "den": "C74",
+     "codigo": "C3",
+     "meta_pct": 75,
+     "piso_pct": 60
+    },
+    {
+     "id_row": 75,
+     "indicador": "RASS documentado cada 4 h",
+     "tipo": "ratio",
+     "num": "B75",
+     "den": "C75",
+     "codigo": "C4",
+     "meta_pct": 90,
+     "piso_pct": 75
+    },
+    {
+     "id_row": 79,
+     "indicador": "CAM-ICU documentado cada turno en elegibles",
+     "tipo": "ratio",
+     "num": "B79",
+     "den": "C79",
+     "codigo": "D1",
+     "meta_pct": 90,
+     "piso_pct": 75
+    },
+    {
+     "id_row": 81,
+     "indicador": "Días libres de delirium",
+     "tipo": "ratio",
+     "num": "B81",
+     "den": "C81",
+     "codigo": "D3",
+     "meta_pct": 60,
+     "piso_pct": 45
+    },
+    {
+     "id_row": 82,
+     "indicador": "Intervenciones no farmacológicas documentadas si CAM+",
+     "tipo": "ratio",
+     "num": "B82",
+     "den": "C82",
+     "codigo": "D4",
+     "meta_pct": 90,
+     "piso_pct": 75
+    },
+    {
+     "id_row": 86,
+     "indicador": "Fisioterapia activa diaria en pacientes elegibles",
+     "tipo": "ratio",
+     "num": "B86",
+     "den": "C86",
+     "codigo": "E1",
+     "meta_pct": 70,
+     "piso_pct": 50
+    },
+    {
+     "id_row": 87,
+     "indicador": "Nivel máximo de movilización alcanzado (1–6)",
+     "tipo": "informativo_valor",
+     "valor": "B87",
+     "codigo": "E2"
+    },
+    {
+     "id_row": 88,
+     "indicador": "Documentación del nivel de movilización diario",
+     "tipo": "ratio",
+     "num": "B88",
+     "den": "C88",
+     "codigo": "E3",
+     "meta_pct": 90,
+     "piso_pct": 75
+    },
+    {
+     "id_row": 92,
+     "indicador": "Nota educacion paciente y familia: MEDICO",
+     "tipo": "ratio",
+     "num": "B92",
+     "den": "C92",
+     "codigo": "F1",
+     "meta_pct": 80,
+     "piso_pct": 60
+    },
+    {
+     "id_row": 93,
+     "indicador": "Nota de educación a paciente y familia: Fisioterapia",
+     "tipo": "ratio",
+     "num": "B93",
+     "den": "C93",
+     "codigo": "F2",
+     "meta_pct": 90,
+     "piso_pct": 75
+    },
+    {
+     "id_row": 94,
+     "indicador": "Nota de educación a paciente y familia: Auxiliar",
+     "tipo": "ratio",
+     "num": "B94",
+     "den": "C94",
+     "codigo": "F3",
+     "meta_pct": 80,
+     "piso_pct": 60
+    },
+    {
+     "id_row": 97,
+     "indicador": "Realizacion escala  FASTHUB",
+     "tipo": "ratio",
+     "num": "B97",
+     "den": "C97",
+     "codigo": "G1",
+     "meta_pct": 90,
+     "piso_pct": 75
+    }
+   ],
+   "campos_elemento": [
+    {
+     "tipo": "cumplimiento_elemento",
+     "elemento": "A",
+     "excel_celda": "F64",
+     "catalogo": "CUMPLIMIENTO_ELEMENTO"
+    },
+    {
+     "tipo": "cumplimiento_elemento",
+     "elemento": "B",
+     "excel_celda": "F70",
+     "catalogo": "CUMPLIMIENTO_ELEMENTO"
+    },
+    {
+     "tipo": "cumplimiento_elemento",
+     "elemento": "C",
+     "excel_celda": "F77",
+     "catalogo": "CUMPLIMIENTO_ELEMENTO"
+    },
+    {
+     "tipo": "delirium_presencia",
+     "codigo": "D2",
+     "excel_celda": "B80",
+     "catalogo": "SI_NO"
+    },
+    {
+     "tipo": "delirium_subtipo",
+     "codigo": "D2",
+     "excel_celda": "C80",
+     "catalogo": "SUBTIPO_DELIRIUM"
+    },
+    {
+     "tipo": "cumplimiento_elemento",
+     "elemento": "D",
+     "excel_celda": "F84",
+     "catalogo": "CUMPLIMIENTO_ELEMENTO"
+    },
+    {
+     "tipo": "cumplimiento_elemento",
+     "elemento": "E",
+     "excel_celda": "F90",
+     "catalogo": "CUMPLIMIENTO_ELEMENTO"
+    }
+   ]
+  },
+  {
+   "id": "encuesta",
+   "titulo": "Encuesta de funcionalidad (ANTES y DESPUÉS)",
+   "hoja_excel": "ENCUESTA – ANTES / DESPUÉS",
+   "nota": "Cree dos instancias por paciente: 'antes' (basal) y 'despues' (egreso/seguimiento).",
+   "datos_encuestado": [
+    {
+     "id": "encuestado.folio_n_de_encuesta_C6",
+     "etiqueta": "Folio / N° de encuesta",
+     "tipo": "text",
+     "excel_celda": "C6"
+    },
+    {
+     "id": "encuestado.fecha_de_la_llamada_dd_mm_aaaa_C7",
+     "etiqueta": "Fecha de la llamada (DD/MM/AAAA)",
+     "tipo": "text",
+     "excel_celda": "C7"
+    },
+    {
+     "id": "encuestado.nombre_o_id_del_paciente_C8",
+     "etiqueta": "Nombre o ID del paciente",
+     "tipo": "text",
+     "excel_celda": "C8"
+    },
+    {
+     "id": "encuestado.edad_C9",
+     "etiqueta": "Edad",
+     "tipo": "text",
+     "excel_celda": "C9"
+    },
+    {
+     "id": "encuestado.sexo_C10",
+     "etiqueta": "Sexo",
+     "tipo": "select",
+     "excel_celda": "C10",
+     "catalogo": "SEXO"
+    },
+    {
+     "id": "encuestado.fecha_de_ingreso_intervencion_C11",
+     "etiqueta": "Fecha de ingreso / intervención",
+     "tipo": "text",
+     "excel_celda": "C11"
+    },
+    {
+     "id": "encuestado.encuesta_aplicada_por_nombre_C12",
+     "etiqueta": "Encuesta aplicada por (nombre)",
+     "tipo": "text",
+     "excel_celda": "C12"
+    },
+    {
+     "id": "encuestado.quien_responde_paciente_familiar_cuida_C13",
+     "etiqueta": "¿Quién responde? (paciente / familiar / cuidador)",
+     "tipo": "text",
+     "excel_celda": "C13"
+    }
+   ],
+   "preguntas": [
+    {
+     "id": "Q1",
+     "texto_leer": "CAMINAR Y DESPLAZARSE. ¿Puede caminar y moverse por sí mismo(a)? Piense en distancias larg",
+     "excel_celda": "C20",
+     "tipo": "select",
+     "catalogo": "AYUDA5"
+    },
+    {
+     "id": "Q2",
+     "texto_leer": "ESTAR DE PIE mucho rato (unos 30 minutos). ¿Cuánta dificultad tiene?",
+     "excel_celda": "C21",
+     "tipo": "select",
+     "catalogo": "DIF5"
+    },
+    {
+     "id": "Q3",
+     "texto_leer": "PASAR DE LA CAMA A UNA SILLA (y volver). ¿Lo hace sin ayuda?",
+     "excel_celda": "C22",
+     "tipo": "select",
+     "catalogo": "BART_TRAS"
+    },
+    {
+     "id": "Q4",
+     "texto_leer": "SUBIR Y BAJAR un piso de ESCALERAS. ¿Lo hace sin ayuda?",
+     "excel_celda": "C23",
+     "tipo": "select",
+     "catalogo": "BART_ESCAL"
+    },
+    {
+     "id": "Q5",
+     "texto_leer": "VESTIRSE y desvestirse (botones, cremalleras). ¿Lo hace solo(a) o necesita ayuda?",
+     "excel_celda": "C28",
+     "tipo": "select",
+     "catalogo": "AYUDA5"
+    },
+    {
+     "id": "Q6",
+     "texto_leer": "BAÑARSE o ducharse (entrar, salir y lavarse el cuerpo). ¿Lo hace solo(a) o necesita ayuda?",
+     "excel_celda": "C29",
+     "tipo": "select",
+     "catalogo": "AYUDA5"
+    },
+    {
+     "id": "Q7",
+     "texto_leer": "ASEARSE: lavarse la cara, peinarse, cepillarse los dientes, afeitarse. ¿Lo hace sin ayuda?",
+     "excel_celda": "C30",
+     "tipo": "select",
+     "catalogo": "BART_ASEO"
+    },
+    {
+     "id": "Q8",
+     "texto_leer": "COMER (usar cubiertos, beber). ¿Come solo(a) o necesita ayuda para cortar o untar?",
+     "excel_celda": "C31",
+     "tipo": "select",
+     "catalogo": "BART_ALIM"
+    },
+    {
+     "id": "Q9",
+     "texto_leer": "IR AL BAÑO / usar el inodoro (entrar, limpiarse, acomodarse la ropa). ¿Lo hace sin ayuda?",
+     "excel_celda": "C32",
+     "tipo": "select",
+     "catalogo": "BART_RETR"
+    },
+    {
+     "id": "Q10",
+     "texto_leer": "CONTROL DE LA DEPOSICIÓN (ir del cuerpo). ¿Controla o tiene accidentes?",
+     "excel_celda": "C33",
+     "tipo": "select",
+     "catalogo": "BART_DEPOS"
+    },
+    {
+     "id": "Q11",
+     "texto_leer": "CONTROL DE LA ORINA. ¿Controla, tiene accidentes o usa sonda?",
+     "excel_celda": "C34",
+     "tipo": "select",
+     "catalogo": "BART_MICC"
+    },
+    {
+     "id": "Q12",
+     "texto_leer": "RESPONSABILIDADES DEL HOGAR. ¿Cuánta dificultad tiene para encargarse de ellas?",
+     "excel_celda": "C39",
+     "tipo": "select",
+     "catalogo": "DIF5"
+    },
+    {
+     "id": "Q13",
+     "texto_leer": "TRABAJO O ESTUDIOS diarios. ¿Cuánta dificultad tiene para realizarlos?",
+     "excel_celda": "C40",
+     "tipo": "select",
+     "catalogo": "DIF5"
+    },
+    {
+     "id": "Q14",
+     "texto_leer": "APRENDER ALGO NUEVO (por ejemplo, llegar a un lugar que no conoce). ¿Cuánta dificultad?",
+     "excel_celda": "C41",
+     "tipo": "select",
+     "catalogo": "DIF5"
+    },
+    {
+     "id": "Q15",
+     "texto_leer": "CONCENTRARSE en hacer algo durante diez minutos. ¿Cuánta dificultad?",
+     "excel_celda": "C42",
+     "tipo": "select",
+     "catalogo": "DIF5"
+    },
+    {
+     "id": "Q16",
+     "texto_leer": "PARTICIPAR EN LA COMUNIDAD (fiestas, reuniones, actos religiosos), igual que los demás. ¿C",
+     "excel_celda": "C43",
+     "tipo": "select",
+     "catalogo": "DIF5"
+    },
+    {
+     "id": "Q17",
+     "texto_leer": "TRATAR CON PERSONAS QUE NO CONOCE. ¿Cuánta dificultad?",
+     "excel_celda": "C48",
+     "tipo": "select",
+     "catalogo": "DIF5"
+    },
+    {
+     "id": "Q18",
+     "texto_leer": "MANTENER UNA AMISTAD. ¿Cuánta dificultad?",
+     "excel_celda": "C49",
+     "tipo": "select",
+     "catalogo": "DIF5"
+    },
+    {
+     "id": "Q19",
+     "texto_leer": "DOLOR O MALESTAR físico HOY. ¿Cuánto tiene?",
+     "excel_celda": "C54",
+     "tipo": "select",
+     "catalogo": "DOLOR5"
+    },
+    {
+     "id": "Q20",
+     "texto_leer": "ANSIEDAD, TRISTEZA O AFECTACIÓN EMOCIONAL por su salud. ¿Cuánta siente?",
+     "excel_celda": "C55",
+     "tipo": "select",
+     "catalogo": "ANIMO5"
+    },
+    {
+     "id": "Q21",
+     "texto_leer": "SALUD HOY de 0 a 100 (100 = la mejor salud que se imagine, 0 = la peor). ¿Qué número le po",
+     "excel_celda": "C60",
+     "tipo": "number",
+     "rango": [
+      0,
+      100
+     ]
+    },
+    {
+     "id": "Q22",
+     "texto_leer": "ESTADO FUNCIONAL DE REFERENCIA. Elija la opción que mejor describe cómo se valía el pacien",
+     "excel_celda": "C61",
+     "tipo": "select",
+     "catalogo": "CFS_L"
+    }
+   ]
+  }
+ ],
+ "indicadores_sepsis": [
+  {
+   "id": "S1",
+   "nombre": "Activación de Código Sepsis",
+   "meta_pct": 85,
+   "piso_pct": 70,
+   "regla": "100 si existe hora de activación (tiempo_cero); si no, 0. Vacío si tiempo_cero ausente."
+  },
+  {
+   "id": "S2",
+   "nombre": "Lactato oportuno (≤60 min)",
+   "meta_pct": 90,
+   "piso_pct": 70,
+   "regla": "min = (hora_toma_lactato_faseII - tiempo_cero) en minutos. 100 si min<=60, si no 0. Vacío si falta alguna hora."
+  },
+  {
+   "id": "S3",
+   "nombre": "Antibiótico oportuno (≤60 min)",
+   "meta_pct": 90,
+   "piso_pct": 70,
+   "regla": "min = (hora_1a_dosis_atb - tiempo_cero). 100 si min<=60, si no 0."
+  },
+  {
+   "id": "S4",
+   "nombre": "Hemocultivos previos al antibiótico",
+   "meta_pct": 85,
+   "piso_pct": 70,
+   "regla": "100 si hemocultivos_tomados == 'Sí'; si no 0."
+  },
+  {
+   "id": "S5",
+   "nombre": "Cumplimiento del bundle de 1 hora",
+   "meta_pct": 75,
+   "piso_pct": 70,
+   "regla": "100 si: lactato_min<=60 Y atb_min<=60 Y hemocultivos_tomados=='Sí' Y (formulacion_vaso=='Sí' ⇒ vaso_inicio_min<=60) Y (liquidos_indicados=='Sí' ⇒ volumen_cristaloides>0); si no 0. Vacío si faltan tiempo_cero/lactato/atb/hemocultivos."
+  },
+  {
+   "id": "S6",
+   "nombre": "Uso oportuno de vasopresor",
+   "meta_pct": 90,
+   "piso_pct": 70,
+   "regla": "Si formulacion_vaso=='No' ⇒ 'N/A'. Si =='Sí' ⇒ 100 si vaso_inicio_min<=60, si no 0."
+  },
+  {
+   "id": "S7",
+   "nombre": "Control oportuno del foco",
+   "meta_pct": 82.5,
+   "piso_pct": 70,
+   "regla": "Si foco_identificado=='No' ⇒ 'N/A'. Si =='Sí' ⇒ 100 si foco_realizado_menos_6h=='Sí', 0 si =='No'."
+  },
+  {
+   "id": "S8",
+   "nombre": "Mortalidad por sepsis",
+   "meta_pct": null,
+   "piso_pct": null,
+   "tipo": "informativo",
+   "regla": "Muestra el desenlace del paciente. No se puntúa (informativo)."
+  }
+ ],
+ "semaforo": {
+  "por_indicador": {
+   "verde": "valor >= meta_pct",
+   "amarillo": "piso_pct <= valor < meta_pct",
+   "rojo": "valor < piso_pct",
+   "sin_dato": "valor vacío (cuenta como no cumplido)",
+   "no_aplica": "valor == 'N/A' (se excluye del puntaje)"
+  },
+  "agregados": {
+   "adherencia_reanimacion_pct": "promedio de S1..S7 puntuables (excluye N/A, sin dato, informativo)",
+   "adherencia_abcdef_pct": "promedio de los indicadores ABCDEF ratio puntuables",
+   "puntuacion_global_pct": "promedio de todos los indicadores puntuables (sepsis + ABCDEF)",
+   "bandas_global": {
+    "verde": "> 90",
+    "amarillo": "70 a 89",
+    "rojo": "< 70"
+   }
+  }
+ },
+ "escalas_encuesta": {
+  "EQ_5D_5L": {
+   "dimensiones": {
+    "movilidad": "Q1",
+    "cuidado_personal": "max(Q5,Q6)",
+    "actividades": "max(Q12,Q13)",
+    "dolor": "Q19",
+    "ansiedad_depresion": "Q20"
+   },
+   "valores": "cada dimensión 1–5 (use el code del catálogo)",
+   "perfil": "concatenar los 5 dígitos en orden: movilidad, cuidado_personal, actividades, dolor, ansiedad",
+   "suma_niveles": "suma de las 5 dimensiones (5–25; MÁS ALTO = PEOR)",
+   "eq_vas": "Q21 (0–100)",
+   "completo_si": "Q1,Q5,Q6,Q12,Q13,Q19,Q20 con valor",
+   "nota": "El índice de utilidad NO es la suma; requiere el value set de Colombia (fuera de este modelo)."
+  },
+  "WHODAS_2_0_12": {
+   "items": [
+    "Q2",
+    "Q12",
+    "Q14",
+    "Q16",
+    "Q20",
+    "Q15",
+    "Q1",
+    "Q6",
+    "Q5",
+    "Q17",
+    "Q18",
+    "Q13"
+   ],
+   "valores": "cada ítem 1–5",
+   "suma": "suma de los 12 (12–60; MÁS ALTO = MÁS discapacidad)",
+   "indice_0_100": "(suma - 12) / 48 * 100",
+   "completo_si": "los 12 ítems con valor"
+  },
+  "BARTHEL": {
+   "items_directos": {
+    "alimentacion": "Q8",
+    "aseo": "Q7",
+    "retrete": "Q9",
+    "deposicion": "Q10",
+    "miccion": "Q11",
+    "traslado": "Q3",
+    "escaleras": "Q4"
+   },
+   "items_derivados": {
+    "bano": "de Q6 (AYUDA5): 5 si code<=2, si no 0",
+    "vestirse": "de Q5 (AYUDA5): 10 si code<=2, 5 si code==3, 0 si code>=4",
+    "deambulacion": "de Q1 (AYUDA5): 15 si code<=2, 10 si code==3, 5 si code==4, 0 si code==5"
+   },
+   "total": "suma de los 10 (0–100; MÁS ALTO = MÁS independiente)",
+   "interpretacion": {
+    "100": "Independiente",
+    "60-95": "Dependencia leve",
+    "40-55": "Dependencia moderada",
+    "20-35": "Dependencia grave",
+    "<20": "Dependencia total"
+   }
+  },
+  "CFS": {
+   "valor": "Q22 (code 1–9)",
+   "categoria": "label del catálogo CFS_L",
+   "lectura": "1–3 robusto · 4 vulnerable · 5–6 frágil · 7–9 muy frágil/terminal (MÁS ALTO = PEOR)"
+  },
+  "comparativo": "Calcule cada escala para 'antes' y 'despues' y muestre la diferencia (despues - antes)."
+ },
+ "flujo_paciente": {
+  "fuente": "El módulo de trazador toma pacientes ya cargados en el censo de UCI (no parte de cero).",
+  "marcar_trazador": {
+   "accion": "En el censo, marcar 'paciente trazador' + tipo (sepsis; extensible)",
+   "efecto": "crea registro de trazador duplicando al paciente y prellenando sus datos"
+  },
+  "prellenado": "Reusar los mismos id de campo entre censo y trazador. Prellenar todo campo que el paciente ya tenga; solo se diligencian los faltantes; los prellenados quedan editables (corrección de errores).",
+  "parte_inicial": [
+   "datos_paciente",
+   "fase1_activacion",
+   "fase2_bundle_1h",
+   "fase3_reeval",
+   "metas_manejo",
+   "abcdef",
+   "encuesta(antes)"
+  ],
+  "al_guardar_inicial": {
+   "sale_de": "bandeja de trazadores activos",
+   "pasa_a": "estadísticas de paciente trazador",
+   "inicia": "conteo de 90 días",
+   "campos": {
+    "fecha_guardado_inicial": "fecha de guardado de la parte inicial",
+    "fecha_objetivo_despues": "fecha_guardado_inicial + 90 días"
+   }
+  },
+  "dia_90": "El paciente reaparece en 'pendientes de encuesta DESPUÉS'. Lo único a diligenciar es la Encuesta DESPUÉS.",
+  "cierre": "Al guardar la Encuesta DESPUÉS se calcula el Comparativo (antes vs después) y el caso queda CERRADO. Única forma de cerrar el caso.",
+  "editar": "En cualquier estado se puede abrir y modificar el paciente/trazador; al guardar se recalculan los indicadores.",
+  "estados": [
+   "EN_UCI",
+   "TRAZADOR_INICIAL",
+   "SEGUIMIENTO_90D",
+   "PENDIENTE_DESPUES",
+   "CERRADO"
+  ],
+  "transiciones": "EN_UCI ->(marcar)-> TRAZADOR_INICIAL ->(guardar inicial)-> SEGUIMIENTO_90D ->(dia 90)-> PENDIENTE_DESPUES ->(guardar despues)-> CERRADO",
+  "campos_estado_registro": [
+   "es_trazador",
+   "tipo_trazador",
+   "estado",
+   "fecha_guardado_inicial",
+   "fecha_objetivo_despues",
+   "fecha_cierre"
+  ],
+  "bandejas_ui": [
+   "Censo de UCI (accion: marcar trazador)",
+   "Trazadores activos (TRAZADOR_INICIAL)",
+   "Estadisticas de trazador (SEGUIMIENTO_90D + CERRADO)",
+   "Pendientes de encuesta DESPUES (PENDIENTE_DESPUES, con fecha objetivo)"
+  ]
+ },
+ "stack": {
+  "framework": "Laravel 12",
+  "vistas": "Blade",
+  "ui": "Bootstrap 5",
+  "db_local": "MySQL (XAMPP)",
+  "db_produccion": "SQLite",
+  "modelo_principal": "Paciente"
+ },
+ "existe_ya": {
+  "controlador": "PacienteController.php",
+  "vista": "pacientes/index.blade.php",
+  "ruta": "pacientes.index",
+  "regla": "No crear archivos nuevos a menos que sea necesario; reutilizar y extender."
+ },
+ "restricciones_tecnicas": [
+  "Migraciones deben funcionar en MySQL y SQLite.",
+  "No usar MODIFY COLUMN.",
+  "No usar ENUM; usar strings + validación en PHP (Rule::in del catálogo).",
+  "Tipos seguros: string, boolean, integer, json, timestamp nullable.",
+  "No cambiar el diseño visual ni el layout existente; cambios acotados."
+ ],
+ "sin_excel": "No se importa Excel de pacientes (captura por formulario, prellenando del censo). SÍ se exporta a Excel un consolidado de indicadores (mensual/trimestral/anual). El .xlsx y este modelo son solo el plano.",
+ "modularidad": {
+  "objetivo": "A futuro habrá trazadores de muchas patologías; Sepsis es el primero.",
+  "modulo": "Contenedor 'Trazadores' (módulo/ventana independiente) que lista los tipos; cada tipo abre su propia página (ej. /trazadores/sepsis).",
+  "esquema": "Una tabla genérica 'trazadores' (paciente_id, tipo_trazador, estado, fechas, datos JSON, resultados JSON). Agregar patología = nuevo tipo + su modelo JSON + su service + su vista, sin cambiar el esquema.",
+  "calculo": "Un service por tipo (IndicadoresSepsis) bajo una interfaz común IndicadoresTrazador."
+ },
+ "exportacion_excel": {
+  "periodos": [
+   "mensual",
+   "trimestral",
+   "anual"
+  ],
+  "alcance": "Indicadores de los trazadores cerrados en el periodo; agrupable por tipo de patología.",
+  "formato": "Excel (hoja resumen + detalle por indicador).",
+  "dependencia": "maatwebsite/excel (Laravel Excel) — única dependencia permitida, solo para exportar."
+ },
+ "proyecto_existente": "C:\\xampp\\htdocs\\Paciente trazador — revisar y reutilizar/extender antes de crear archivos nuevos."
+}
