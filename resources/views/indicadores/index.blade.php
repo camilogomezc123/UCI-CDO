@@ -189,10 +189,81 @@
                 'verde'=>'#198754','amarillo'=>'#d97706','rojo'=>'#dc3545','informativo'=>'#0d6efd',default=>'#adb5bd'
             };
             $aux = $ind['aux'] ?? [];
+            $tieneDesglose = !empty($aux['tasas']);
         @endphp
-        <div class="col-md-4 col-lg-3">
+        <div class="{{ $tieneDesglose ? 'col-12' : 'col-md-4 col-lg-3' }}">
             <div class="card ind-card {{ $ind['semaforo'] }} h-100">
                 <div class="card-body py-2 px-3">
+                    @if($tieneDesglose)
+                    {{-- Layout expandido con desglose S1-S7 --}}
+                    <div class="row align-items-center">
+                        <div class="col-md-3 border-end pe-3">
+                            <div class="d-flex align-items-start justify-content-between mb-1">
+                                <i class="bi {{ $ind['icono'] }}" style="color:{{ $vcol }}; font-size:1.1rem;"></i>
+                                <span class="badge" style="background:{{ $vcol }}22; color:{{ $vcol }}; font-size:.6rem;">{{ $cod }}</span>
+                            </div>
+                            <div class="ind-nombre">{{ $ind['nombre'] }}</div>
+                            <div class="ind-valor" style="color:{{ $vcol }}">
+                                {{ $ind['valor'] !== null ? $ind['valor'].$ind['unidad'] : '—' }}
+                            </div>
+                            @if(isset($aux['n']) && $aux['n'] !== null)
+                            <div style="font-size:.68rem; color:#888; margin-top:.1rem;">
+                                {{ $aux['n'] }} / {{ $aux['d'] ?? '?' }} casos
+                            </div>
+                            @endif
+                            <div class="ind-meta mt-1">
+                                <span class="sem-dot-lg bg-sem-{{ $ind['semaforo'] }}"></span>
+                                <span style="color:{{ $vcol }}; font-size:.7rem; font-weight:600;">
+                                    {{ match($ind['semaforo']) {
+                                        'verde'=>'En meta','amarillo'=>'Alerta','rojo'=>'Crítico',
+                                        'informativo'=>'Informativo',default=>'Sin datos'
+                                    } }}
+                                </span>
+                                · Meta: <span style="font-size:.68rem; color:#666;">{{ $ind['meta'] }}</span>
+                            </div>
+                            <div class="ind-fuente mt-1"><i class="bi bi-journal-text me-1"></i>{{ $ind['fuente'] }}</div>
+                        </div>
+                        <div class="col-md-9 ps-3">
+                            @php
+                            $sLabels = [
+                                'S1' => 'S1 · Activación tiempo cero',
+                                'S2' => 'S2 · Lactato ≤ 60 min',
+                                'S3' => 'S3 · Antibiótico ≤ 60 min',
+                                'S4' => 'S4 · Hemocultivos tomados',
+                                'S5' => 'S5 · Bundle hora-1 completo',
+                                'S6' => 'S6 · Vasopresor ≤ 60 min',
+                                'S7' => 'S7 · Control de foco < 6h',
+                            ];
+                            @endphp
+                            <div style="font-size:.72rem; font-weight:700; color:#444; margin-bottom:.4rem;">
+                                Desglose por criterio — tasa de cumplimiento (casos evaluables)
+                            </div>
+                            @foreach($aux['tasas'] as $s => $tasa)
+                            @php
+                                $pct  = $tasa['pct'] ?? null;
+                                $scol = $pct === null ? '#adb5bd' : ($pct >= 80 ? '#198754' : ($pct >= 60 ? '#d97706' : '#dc3545'));
+                                $esS5 = $s === 'S5';
+                            @endphp
+                            <div class="d-flex align-items-center gap-2 mb-1" style="{{ $esS5 ? 'background:#f8f9fa; border-radius:4px; padding:2px 4px;' : '' }}">
+                                <span style="font-size:.7rem; min-width:175px; color:{{ $esS5 ? '#333' : '#555' }}; font-weight:{{ $esS5 ? '700' : '400' }};">
+                                    {{ $sLabels[$s] ?? $s }}
+                                    @if($esS5)<i class="bi bi-star-fill ms-1" style="color:#d97706; font-size:.6rem;"></i>@endif
+                                </span>
+                                @if($pct !== null)
+                                <div class="flex-grow-1" style="height:7px; background:#e9ecef; border-radius:4px; overflow:hidden;">
+                                    <div style="height:100%; width:{{ $pct }}%; background:{{ $scol }}; border-radius:4px; transition:width .4s;"></div>
+                                </div>
+                                <span style="font-size:.72rem; font-weight:700; color:{{ $scol }}; min-width:38px; text-align:right;">{{ $pct }}%</span>
+                                <span style="font-size:.65rem; color:#aaa; min-width:55px;">{{ $tasa['cumple'] }}/{{ $tasa['total'] }}</span>
+                                @else
+                                <span style="font-size:.68rem; color:#aaa; font-style:italic;">Sin datos o N/A</span>
+                                @endif
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @else
+                    {{-- Layout normal --}}
                     <div class="d-flex align-items-start justify-content-between mb-1">
                         <i class="bi {{ $ind['icono'] }}" style="color:{{ $vcol }}; font-size:1.1rem;"></i>
                         <span class="badge" style="background:{{ $vcol }}22; color:{{ $vcol }}; font-size:.6rem;">{{ $cod }}</span>
@@ -218,6 +289,7 @@
                         · Meta: <span style="font-size:.68rem; color:#666;">{{ $ind['meta'] }}</span>
                     </div>
                     <div class="ind-fuente mt-1"><i class="bi bi-journal-text me-1"></i>{{ $ind['fuente'] }}</div>
+                    @endif
                 </div>
             </div>
         </div>

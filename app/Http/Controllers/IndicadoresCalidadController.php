@@ -227,14 +227,14 @@ class IndicadoresCalidadController extends Controller
         // ─── CAT 7: CALIDAD DE CUIDADO — TRAZADORES ───────────────────────────
         'IND-16' => [
             'categoria'  => 'Calidad trazadores',
-            'nombre'     => 'Adherencia Código Sepsis (S1–S7)',
-            'descripcion'=> 'Cumplimiento promedio del bundle de reanimación en trazadores Sepsis cerrados',
+            'nombre'     => 'Bundle hora-1 Sepsis completo (S5)',
+            'descripcion'=> '% de casos donde todos los criterios del bundle de reanimación en la primera hora se cumplieron (S5) sobre los casos evaluables',
             'unidad'     => '%',
-            'fuente'     => 'SEMICYUC · SSC 2021',
-            'meta'       => '≥ 90%',
-            'verde'      => [90, null],
-            'amarillo'   => [70, 90],
-            'rojo'       => [null, 70],
+            'fuente'     => 'SSC 2021 · SEMICYUC',
+            'meta'       => '≥ 80%',
+            'verde'      => [80, null],
+            'amarillo'   => [60, 80],
+            'rojo'       => [null, 60],
             'icono'      => 'bi-heart-pulse',
             'periodo'    => false,
             'invertir'   => true,
@@ -385,9 +385,23 @@ class IndicadoresCalidadController extends Controller
         })->count();
         $vals['IND-15'] = $conSofa->isNotEmpty() ? round($sofaAlerta / $conSofa->count() * 100, 1) : null;
 
-        // IND-16: Adherencia Código Sepsis
-        $reaProm = $sepsisTotal->avg(fn($t) => $t->resultados['adherencia_reanimacion_pct'] ?? null);
-        $vals['IND-16'] = $reaProm !== null ? round($reaProm, 1) : null;
+        // Tasas S1–S7 por criterio: # cumplieron / # evaluables (excluye null y N/A)
+        $sRates = [];
+        foreach (['S1','S2','S3','S4','S5','S6','S7'] as $s) {
+            $ev = $sepsisTotal->filter(function ($t) use ($s) {
+                $v = $t->resultados['semaforo']['por_indicador'][$s]['valor'] ?? 'x';
+                return $v !== null && $v !== 'N/A';
+            });
+            $cu = $ev->filter(fn($t) =>
+                ($t->resultados['semaforo']['por_indicador'][$s]['valor'] ?? null) === 100
+            )->count();
+            $sRates[$s] = $ev->count() > 0
+                ? ['pct' => round($cu / $ev->count() * 100, 1), 'cumple' => $cu, 'total' => $ev->count()]
+                : null;
+        }
+
+        // IND-16: tasa de S5 (bundle hora-1 completo) sobre casos evaluables
+        $vals['IND-16'] = $sRates['S5']['pct'] ?? null;
 
         // IND-17: Adherencia Bundle ABCDEF
         $abProm = $sepsisTotal->avg(fn($t) => $t->resultados['adherencia_abcdef_pct'] ?? null);
@@ -401,7 +415,7 @@ class IndicadoresCalidadController extends Controller
                 'codigo'   => $cod,
                 'valor'    => $valor,
                 'semaforo' => $this->semaforo($valor, $def),
-                'aux'      => $this->aux($cod, $activos, $egresados, $camHoy, $sepsisTotal, $ingresosPer, $reingresosPer),
+                'aux'      => $this->aux($cod, $activos, $egresados, $camHoy, $sepsisTotal, $ingresosPer, $reingresosPer, $sRates),
             ]);
         }
 
@@ -409,7 +423,7 @@ class IndicadoresCalidadController extends Controller
     }
 
     // ── Datos auxiliares contextuales por indicador ───────────────────────────
-    private function aux(string $cod, $activos, $egresados, $camHoy, $sepsisTotal, int $ingresosPer, int $reingresosPer): array
+    private function aux(string $cod, $activos, $egresados, $camHoy, $sepsisTotal, int $ingresosPer, int $reingresosPer, array $sRates = []): array
     {
         $totalActivos = $activos->count();
         $totalEgr     = $egresados->count();
@@ -424,7 +438,11 @@ class IndicadoresCalidadController extends Controller
             'IND-08' => ['n' => $camHoy->where('resultado','positivo')->count(),
                          'd' => $camHoy->whereIn('resultado',['positivo','negativo'])->count()],
             'IND-09' => ['n' => $camHoy->count(), 'd' => $totalActivos],
-            'IND-16' => ['n' => $sepsisTotal->count(), 'd' => null],
+            'IND-16' => [
+                'n'     => $sRates['S5']['cumple'] ?? null,
+                'd'     => $sRates['S5']['total']  ?? null,
+                'tasas' => $sRates,
+            ],
             'IND-17' => ['n' => $sepsisTotal->count(), 'd' => null],
             default   => [],
         };
