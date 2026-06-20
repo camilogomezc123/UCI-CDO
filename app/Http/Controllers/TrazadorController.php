@@ -77,7 +77,92 @@ class TrazadorController extends Controller
             ];
         }
 
-        return view('trazadores.index', compact('grupos', 'tiposActivos', 'etiquetas', 'global', 'tendencia'));
+        // ── Definición de indicadores por tipo (extensible) ──────────────────
+        $indicadoresDef = [
+            'sepsis' => [
+                'codigo_sepsis' => [
+                    'label' => 'Código Sepsis (S1–S7)',
+                    'icon'  => 'bi-heart-pulse',
+                    'color' => '#dc3545',
+                    'items' => [
+                        'S1' => 'Activación Código Sepsis',
+                        'S2' => 'Lactato ≤ 60 min',
+                        'S3' => 'Antibiótico ≤ 60 min',
+                        'S4' => 'Hemocultivos tomados',
+                        'S5' => 'Bundle 1h completo',
+                        'S6' => 'Vasopresor ≤ 60 min',
+                        'S7' => 'Control de foco',
+                    ],
+                ],
+                'bundle_abcdef' => [
+                    'label' => 'Bundle ABCDEF',
+                    'icon'  => 'bi-list-check',
+                    'color' => '#0d6efd',
+                    'grupos' => [
+                        'A' => ['label' => 'A — Analgesia',   'items' => ['A1'=>'Dolor c/turno','A2'=>'Dolor en meta','A3'=>'Analgesia prev.']],
+                        'B' => ['label' => 'B — Respiratorio','items' => ['B1'=>'SAT','B2'=>'SBT','B3'=>'Extubación']],
+                        'C' => ['label' => 'C — Sedación',    'items' => ['C1'=>'RASS meta','C2'=>'Sin BDZ','C3'=>'Propofol/Dex','C4'=>'RASS doc.']],
+                        'D' => ['label' => 'D — Delirium',    'items' => ['D1'=>'CAM-ICU','D3'=>'Sin delirium','D4'=>'Interv. no farm.']],
+                        'E' => ['label' => 'E — Ejercicio',   'items' => ['E1'=>'Fisioterapia','E3'=>'Doc. moviliz.']],
+                        'F' => ['label' => 'F — Familia',     'items' => ['F1'=>'Educ. médico','F2'=>'Educ. fisio','F3'=>'Educ. aux.']],
+                        'G' => ['label' => 'G — FAST-HUG',    'items' => ['G1'=>'FAST-HUG']],
+                    ],
+                ],
+            ],
+        ];
+
+        // ── Cómputo de tasas de cumplimiento por indicador ────────────────────
+        $dashIndicadores = [];
+        foreach ($grupos as $tipo => $g) {
+            if (!isset($indicadoresDef[$tipo])) continue;
+            $cerrados = $g['cerrados'];
+            $stats = [];
+
+            // Recopila todos los códigos del tipo
+            foreach ($indicadoresDef[$tipo] as $groupKey => $groupDef) {
+                $cods = isset($groupDef['items'])
+                    ? array_keys($groupDef['items'])
+                    : collect($groupDef['grupos'] ?? [])->flatMap(fn($g) => array_keys($g['items']))->all();
+
+                foreach ($cods as $cod) {
+                    $vals      = $cerrados->map(fn($t) => $t->resultados['semaforo']['por_indicador'][$cod] ?? null)->filter();
+                    $evaluados = $vals->filter(fn($v) => is_numeric($v['valor'] ?? null))->count();
+                    $cumple    = $vals->filter(fn($v) => ($v['valor'] ?? null) === 100)->count();
+                    $na        = $vals->filter(fn($v) => ($v['valor'] ?? null) === 'N/A')->count();
+                    $rate      = $evaluados > 0 ? round($cumple / $evaluados * 100, 1) : null;
+                    $stats[$cod] = [
+                        'evaluados' => $evaluados,
+                        'cumple'    => $cumple,
+                        'na'        => $na,
+                        'rate'      => $rate,
+                        'color'     => $rate === null ? 'sin_dato'
+                                    : ($rate >= 90 ? 'verde' : ($rate >= 70 ? 'amarillo' : 'rojo')),
+                    ];
+                }
+
+                // Tasa agregada por letra (para bundle ABCDEF)
+                if (isset($groupDef['grupos'])) {
+                    foreach ($groupDef['grupos'] as $letra => $letraDef) {
+                        $rates = collect(array_keys($letraDef['items']))
+                            ->map(fn($c) => $stats[$c]['rate'] ?? null)
+                            ->filter()
+                            ->values();
+                        $letraRate = $rates->isNotEmpty() ? round($rates->avg(), 1) : null;
+                        $stats["_{$letra}"] = [
+                            'rate'  => $letraRate,
+                            'color' => $letraRate === null ? 'sin_dato'
+                                     : ($letraRate >= 90 ? 'verde' : ($letraRate >= 70 ? 'amarillo' : 'rojo')),
+                        ];
+                    }
+                }
+            }
+            $dashIndicadores[$tipo] = $stats;
+        }
+
+        return view('trazadores.index', compact(
+            'grupos', 'tiposActivos', 'etiquetas', 'global', 'tendencia',
+            'indicadoresDef', 'dashIndicadores'
+        ));
     }
 
     // ─── Marcar paciente como trazador ────────────────────────────────────────

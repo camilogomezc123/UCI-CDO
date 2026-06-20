@@ -173,6 +173,177 @@
 </div>
 
 {{-- ═══════════════════════════════════════════════════════════════════════════
+     INDICADORES POR PATOLOGÍA
+     ═══════════════════════════════════════════════════════════════════════════ --}}
+@foreach($tiposActivos as $tipo)
+@if(isset($indicadoresDef[$tipo]) && $grupos[$tipo]['cerrados']->isNotEmpty())
+@php
+    $def   = $indicadoresDef[$tipo];
+    $stats = $dashIndicadores[$tipo] ?? [];
+    $etiqs = $etiquetas[$tipo] ?? strtoupper($tipo);
+@endphp
+<div class="row g-3 mb-3">
+
+    {{-- ── Indicadores principales (código sepsis, etc.) ───────────────── --}}
+    @foreach($def as $groupKey => $groupDef)
+    @if(isset($groupDef['items']))
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="bi {{ $groupDef['icon'] }} text-danger"></i>
+                <span>{{ $groupDef['label'] }} — {{ $etiqs }}</span>
+                <small class="text-muted ms-auto">{{ $grupos[$tipo]['cerrados']->count() }} caso(s) cerrado(s)</small>
+            </div>
+            <div class="card-body py-2">
+                @foreach($groupDef['items'] as $cod => $nombre)
+                @php
+                    $s    = $stats[$cod] ?? [];
+                    $rate = $s['rate'] ?? null;
+                    $col  = $s['color'] ?? 'sin_dato';
+                    $barColor = match($col) { 'verde'=>'#198754','amarillo'=>'#d97706','rojo'=>'#dc3545', default=>'#adb5bd' };
+                @endphp
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span style="font-size:.78rem; font-weight:600;">
+                            <span class="badge me-1" style="background:{{ $groupDef['color'] }}; font-size:.65rem;">{{ $cod }}</span>
+                            {{ $nombre }}
+                        </span>
+                        <span style="font-size:.75rem; min-width:70px; text-align:right;">
+                            @if($rate !== null)
+                                <strong style="color:{{ $barColor }}">{{ $rate }}%</strong>
+                                <span class="text-muted"> ({{ $s['cumple'] }}/{{ $s['evaluados'] }})</span>
+                            @elseif(($s['na'] ?? 0) > 0)
+                                <span class="text-muted">N/A</span>
+                            @else
+                                <span class="text-muted">Sin datos</span>
+                            @endif
+                        </span>
+                    </div>
+                    <div class="progress" style="height:7px; border-radius:4px;">
+                        @if($rate !== null)
+                        <div class="progress-bar" role="progressbar"
+                             style="width:{{ $rate }}%; background:{{ $barColor }}; border-radius:4px;">
+                        </div>
+                        @else
+                        <div class="progress-bar" style="width:100%; background:#e9ecef; border-radius:4px;"></div>
+                        @endif
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- ── Bundle ABCDEF ────────────────────────────────────────────────── --}}
+    @if(isset($groupDef['grupos']))
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="bi {{ $groupDef['icon'] }} text-primary"></i>
+                <span>{{ $groupDef['label'] }} — {{ $etiqs }}</span>
+            </div>
+            <div class="card-body py-2">
+                <div class="row g-2">
+                @foreach($groupDef['grupos'] as $letra => $letraDef)
+                @php
+                    $letraStats = $stats["_{$letra}"] ?? [];
+                    $lRate  = $letraStats['rate']  ?? null;
+                    $lColor = $letraStats['color'] ?? 'sin_dato';
+                    $lBar   = match($lColor) { 'verde'=>'#198754','amarillo'=>'#d97706','rojo'=>'#dc3545', default=>'#adb5bd' };
+                @endphp
+                <div class="col-md-6">
+                    <div class="border rounded p-2" style="font-size:.78rem;">
+                        {{-- Encabezado letra --}}
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="fw-bold" style="color:{{ $lBar }}; font-size:.85rem;">{{ $letra }}</span>
+                            <span class="fw-semibold text-muted" style="font-size:.74rem;">{{ Str::after($letraDef['label'], '— ') }}</span>
+                            <span class="ms-auto fw-bold" style="color:{{ $lBar }}">
+                                {{ $lRate !== null ? $lRate.'%' : '—' }}
+                            </span>
+                        </div>
+                        <div class="progress mb-2" style="height:5px;">
+                            @if($lRate !== null)
+                            <div class="progress-bar" style="width:{{ $lRate }}%; background:{{ $lBar }};"></div>
+                            @else
+                            <div class="progress-bar" style="width:100%; background:#e9ecef;"></div>
+                            @endif
+                        </div>
+                        {{-- Ítems del bundle --}}
+                        @foreach($letraDef['items'] as $cod => $nombre)
+                        @php
+                            $is   = $stats[$cod] ?? [];
+                            $ir   = $is['rate'] ?? null;
+                            $ic   = $is['color'] ?? 'sin_dato';
+                            $iBar = match($ic) { 'verde'=>'#198754','amarillo'=>'#d97706','rojo'=>'#dc3545', default=>'#adb5bd' };
+                        @endphp
+                        <div class="d-flex align-items-center gap-1 mb-1">
+                            <span style="width:8px;height:8px;border-radius:50%;background:{{ $iBar }};flex-shrink:0;"></span>
+                            <span class="text-muted flex-grow-1">{{ $cod }}: {{ $nombre }}</span>
+                            <span class="fw-semibold" style="font-size:.72rem; color:{{ $iBar }}">
+                                {{ $ir !== null ? $ir.'%' : (($is['na'] ?? 0) > 0 ? 'N/A' : '—') }}
+                            </span>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+    @endforeach
+
+</div>{{-- /row indicadores --}}
+@endif
+@endforeach
+
+{{-- ═══════════════════════════════════════════════════════════════════════════
+     DESCARGA CONSOLIDADO
+     ═══════════════════════════════════════════════════════════════════════════ --}}
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="bi bi-file-earmark-excel me-2 text-success"></i>Descargar reporte consolidado
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ route('trazadores.exportar') }}"
+              class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label mb-1" style="font-size:.8rem; font-weight:600;">Período</label>
+                <select name="periodo" class="form-select form-select-sm">
+                    <option value="mensual">Mensual</option>
+                    <option value="trimestral">Trimestral</option>
+                    <option value="anual">Anual</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label mb-1" style="font-size:.8rem; font-weight:600;">Fecha de referencia</label>
+                <input type="month" name="fecha" value="{{ now()->format('Y-m') }}"
+                       class="form-control form-control-sm">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label mb-1" style="font-size:.8rem; font-weight:600;">Patología</label>
+                <select name="tipo_trazador" class="form-select form-select-sm">
+                    <option value="">Todas</option>
+                    @foreach($tiposActivos as $tipo)
+                        <option value="{{ $tipo }}">{{ $etiquetas[$tipo] ?? strtoupper($tipo) }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-success w-100">
+                    <i class="bi bi-file-earmark-arrow-down me-2"></i>Descargar Excel
+                </button>
+                <div style="font-size:.72rem; color:#6c757d; margin-top:.3rem;">
+                    5 hojas: resumen · pacientes · indicadores · calidad de vida · incumplimientos
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ═══════════════════════════════════════════════════════════════════════════
      SUBGRUPOS POR PATOLOGÍA
      ═══════════════════════════════════════════════════════════════════════════ --}}
 <div class="card">
