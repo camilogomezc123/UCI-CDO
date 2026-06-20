@@ -1,6 +1,16 @@
-@extends('layouts.app')
+@extends('layouts.trazador')
 @section('title', 'Resultados Trazador — ' . ($paciente->nombre ?? ''))
-@section('page-title', 'Resultados: ' . ($paciente->nombre ?? 'Paciente'))
+@section('page-title', 'Resultados Trazador Sepsis &mdash; ' . ($paciente->nombre ?? 'Paciente'))
+@section('trazador-estado')
+    <span class="tz-badge-estado bg-{{ $trazador->estado === 'CERRADO' ? 'success' : 'info' }} text-{{ $trazador->estado === 'CERRADO' ? 'white' : 'dark' }}">
+        {{ $trazador->estado }}
+    </span>
+@endsection
+@section('trazador-acciones')
+    <a href="{{ route('trazadores.edit', $trazador) }}" class="tz-btn-volver">
+        <i class="bi bi-pencil"></i> Editar
+    </a>
+@endsection
 
 @push('styles')
 <style>

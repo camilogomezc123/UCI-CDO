@@ -15,6 +15,7 @@ use App\Http\Controllers\ReporteMortalidadController;
 use App\Http\Controllers\ReporteDescargasController;
 use App\Http\Controllers\ReingresosController;
 use App\Http\Controllers\TrazadorController;
+use App\Http\Controllers\TrazadorExportController;
 
 // Autenticación
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -72,6 +73,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Trazadores
     Route::get('/trazadores', [TrazadorController::class, 'index'])->name('trazadores.index');
+    Route::get('/trazadores/exportar', [TrazadorExportController::class, 'descargar'])->name('trazadores.exportar');
     Route::post('/trazadores/marcar/{paciente}', [TrazadorController::class, 'marcar'])->name('trazadores.marcar');
     Route::get('/trazadores/{trazador}/editar', [TrazadorController::class, 'edit'])->name('trazadores.edit');
     Route::post('/trazadores/{trazador}', [TrazadorController::class, 'store'])->name('trazadores.store');

@@ -1,6 +1,9 @@
-@extends('layouts.app')
+@extends('layouts.trazador')
 @section('title', 'Encuesta DESPUÉS — ' . ($paciente->nombre ?? ''))
-@section('page-title', 'Encuesta DESPUÉS (90 días): ' . ($paciente->nombre ?? 'Paciente'))
+@section('page-title', 'Encuesta DESPUÉS (90 días) &mdash; ' . ($paciente->nombre ?? 'Paciente'))
+@section('trazador-estado')
+    <span class="tz-badge-estado bg-warning text-dark">PENDIENTE_DESPUES</span>
+@endsection
 
 @push('styles')
 <style>

@@ -219,12 +219,27 @@
     {{-- ── Cerrados ─────────────────────────────────────────────────────── --}}
     <div class="tab-pane fade" id="cerrados">
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-archive me-2 text-success"></i>Casos cerrados</span>
-                {{-- Exportación Excel (Paso 6) --}}
-                <a href="#" class="btn btn-sm btn-outline-success disabled">
-                    <i class="bi bi-file-earmark-excel me-1"></i>Exportar (próx.)
-                </a>
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <span><i class="bi bi-archive me-2 text-success"></i>Casos cerrados</span>
+                    <form method="GET" action="{{ route('trazadores.exportar') }}"
+                          class="d-flex align-items-center gap-2 flex-wrap">
+                        <select name="periodo" class="form-select form-select-sm" style="width:auto;">
+                            <option value="mensual">Mensual</option>
+                            <option value="trimestral">Trimestral</option>
+                            <option value="anual">Anual</option>
+                        </select>
+                        <input type="month" name="fecha" value="{{ now()->format('Y-m') }}"
+                               class="form-control form-control-sm" style="width:auto;">
+                        <select name="tipo_trazador" class="form-select form-select-sm" style="width:auto;">
+                            <option value="">Todos los tipos</option>
+                            <option value="sepsis">Sepsis</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-success">
+                            <i class="bi bi-file-earmark-excel me-1"></i>Exportar Excel
+                        </button>
+                    </form>
+                </div>
             </div>
             <div class="card-body p-0">
                 @if($cerrados->isEmpty())

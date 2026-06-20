@@ -1,6 +1,20 @@
-@extends('layouts.app')
+@extends('layouts.trazador')
 @section('title', 'Trazador Sepsis — ' . ($paciente->nombre ?? 'Paciente'))
-@section('page-title', 'Trazador Sepsis: ' . ($paciente->nombre ?? 'Paciente'))
+@section('page-title', 'Trazador Sepsis &mdash; ' . ($paciente->nombre ?? 'Paciente'))
+@section('trazador-estado')
+    @php
+        $estadoColor = match($trazador->estado ?? 'TRAZADOR_INICIAL') {
+            'TRAZADOR_INICIAL'  => 'warning',
+            'SEGUIMIENTO_90D'   => 'info',
+            'PENDIENTE_DESPUES' => 'orange',
+            'CERRADO'           => 'success',
+            default             => 'secondary',
+        };
+    @endphp
+    <span class="tz-badge-estado bg-{{ $estadoColor === 'orange' ? 'warning' : $estadoColor }} text-{{ in_array($estadoColor,['warning','info']) ? 'dark' : 'white' }}">
+        {{ $trazador->estado ?? 'TRAZADOR_INICIAL' }}
+    </span>
+@endsection
 
 @push('styles')
 <style>
