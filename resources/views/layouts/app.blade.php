@@ -165,6 +165,9 @@
         <a href="{{ route('epidemiologia.index') }}" class="sidebar-link {{ request()->routeIs('epidemiologia.*') ? 'active' : '' }}">
             <i class="bi bi-heart-pulse"></i> Perfil epidemiológico
         </a>
+        <a href="{{ route('indicadores.calidad') }}" class="sidebar-link {{ request()->routeIs('indicadores.*') ? 'active' : '' }}">
+            <i class="bi bi-award"></i> Indicadores de calidad
+        </a>
         <a href="{{ route('reportes.index') }}" class="sidebar-link {{ request()->routeIs('reportes.index') ? 'active' : '' }}">
             <i class="bi bi-bar-chart"></i> Reportes por subunidad
         </a>

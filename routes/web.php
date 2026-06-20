@@ -16,6 +16,7 @@ use App\Http\Controllers\ReporteDescargasController;
 use App\Http\Controllers\ReingresosController;
 use App\Http\Controllers\TrazadorController;
 use App\Http\Controllers\TrazadorExportController;
+use App\Http\Controllers\IndicadoresCalidadController;
 
 // Autenticación
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -66,6 +67,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Epidemiología
     Route::get('/epidemiologia', [EpidemiologiaController::class, 'index'])->name('epidemiologia.index');
+
+    // Indicadores de Calidad UCI
+    Route::get('/indicadores-calidad', [IndicadoresCalidadController::class, 'index'])->name('indicadores.calidad');
 
     // Plantilla de registro diario
     Route::get('/plantilla-diaria', [PlantillaDiariaController::class, 'index'])->name('plantilla-diaria');
