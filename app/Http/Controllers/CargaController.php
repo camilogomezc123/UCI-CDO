@@ -5,11 +5,17 @@ namespace App\Http\Controllers;
 use App\Services\ExcelImportService;
 use App\Models\CargaArchivo;
 use App\Models\Paciente;
+use App\Models\Snapshot;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CargaController extends Controller
 {
+    private const SUBUNIDADES_ESPERADAS = [
+        'UCI Quirúrgica', 'UCI Cardiovascular', 'UCI Respiratoria', 'UCI General',
+        'UCI Neurovascular', 'UCI Torre C', 'UCI Torre B',
+    ];
+
     public function index()
     {
         $ultimaCarga = CargaArchivo::with('usuario')->latest()->first();
@@ -31,6 +37,7 @@ class CargaController extends Controller
         $exitos = [];
         $errores = [];
         $infoBarthel = [];
+        $fechasCargadas = [];
 
         foreach ($request->file('archivos') as $archivo) {
             $nombreOriginal = $archivo->getClientOriginalName();
@@ -38,6 +45,9 @@ class CargaController extends Controller
             $rutaAbsoluta   = $archivo->getRealPath();
 
             $resultado = $importService->procesar($rutaAbsoluta, auth()->id(), $nombreOriginal);
+            if (!empty($resultado['fecha_archivo'])) {
+                $fechasCargadas[] = $resultado['fecha_archivo'];
+            }
 
             $egresados  = $resultado['egresados']  ?? 0;
             $reingresos = $resultado['reingresos'] ?? 0;
@@ -72,6 +82,20 @@ class CargaController extends Controller
         }
 
         $flash = implode(' | ', $exitos);
+        $faltantesPorFecha = collect($fechasCargadas)->unique()->map(function ($fecha) {
+            $presentes = Snapshot::whereDate('fecha_snapshot', $fecha)
+                ->pluck('subunidad')->filter()->unique()->all();
+            return [
+                'fecha' => $fecha,
+                'faltantes' => array_values(array_diff(self::SUBUNIDADES_ESPERADAS, $presentes)),
+            ];
+        })->filter(fn($cobertura) => !empty($cobertura['faltantes']));
+
+        if ($faltantesPorFecha->isNotEmpty()) {
+            $detalle = $faltantesPorFecha->map(fn($cobertura) => $cobertura['fecha'] . ': faltan ' . implode(', ', $cobertura['faltantes']))->implode(' | ');
+            return redirect()->route('carga.historial')
+                ->with('warning', trim($flash . ' — Atención: cobertura incompleta. ' . $detalle, ' —'));
+        }
         if (!empty($errores)) {
             $flash .= ' — Con errores: ' . implode(' | ', $errores);
             return redirect()->route('carga.historial')->with('warning', $flash);

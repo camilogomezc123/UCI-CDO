@@ -58,6 +58,7 @@ class ExcelImportService
         );
 
         $fechaArchivo = $this->extraerFechaArchivo($nombreOriginal);
+        $resultado['fecha_archivo'] = $fechaArchivo;
 
         DB::transaction(function () use ($filas, $usuarioId, $fechaArchivo, $nombreOriginal, &$resultado) {
             $carga = CargaArchivo::create([

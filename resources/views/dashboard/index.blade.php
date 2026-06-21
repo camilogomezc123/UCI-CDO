@@ -263,38 +263,42 @@
                     </div>
                 @else
                     <canvas id="chartOcupacion" style="max-height:200px;"></canvas>
+                    @php $ocupacionNoConfiable = $ocupacionHistorica->where('confiable', false); @endphp
+                    @if($ocupacionNoConfiable->isNotEmpty())
+                    <div class="alert alert-warning py-2 px-3 mt-3 mb-0" style="font-size:0.78rem;">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        <strong>Puntos naranjas:</strong> ocupación estimada por ingresos y egresos. Puntos rojos: carga incompleta sin estimación.
+                    </div>
+                    @endif
                 @endif
             </div>
         </div>
-    </div>
-</div>
 
-<div class="row g-3 mb-4">
-    {{-- Criterios --}}
-    <div class="col-lg-3 col-sm-6">
-        <div class="card h-100">
+        <div class="card mt-3">
             <div class="card-header d-flex align-items-center gap-2">
                 <i class="bi bi-pie-chart text-primary"></i> Por Criterio
             </div>
             <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                <canvas id="chartCriterio" style="max-height:160px;"></canvas>
-                <div class="mt-3 w-100">
+                <canvas id="chartCriterio" style="max-height:210px;"></canvas>
+                <div class="mt-3 w-100 row g-2">
                     @php $cc = ['ESTANCIA EN UNIDAD CUIDADO INTENSIVO'=>['UCI Intensivo','#dc3545'],'ESTANCIA EN UNIDAD CUIDADO INTERMEDIO'=>['UCI Intermedio','#fd7e14'],'OTROS CRITERIOS(Hosp, Alta)'=>['Otros','#6c757d']]; @endphp
                     @foreach($porCriterio as $c => $n)
                     @php $i = $cc[$c] ?? [$c,'#aaa']; @endphp
-                    <div class="d-flex align-items-center gap-2 mb-1">
+                    <div class="col-md-4 d-flex align-items-center gap-2">
                         <span style="width:10px;height:10px;border-radius:50%;background:{{ $i[1] }};display:inline-block;flex-shrink:0;"></span>
-                        <span style="font-size:0.78rem;">{{ $i[0] }}</span>
-                        <span class="ms-auto fw-bold" style="font-size:0.85rem;">{{ $n }}</span>
+                        <span style="font-size:0.82rem;">{{ $i[0] }}</span>
+                        <span class="ms-auto fw-bold">{{ $n }}</span>
                     </div>
                     @endforeach
                 </div>
             </div>
         </div>
     </div>
+</div>
 
+<div class="row g-3 mb-4">
     {{-- Soporte --}}
-    <div class="col-lg-3 col-sm-6">
+    <div class="col-lg-4">
         <div class="card h-100">
             <div class="card-header d-flex align-items-center gap-2">
                 <i class="bi bi-lungs text-primary"></i> Soporte Activo
@@ -320,7 +324,7 @@
     </div>
 
     {{-- Promedios escalas --}}
-    <div class="col-lg-6">
+    <div class="col-lg-8">
         <div class="card h-100">
             <div class="card-header d-flex align-items-center gap-2">
                 <i class="bi bi-clipboard2-pulse text-primary"></i> Promedios Escalas Clínicas
@@ -658,7 +662,10 @@ if (ctxO) {
                 data: hist.map(h => h.total),
                 borderColor: '#0d6efd',
                 backgroundColor: 'rgba(13,110,253,0.1)',
-                fill: true, tension: 0.3, pointRadius: 3
+                fill: true, tension: 0.3,
+                pointRadius: hist.map(h => h.confiable ? 3 : 5),
+                pointBackgroundColor: hist.map(h => h.estimado ? '#fd7e14' : (h.confiable ? '#fff' : '#dc3545')),
+                pointBorderColor: hist.map(h => h.estimado ? '#fd7e14' : (h.confiable ? '#0d6efd' : '#dc3545')),
             }]
         },
         options: {
@@ -670,9 +677,14 @@ if (ctxO) {
                     callbacks: {
                         title: items => {
                             const corte = hist[items[0].dataIndex];
-                            return `${corte.fecha} · corte ${corte.hora_carga}`;
+                            const estado = corte.estimado ? ' · estimado' : (!corte.confiable ? ' · datos incompletos' : '');
+                            return `${corte.fecha} · corte ${corte.hora_carga}${estado}`;
                         },
-                        label: item => `${item.parsed.y} camas ocupadas`,
+                        label: item => {
+                            const corte = hist[item.dataIndex];
+                            const faltantes = corte.faltantes.length ? ` · Faltan: ${corte.faltantes.join(', ')}` : '';
+                            return `${item.parsed.y} camas ocupadas${faltantes}`;
+                        },
                     }
                 }
             }

@@ -90,21 +90,49 @@ class DashboardController extends Controller
         ];
 
         // ── Ocupación histórica ───────────────────────────────────────────────────
+        $inicioHistorico = now()->subDays(30)->startOfDay();
+        $subunidadesEsperadas = array_values(array_filter(array_keys($capacidades), fn($subunidad) => $subunidad !== 'UCIN'));
         $ocupacionHistorica = Snapshot::join('cargas_archivo', 'cargas_archivo.id', '=', 'snapshots.carga_id')
-            ->select(
-                DB::raw('DATE(snapshots.fecha_snapshot) as fecha'),
-                DB::raw('COUNT(DISTINCT snapshots.paciente_id) as total'),
-                DB::raw('MAX(cargas_archivo.created_at) as hora_carga')
-            )
-            ->whereDate('snapshots.fecha_snapshot', '>=', now()->subDays(30)->toDateString())
-            ->groupBy(DB::raw('DATE(snapshots.fecha_snapshot)'))
-            ->orderBy('fecha')
-            ->get()
-            ->map(fn($r) => [
-                'fecha'      => Carbon::parse($r->fecha)->format('Y-m-d'),
-                'total'      => (int) $r->total,
-                'hora_carga' => Carbon::parse($r->hora_carga)->format('H:i'),
-            ]);
+            ->whereDate('snapshots.fecha_snapshot', '>=', $inicioHistorico->toDateString())
+            ->get(['snapshots.fecha_snapshot', 'snapshots.paciente_id', 'snapshots.subunidad', 'cargas_archivo.created_at'])
+            ->groupBy(fn($s) => Carbon::parse($s->fecha_snapshot)->toDateString())
+            ->map(function ($snapshotsDia, $fecha) use ($subunidadesEsperadas) {
+                $subunidades = $snapshotsDia->pluck('subunidad')->filter()->unique()->values()->all();
+                $faltantes = array_values(array_diff($subunidadesEsperadas, $subunidades));
+                $ultimaCarga = $snapshotsDia->max('created_at');
+
+                return [
+                    'fecha'       => $fecha,
+                    'total'       => $snapshotsDia->pluck('paciente_id')->unique()->count(),
+                    'medido'      => $snapshotsDia->pluck('paciente_id')->unique()->count(),
+                    'hora_carga'  => Carbon::parse($ultimaCarga)->format('H:i'),
+                    'faltantes'   => $faltantes,
+                    'confiable'   => empty($faltantes),
+                    'estimado'    => false,
+                ];
+            })
+            ->sortBy('fecha')
+            ->values();
+
+        $ingresos = Paciente::whereBetween('ingreso_uci', [$inicioHistorico, now()->endOfDay()])
+            ->selectRaw('DATE(ingreso_uci) as fecha, COUNT(*) as total')
+            ->groupBy(DB::raw('DATE(ingreso_uci)'))
+            ->pluck('total', 'fecha');
+        $egresos = Paciente::whereBetween('egreso_uci', [$inicioHistorico, now()->endOfDay()])
+            ->selectRaw('DATE(egreso_uci) as fecha, COUNT(*) as total')
+            ->groupBy(DB::raw('DATE(egreso_uci)'))
+            ->pluck('total', 'fecha');
+
+        $ocupacionHistorica = $ocupacionHistorica->all();
+        foreach ($ocupacionHistorica as $indice => &$dia) {
+            $anterior = $ocupacionHistorica[$indice - 1] ?? null;
+            if (!$dia['confiable'] && $anterior && $anterior['confiable']) {
+                $dia['total'] = max(0, $anterior['total'] + ($ingresos[$dia['fecha']] ?? 0) - ($egresos[$dia['fecha']] ?? 0));
+                $dia['estimado'] = true;
+            }
+        }
+        unset($dia);
+        $ocupacionHistorica = collect($ocupacionHistorica);
 
         // ── VMI y vasopresor activos ──────────────────────────────────────────────
         $conVmiActivo = $snapshots->filter(fn($s) =>
