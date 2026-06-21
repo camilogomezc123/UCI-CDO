@@ -78,6 +78,7 @@
                 </table>
             </div>
         </div>
+
     </div>
     @endif
     @if($alertasSofa->count() > 0)
@@ -247,6 +248,25 @@
                 @endforeach
             </div>
         </div>
+        <div class="card mt-3">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="bi bi-pie-chart text-primary"></i> Por Criterio
+            </div>
+            <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                <canvas id="chartCriterio" style="max-height:210px;"></canvas>
+                <div class="mt-3 w-100 row g-2">
+                    @php $cc = ['ESTANCIA EN UNIDAD CUIDADO INTENSIVO'=>['UCI Intensivo','#dc3545'],'ESTANCIA EN UNIDAD CUIDADO INTERMEDIO'=>['UCI Intermedio','#fd7e14'],'OTROS CRITERIOS(Hosp, Alta)'=>['Otros','#6c757d']]; @endphp
+                    @foreach($porCriterio as $c => $n)
+                    @php $i = $cc[$c] ?? [$c,'#aaa']; @endphp
+                    <div class="col-12 d-flex align-items-center gap-2">
+                        <span style="width:10px;height:10px;border-radius:50%;background:{{ $i[1] }};display:inline-block;flex-shrink:0;"></span>
+                        <span style="font-size:0.82rem;">{{ $i[0] }}</span>
+                        <span class="ms-auto fw-bold">{{ $n }}</span>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
     </div>
 
     {{-- Ocupación histórica últimos 30 días --}}
@@ -274,25 +294,6 @@
             </div>
         </div>
 
-        <div class="card mt-3">
-            <div class="card-header d-flex align-items-center gap-2">
-                <i class="bi bi-pie-chart text-primary"></i> Por Criterio
-            </div>
-            <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                <canvas id="chartCriterio" style="max-height:210px;"></canvas>
-                <div class="mt-3 w-100 row g-2">
-                    @php $cc = ['ESTANCIA EN UNIDAD CUIDADO INTENSIVO'=>['UCI Intensivo','#dc3545'],'ESTANCIA EN UNIDAD CUIDADO INTERMEDIO'=>['UCI Intermedio','#fd7e14'],'OTROS CRITERIOS(Hosp, Alta)'=>['Otros','#6c757d']]; @endphp
-                    @foreach($porCriterio as $c => $n)
-                    @php $i = $cc[$c] ?? [$c,'#aaa']; @endphp
-                    <div class="col-md-4 d-flex align-items-center gap-2">
-                        <span style="width:10px;height:10px;border-radius:50%;background:{{ $i[1] }};display:inline-block;flex-shrink:0;"></span>
-                        <span style="font-size:0.82rem;">{{ $i[0] }}</span>
-                        <span class="ms-auto fw-bold">{{ $n }}</span>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
