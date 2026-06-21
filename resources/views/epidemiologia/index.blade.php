@@ -2,6 +2,18 @@
 @section('title', 'Perfil Epidemiológico')
 @section('page-title', 'Perfil Epidemiológico UCI')
 
+@push('styles')
+<style>
+    .epid-ranking .card-body { padding: 1rem 1.25rem; }
+    .epid-ranking-item { margin-bottom: .8rem; }
+    .epid-ranking-item:last-child { margin-bottom: 0; }
+    .epid-ranking-label { font-size: .79rem; line-height: 1.2; min-width: 0; }
+    .epid-ranking-bar { height: 8px; border-radius: 99px; background: #e9ecef; overflow: hidden; }
+    .epid-ranking-bar > span { display: block; height: 100%; border-radius: inherit; }
+    .epid-ranking-count { min-width: 62px; text-align: right; font-size: .76rem; white-space: nowrap; }
+</style>
+@endpush
+
 @section('content')
 
 {{-- KPIs rápidos --}}
@@ -295,17 +307,19 @@
 
 {{-- Fila 4: CIE-10 + Especialidades + EAPB --}}
 <div class="row g-3 mb-3">
-    <div class="col-lg-4">
-        <div class="card h-100">
-            <div class="card-header"><i class="bi bi-journal-medical me-2 text-primary"></i>Top 10 Diagnósticos CIE-10</div>
+    <div class="col-xl-5">
+        <div class="card h-100 epid-ranking">
+            <div class="card-header d-flex justify-content-between"><span><i class="bi bi-journal-medical me-2 text-primary"></i>Diagnósticos frecuentes</span><small class="text-muted">CIE-10</small></div>
             <div class="card-body">
                 @forelse($cie10Raw as $cod => $n)
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="badge bg-primary me-2" style="font-size:0.8rem;min-width:50px;">{{ $cod }}</span>
-                    <div class="progress flex-fill mx-2" style="height:14px;border-radius:4px;">
-                        <div class="progress-bar" style="width:{{ $cie10Raw->max() > 0 ? round($n/$cie10Raw->max()*100) : 0 }}%;"></div>
+                @php preg_match('/^([A-Z]\d{2,3}[A-Z]?)[\s\-:]*(.*)$/', $cod, $cie); $codigoCie = $cie[1] ?? $cod; $nombreCie = $cie[2] ?? ''; @endphp
+                <div class="epid-ranking-item">
+                    <div class="d-flex align-items-start gap-2 mb-1">
+                        <span class="badge bg-primary">{{ $codigoCie }}</span>
+                        <span class="epid-ranking-label flex-grow-1" title="{{ $cod }}">{{ $nombreCie ?: $cod }}</span>
+                        <span class="epid-ranking-count fw-bold">{{ $n }} <small class="text-muted fw-normal">casos</small></span>
                     </div>
-                    <span class="fw-bold" style="font-size:0.82rem;min-width:25px;text-align:right;">{{ $n }}</span>
+                    <div class="epid-ranking-bar"><span class="bg-primary" style="width:{{ $cie10Raw->max() > 0 ? round($n/$cie10Raw->max()*100) : 0 }}%;"></span></div>
                 </div>
                 @empty
                 <div class="text-center text-muted py-3" style="font-size:0.875rem;">Sin datos CIE-10 registrados.</div>
@@ -313,17 +327,14 @@
             </div>
         </div>
     </div>
-    <div class="col-lg-4">
-        <div class="card h-100">
-            <div class="card-header"><i class="bi bi-person-badge me-2 text-primary"></i>Top Especialidades</div>
+    <div class="col-xl-3">
+        <div class="card h-100 epid-ranking">
+            <div class="card-header"><i class="bi bi-person-badge me-2 text-success"></i>Especialidades</div>
             <div class="card-body">
                 @forelse($topEspecialidades as $esp => $n)
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="text-truncate me-2" style="font-size:0.8rem;max-width:180px;" title="{{ $esp }}">{{ $esp }}</span>
-                    <div class="progress flex-fill mx-2" style="height:14px;border-radius:4px;">
-                        <div class="progress-bar bg-success" style="width:{{ $topEspecialidades->max() > 0 ? round($n/$topEspecialidades->max()*100) : 0 }}%;"></div>
-                    </div>
-                    <span class="fw-bold" style="font-size:0.82rem;min-width:25px;text-align:right;">{{ $n }}</span>
+                <div class="epid-ranking-item">
+                    <div class="d-flex gap-2 mb-1"><span class="epid-ranking-label flex-grow-1 text-truncate" title="{{ $esp }}">{{ $esp }}</span><span class="epid-ranking-count fw-bold">{{ $n }}</span></div>
+                    <div class="epid-ranking-bar"><span class="bg-success" style="width:{{ $topEspecialidades->max() > 0 ? round($n/$topEspecialidades->max()*100) : 0 }}%;"></span></div>
                 </div>
                 @empty
                 <div class="text-center text-muted py-3" style="font-size:0.875rem;">Sin datos de especialidad.</div>
@@ -331,17 +342,14 @@
             </div>
         </div>
     </div>
-    <div class="col-lg-4">
-        <div class="card h-100">
-            <div class="card-header"><i class="bi bi-building-check me-2 text-primary"></i>Top EAPB / Aseguradora</div>
+    <div class="col-xl-4">
+        <div class="card h-100 epid-ranking">
+            <div class="card-header"><i class="bi bi-building-check me-2 text-warning"></i>Aseguradoras / EAPB</div>
             <div class="card-body">
                 @forelse($topEapb as $eapb => $n)
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="text-truncate me-2" style="font-size:0.8rem;max-width:180px;" title="{{ $eapb }}">{{ $eapb }}</span>
-                    <div class="progress flex-fill mx-2" style="height:14px;border-radius:4px;">
-                        <div class="progress-bar bg-warning" style="width:{{ $topEapb->max() > 0 ? round($n/$topEapb->max()*100) : 0 }}%;"></div>
-                    </div>
-                    <span class="fw-bold" style="font-size:0.82rem;min-width:25px;text-align:right;">{{ $n }}</span>
+                <div class="epid-ranking-item">
+                    <div class="d-flex gap-2 mb-1"><span class="epid-ranking-label flex-grow-1 text-truncate" title="{{ $eapb }}">{{ $eapb }}</span><span class="epid-ranking-count fw-bold">{{ $n }}</span></div>
+                    <div class="epid-ranking-bar"><span class="bg-warning" style="width:{{ $topEapb->max() > 0 ? round($n/$topEapb->max()*100) : 0 }}%;"></span></div>
                 </div>
                 @empty
                 <div class="text-center text-muted py-3" style="font-size:0.875rem;">Sin datos EAPB.</div>
