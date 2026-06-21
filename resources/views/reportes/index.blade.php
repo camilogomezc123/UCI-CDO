@@ -38,9 +38,9 @@
                         <th class="text-center">Ocupados</th>
                         <th class="text-center">Vacíos</th>
                         <th class="text-center">% Ocup.</th>
-                        <th class="text-center">UCI Int.</th>
-                        <th class="text-center">UCI Interm.</th>
-                        <th class="text-center">Otros</th>
+                        <th class="text-center">UCI</th>
+                        <th class="text-center">UCIN / Interm.</th>
+                        <th class="text-center">Hosp. / Traslado</th>
                         <th class="text-center">VMI</th>
                         <th class="text-center">Vasopresor</th>
                         <th class="text-center">Pend. Egreso</th>
@@ -68,9 +68,9 @@
                         <td class="text-center">
                             <span class="badge bg-{{ $colorPct }}">{{ $pct }}%</span>
                         </td>
-                        <td class="text-center"><span class="badge" style="background:#dc354520;color:#dc3545;">{{ $datos['intensivo'] }}</span></td>
-                        <td class="text-center"><span class="badge" style="background:#fd7e1420;color:#e06000;">{{ $datos['intermedio'] }}</span></td>
-                        <td class="text-center"><span class="badge bg-secondary">{{ $datos['otros'] }}</span></td>
+                        <td class="text-center"><span class="badge" style="background:#dc354520;color:#dc3545;">{{ $datos['uci'] }}</span></td>
+                        <td class="text-center"><span class="badge" style="background:#ffc10720;color:#9a7200;">{{ $datos['ucin'] }}</span></td>
+                        <td class="text-center"><span class="badge" style="background:#19875420;color:#198754;">{{ $datos['traslado'] }}</span></td>
                         <td class="text-center"><span class="badge bg-info text-dark">{{ $datos['con_vmi'] }}</span></td>
                         <td class="text-center"><span class="badge bg-danger">{{ $datos['con_vasopresor'] }}</span></td>
                         <td class="text-center">
