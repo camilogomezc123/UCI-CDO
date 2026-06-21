@@ -69,9 +69,12 @@ class DashboardController extends Controller
         // ── Espera larga (> 4h) ───────────────────────────────────────────────────
         $pacientesEsperaLarga = Paciente::whereNotNull('salida_hospitalizacion')
             ->whereNull('egreso_uci')->where('activo', true)
-            ->with('ultimoSnapshot')->get()
-            ->filter(fn($p) => $p->tiempoEsperaHoras() > 4)
-            ->sortByDesc(fn($p) => $p->tiempoEsperaHoras());
+            // Se filtra en la base de datos: evita cargar pacientes que todavía
+            // no cumplen cuatro horas de espera solo para descartarlos en PHP.
+            ->where('salida_hospitalizacion', '<=', now()->subHours(4))
+            ->with('ultimoSnapshot')
+            ->orderBy('salida_hospitalizacion')
+            ->get();
 
         // ── Capacidades ───────────────────────────────────────────────────────────
         $unidades = UnidadUci::with('indisponibilidades')->orderBy('cama_desde')->get();
@@ -101,7 +104,9 @@ class DashboardController extends Controller
         // ── Ocupación histórica ───────────────────────────────────────────────────
         $inicioHistorico = now()->subDays(30)->startOfDay();
         $ocupacionHistorica = Snapshot::join('cargas_archivo', 'cargas_archivo.id', '=', 'snapshots.carga_id')
-            ->whereDate('snapshots.fecha_snapshot', '>=', $inicioHistorico->toDateString())
+            // fecha_snapshot es siempre el corte de medianoche; no usar DATE()
+            // permite que SQLite/PostgreSQL aprovechen el índice por fecha.
+            ->where('snapshots.fecha_snapshot', '>=', $inicioHistorico->toDateString())
             ->get(['snapshots.fecha_snapshot', 'snapshots.paciente_id', 'snapshots.subunidad', 'cargas_archivo.created_at'])
             ->groupBy(fn($s) => Carbon::parse($s->fecha_snapshot)->toDateString())
             ->map(function ($snapshotsDia, $fecha) use ($unidades) {
