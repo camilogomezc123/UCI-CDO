@@ -62,8 +62,8 @@ class DashboardController extends Controller
             ->sortByDesc(fn($p) => $p->tiempoEsperaHoras());
 
         // ── Capacidades ───────────────────────────────────────────────────────────
-        $unidades = UnidadUci::orderBy('cama_desde')->get();
-        $capacidades = $unidades->filter(fn($u) => $u->estaHabilitadaEn(today()))->pluck('capacidad', 'nombre')->all();
+        $unidades = UnidadUci::with('indisponibilidades')->orderBy('cama_desde')->get();
+        $capacidades = $unidades->mapWithKeys(fn($u) => [$u->nombre => $u->capacidadDisponibleEn(today())])->all();
         $totalCamas = array_sum($capacidades);
 
         // ── Promedios escalas ─────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ class DashboardController extends Controller
             ->get(['snapshots.fecha_snapshot', 'snapshots.paciente_id', 'snapshots.subunidad', 'cargas_archivo.created_at'])
             ->groupBy(fn($s) => Carbon::parse($s->fecha_snapshot)->toDateString())
             ->map(function ($snapshotsDia, $fecha) use ($unidades) {
-                $subunidadesEsperadas = $unidades->filter(fn($u) => $u->nombre !== 'UCIN' && $u->estaHabilitadaEn($fecha))->pluck('nombre')->all();
+                $subunidadesEsperadas = $unidades->filter(fn($u) => $u->nombre !== 'UCIN' && $u->capacidadDisponibleEn($fecha) > 0)->pluck('nombre')->all();
                 $subunidades = $snapshotsDia->pluck('subunidad')->filter()->unique()->values()->all();
                 $faltantes = array_values(array_diff($subunidadesEsperadas, $subunidades));
                 $ultimaCarga = $snapshotsDia->max('created_at');
@@ -240,7 +240,7 @@ class DashboardController extends Controller
         return view('dashboard.index', compact(
             'totalActivos', 'pendientesEgreso', 'ultimaCarga', 'cargaHoy',
             'porCriterio', 'porSubunidad', 'porVentilatorio', 'porHemodinamico',
-            'pacientesEsperaLarga', 'capacidades', 'promedios', 'movilizacion',
+            'pacientesEsperaLarga', 'capacidades', 'unidades', 'promedios', 'movilizacion',
             'alertasNews', 'alertasSofa', 'alertasDolor',
             'ocupacionHistorica', 'conVmiActivo', 'conVasopresorActivo',
             'pacientesSoporteProlongado',

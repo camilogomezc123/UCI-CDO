@@ -230,16 +230,18 @@
                 <i class="bi bi-building text-primary"></i> Ocupación por Subunidad
             </div>
             <div class="card-body">
-                @foreach($capacidades as $sub => $cap)
+                @foreach($unidades as $unidad)
                 @php
+                    $sub = $unidad->nombre;
+                    $cap = $capacidades[$sub] ?? 0;
                     $ocu = $porSubunidad[$sub] ?? 0;
                     $pct = $cap > 0 ? round($ocu / $cap * 100) : 0;
                     $color = $pct >= 90 ? 'danger' : ($pct >= 70 ? 'warning' : 'success');
                 @endphp
-                <div class="mb-2">
+                <div class="mb-2 {{ $cap === 0 ? 'opacity-50' : '' }}">
                     <div class="d-flex justify-content-between mb-1">
                         <span style="font-size:0.82rem;font-weight:600;">{{ $sub }}</span>
-                        <span style="font-size:0.8rem;" class="text-{{ $color }}">{{ $ocu }}/{{ $cap }}</span>
+                        <span style="font-size:0.8rem;" class="text-{{ $color }}">{{ $cap === 0 ? 'Inhabilitada' : $ocu.'/'.$cap }}</span>
                     </div>
                     <div class="progress" style="height:6px;border-radius:4px;">
                         <div class="progress-bar bg-{{ $color }}" style="width:{{ $pct }}%"></div>

@@ -81,8 +81,8 @@ class CargaController extends Controller
         $faltantesPorFecha = collect($fechasCargadas)->unique()->map(function ($fecha) {
             $presentes = Snapshot::whereDate('fecha_snapshot', $fecha)
                 ->pluck('subunidad')->filter()->unique()->all();
-            $esperadas = UnidadUci::orderBy('cama_desde')->get()
-                ->filter(fn($u) => $u->nombre !== 'UCIN' && $u->estaHabilitadaEn($fecha))->pluck('nombre')->all();
+            $esperadas = UnidadUci::with('indisponibilidades')->orderBy('cama_desde')->get()
+                ->filter(fn($u) => $u->nombre !== 'UCIN' && $u->capacidadDisponibleEn($fecha) > 0)->pluck('nombre')->all();
             return [
                 'fecha' => $fecha,
                 'faltantes' => array_values(array_diff($esperadas, $presentes)),

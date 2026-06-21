@@ -94,6 +94,7 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/usuarios/{usuario}/toggle', [UsuarioController::class, 'toggleActivo'])->name('usuarios.toggle');
         Route::patch('/usuarios/{usuario}/reset-password', [UsuarioController::class, 'resetPassword'])->name('usuarios.reset-password');
         Route::get('/administracion/unidades-uci', [UnidadUciController::class, 'index'])->name('unidades-uci.index');
-        Route::patch('/administracion/unidades-uci/{unidad}', [UnidadUciController::class, 'update'])->name('unidades-uci.update');
+        Route::post('/administracion/unidades-uci/{unidad}/inhabilitar', [UnidadUciController::class, 'inhabilitar'])->name('unidades-uci.inhabilitar');
+        Route::patch('/administracion/indisponibilidades-uci/{indisponibilidad}/habilitar', [UnidadUciController::class, 'habilitar'])->name('unidades-uci.habilitar');
     });
 });
