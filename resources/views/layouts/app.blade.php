@@ -116,6 +116,7 @@
         .criterio-intensivo { background: #dc354520; color: #dc3545; }
         .criterio-intermedio { background: #fd7e1420; color: #e06000; }
         .criterio-otros { background: #6c757d20; color: #6c757d; }
+        .criterio-traslado { background: #19875420; color: #198754; }
 
         /* Tables */
         .table > thead > tr > th { background: #f8f9fa; font-size: 0.8rem; font-weight: 600; color: var(--co-gris); border-bottom: 2px solid #e5e9f0; }

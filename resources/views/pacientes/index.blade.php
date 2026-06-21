@@ -62,28 +62,25 @@
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover mb-0 pacientes-activos-table">
                 <thead>
                     <tr>
-                        <th>Cama</th>
-                        <th>Subunidad</th>
+                        <th>Ubicación</th>
                         <th>Paciente</th>
-                        <th>Criterio</th>
+                        <th>Clasificación</th>
                         <th>Soporte</th>
-                        <th>Ingreso UCI</th>
-                        <th>Tiempo en UCI</th>
-                        <th>Estado egreso</th>
-                        <th>CAM-UCI hoy</th>
+                        <th>Estancia</th>
+                        <th>Seguimiento</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($pacientes as $p)
                     <tr>
-                        <td>
+                        <td class="text-nowrap">
                             <span class="badge bg-secondary rounded-pill" style="font-size:0.8rem;">{{ $p->ubicacion ?? '—' }}</span>
+                            <div class="text-muted mt-1" style="font-size:0.68rem;">{{ $p->subunidad ?? '—' }}</div>
                         </td>
-                        <td style="font-size:0.8rem;">{{ $p->subunidad ?? '—' }}</td>
                         <td>
                             <div class="fw-semibold" style="font-size:0.875rem;">{{ $p->nombre }}</div>
                             <div class="text-muted" style="font-size:0.72rem;">{{ $p->documento }}</div>
@@ -91,21 +88,19 @@
                         <td>
                             @php
                                 $criterio = $p->criterio_atencion ?? '';
-                                $cls = match(true) {
-                                    str_contains($criterio, 'INTENSIVO') => 'criterio-intensivo',
-                                    str_contains($criterio, 'INTERMEDIO') => 'criterio-intermedio',
-                                    default => 'criterio-otros',
+                                $clasificacion = $p->salida_hospitalizacion && !$p->egreso_uci ? 'traslado'
+                                    : (str_contains(strtoupper($criterio), 'INTERMEDIO') || $p->subunidad === 'UCIN' ? 'ucin' : 'uci');
+                                $cls = match($clasificacion) {
+                                    'uci' => 'criterio-intensivo', 'ucin' => 'criterio-intermedio', default => 'criterio-traslado',
                                 };
                             @endphp
                             <span class="badge badge-criterio {{ $cls }}">
-                                {{ match(true) {
-                                    str_contains($criterio, 'INTENSIVO') => 'UCI Intensivo',
-                                    str_contains($criterio, 'INTERMEDIO') => 'UCI Intermedio',
-                                    default => 'Otro',
+                                {{ match($clasificacion) {
+                                    'uci' => 'UCI', 'ucin' => 'UCIN / Interm.', default => 'Hosp. / Traslado',
                                 } }}
                             </span>
                         </td>
-                        <td style="font-size:0.78rem;">
+                        <td style="font-size:0.72rem;max-width:145px;">
                             @if($p->soporte_ventilatorio)
                                 <span class="badge bg-info text-dark me-1" title="Ventilatorio">{{ $p->soporte_ventilatorio }}</span>
                             @endif
@@ -113,20 +108,14 @@
                                 <span class="badge bg-danger me-1" title="Hemodinámico">{{ $p->soporte_hemodinamico }}</span>
                             @endif
                         </td>
-                        <td style="font-size:0.8rem;">
+                        <td style="font-size:0.76rem;" class="text-nowrap">
                             @if($p->ingreso_uci)
-                                {{ $p->ingreso_uci->format('d/m/Y H:i') }}
+                                <div>{{ $p->ingreso_uci->format('d/m/y H:i') }}</div>
+                                <div class="tiempo-uci">{{ $p->tiempoEnUciTexto() }}</div>
                             @else
                                 <span class="text-warning fw-semibold" style="font-size:0.75rem;">
                                     <i class="bi bi-exclamation-triangle-fill me-1"></i>Sin registrar
                                 </span>
-                            @endif
-                        </td>
-                        <td>
-                            @if($p->ingreso_uci)
-                                <span class="tiempo-uci" style="font-size:0.85rem;">{{ $p->tiempoEnUciTexto() }}</span>
-                            @else
-                                <span class="text-muted">—</span>
                             @endif
                         </td>
                         <td>
@@ -140,8 +129,7 @@
                             @else
                                 <span class="badge bg-secondary">En UCI</span>
                             @endif
-                        </td>
-                        <td>
+                            <div class="mt-1">
                             @php $cam = $camHoy[$p->id] ?? null; @endphp
                             @if($cam === 'positivo')
                                 <span class="badge bg-danger" style="font-size:0.7rem;" title="Delirium presente">
@@ -160,6 +148,7 @@
                                     <i class="bi bi-clock me-1"></i>Pendiente
                                 </span>
                             @endif
+                            </div>
                         </td>
                         <td>
                             <div class="d-flex gap-1">
@@ -185,7 +174,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" class="text-center text-muted py-4">
+                        <td colspan="7" class="text-center text-muted py-4">
                             <i class="bi bi-people display-6 d-block mb-2 opacity-25"></i>
                             No hay pacientes que coincidan con el filtro.
                         </td>
