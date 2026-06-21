@@ -695,7 +695,10 @@ if (ctxO) {
                         label: item => {
                             const corte = hist[item.dataIndex];
                             const faltantes = corte.faltantes.length ? ` · Faltan: ${corte.faltantes.join(', ')}` : '';
-                            return item.datasetIndex === 1 ? `${item.parsed.y} camas habilitadas (100%)` : `${item.parsed.y} camas ocupadas${faltantes}`;
+                            const porcentaje = corte.capacidad > 0 ? Math.round((corte.total / corte.capacidad) * 100) : 0;
+                            return item.datasetIndex === 1
+                                ? `${item.parsed.y} camas habilitadas (100%)`
+                                : `${item.parsed.y} camas ocupadas (${porcentaje}%)${faltantes}`;
                         },
                     }
                 }
