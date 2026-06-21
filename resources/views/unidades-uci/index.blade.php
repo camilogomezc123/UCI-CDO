@@ -21,6 +21,7 @@
      <div class="unidad-meta"><span class="unidad-meta-label">Disponibles</span><strong>{{ $disponibles }}/{{ $unidad->capacidad }}</strong></div>
      <div class="unidad-meta {{ $cerrada ? '' : 'text-muted' }}"><span class="unidad-meta-label">Estado desde</span><span>{{ $cerrada ? $cierresActivos->first()?->inhabilitada_desde?->format('d/m/Y') : 'Operativa' }}</span></div>
    </div>
+   <i class="bi bi-chevron-down unidad-chevron"></i>
  </button></h2>
  <div id="unidad{{ $unidad->id }}" class="accordion-collapse collapse" data-bs-parent="#unidadesAccordion"><div class="accordion-body bg-light">
    <div class="row g-3"><div class="col-lg-8"><div class="row g-2">
@@ -43,7 +44,10 @@
 .unidad-card.unidad-habilitada { border-left:5px solid #198754!important; }
 .unidad-card.unidad-parcial { border-left:5px solid #ffc107!important; }
 .unidad-card.unidad-cerrada { border-left:5px solid #6c757d!important; }
-.unidad-toggle { padding:1rem 3rem 1rem 1.1rem; background:#fff; }
+.unidad-toggle { padding:1rem 1.1rem; background:#fff; }
+.unidad-toggle::after { display:none; }
+.unidad-chevron { margin-left:1rem; color:#6c757d; transition:transform .2s ease; flex-shrink:0; }
+.unidad-toggle:not(.collapsed) .unidad-chevron { transform:rotate(180deg); }
 .unidad-cerrada .unidad-toggle { background:#f2f3f5; }
 .unidad-parcial .unidad-toggle { background:#fffdf3; }
 .unidad-resumen { display:grid; grid-template-columns:minmax(210px,1.7fr) minmax(110px,.8fr) minmax(120px,.8fr) minmax(135px,1fr); gap:1rem; align-items:center; }
