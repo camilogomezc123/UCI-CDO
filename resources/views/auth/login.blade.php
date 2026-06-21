@@ -70,7 +70,7 @@
 <body>
     <div class="login-card">
         <div class="login-header">
-            <img src="{{ asset('img/logo1-white.webp') }}" alt="Clínica de Occidente">
+            <img src="{{ asset('img/logo1-white.png') }}" alt="Clínica de Occidente">
             <h5>Panel UCI — Control de Pacientes</h5>
         </div>
         <div class="login-body">
