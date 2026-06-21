@@ -110,9 +110,9 @@
                                 <div class="fw-semibold" style="font-size:0.9rem;">{{ $p->nombre }}</div>
                                 <div class="text-muted" style="font-size:0.75rem;">{{ $p->documento }}</div>
                             </div>
-                            <div class="ms-2">
+                            <div class="ms-2 d-flex flex-column align-items-start gap-1 flex-shrink-0">
                                 <span class="badge bg-secondary" style="font-size:0.75rem;">{{ $p->ultimoSnapshot->ubicacion ?? '—' }}</span>
-                                <span class="badge ms-1" style="background:#e8f0ff;color:#0d6efd;font-size:0.72rem;">{{ $p->ultimoSnapshot->subunidad ?? '—' }}</span>
+                                <span class="badge" style="background:#e8f0ff;color:#0d6efd;font-size:0.72rem;">{{ $p->ultimoSnapshot->subunidad ?? '—' }}</span>
                             </div>
                             <div class="ms-auto me-3 d-flex gap-1 flex-wrap">
                                 @if($causa)
