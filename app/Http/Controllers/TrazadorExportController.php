@@ -262,7 +262,7 @@ class TrazadorExportController extends Controller
         $row = 2;
         $col = 1;
         foreach ($headers as $h) {
-            $ws->setCellValueByColumnAndRow($col++, $row, $h);
+            $ws->setCellValue(Coordinate::stringFromColumnIndex($col++) . $row, $h);
         }
         $this->estiloEncabezado($ws, "A{$row}:P{$row}");
         $row = 3;
@@ -299,7 +299,7 @@ class TrazadorExportController extends Controller
 
             $col = 1;
             foreach ($fila as $val) {
-                $ws->setCellValueByColumnAndRow($col++, $row, $val ?? '');
+                $ws->setCellValue(Coordinate::stringFromColumnIndex($col++) . $row, $val ?? '');
             }
 
             // Formato porcentaje en columnas H, I, J (cols 8,9,10)
@@ -364,7 +364,7 @@ class TrazadorExportController extends Controller
         $ws->setCellValue("B{$row}", 'Cierre');
         $col = 3;
         foreach ($todos as $cod => $nombre) {
-            $ws->setCellValueByColumnAndRow($col, $row, "{$cod}\n" . $nombre);
+            $ws->setCellValue(Coordinate::stringFromColumnIndex($col) . $row, "{$cod}\n" . $nombre);
             $ws->getStyleByColumnAndRow($col, $row)->getAlignment()->setWrapText(true);
             $col++;
         }
@@ -385,13 +385,13 @@ class TrazadorExportController extends Controller
                 $color = $ind['color'] ?? 'sin_dato';
 
                 if ($valor === 'N/A') {
-                    $ws->setCellValueByColumnAndRow($col, $row, 'N/A');
+                    $ws->setCellValue(Coordinate::stringFromColumnIndex($col) . $row, 'N/A');
                     $bg = self::NA_BG;
                 } elseif ($valor === null) {
-                    $ws->setCellValueByColumnAndRow($col, $row, '—');
+                    $ws->setCellValue(Coordinate::stringFromColumnIndex($col) . $row, '—');
                     $bg = self::NA_BG;
                 } else {
-                    $ws->setCellValueByColumnAndRow($col, $row, $valor / 100);
+                    $ws->setCellValue(Coordinate::stringFromColumnIndex($col) . $row, $valor / 100);
                     $ws->getStyleByColumnAndRow($col, $row)->getNumberFormat()->setFormatCode('0%');
                     $bg = match($color) {
                         'verde'    => self::VERDE,
@@ -549,7 +549,7 @@ class TrazadorExportController extends Controller
         $row = 2;
         $col = 1;
         foreach ($headers as $h) {
-            $ws->setCellValueByColumnAndRow($col++, $row, $h);
+            $ws->setCellValue(Coordinate::stringFromColumnIndex($col++) . $row, $h);
         }
         $this->estiloEncabezado($ws, "A{$row}:F{$row}");
         $row = 3;
