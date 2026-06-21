@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
-# Respaldo cifrado y verificable de la base clínica SQLite de Tablero UCI.
+# Respaldo cifrado y verificable de la base clínica PostgreSQL de Tablero UCI.
 set -Eeuo pipefail
 
 APP_NAME="tablerouci"
-DATABASE_FILE="/var/www/tablerouci.koqoi.com/public/database/database.sqlite"
+APP_PATH="/var/www/tablerouci.koqoi.com/public"
 BACKUP_ROOT="/var/backups/tablerouci"
 PASSPHRASE_FILE="/root/.config/tablerouci-backup/passphrase"
 REMOTE_ROOT="tablerouci-corporate-drive:Respaldos/Respaldos Tablero UCI/Datos clínicos"
 TIMESTAMP="$(date '+%Y-%m-%d_%H-%M-%S')"
 WORK_DIR=""
-DUMP_NAME="${APP_NAME}_${TIMESTAMP}.sqlite"
+DUMP_NAME="${APP_NAME}_${TIMESTAMP}.dump"
 ENCRYPTED_NAME="${DUMP_NAME}.gpg"
 LOG_FILE="/var/log/tablerouci_backup.log"
 
@@ -20,8 +20,21 @@ cleanup() {
 trap cleanup EXIT
 umask 077
 
-[[ -s "$DATABASE_FILE" ]] || { echo "No se encontró la base SQLite." >&2; exit 1; }
 [[ -s "$PASSPHRASE_FILE" ]] || { echo "No se encontró la clave de cifrado." >&2; exit 1; }
+
+env_value() {
+    sed -n "s/^$1=//p" "$APP_PATH/.env" | tail -n 1
+}
+
+DB_CONNECTION="$(env_value DB_CONNECTION)"
+DB_HOST="$(env_value DB_HOST)"
+DB_PORT="$(env_value DB_PORT)"
+DB_DATABASE="$(env_value DB_DATABASE)"
+DB_USERNAME="$(env_value DB_USERNAME)"
+DB_PASSWORD="$(env_value DB_PASSWORD)"
+
+[[ "$DB_CONNECTION" == 'pgsql' ]] || { echo "La aplicación no está configurada para PostgreSQL." >&2; exit 1; }
+[[ -n "$DB_DATABASE" && -n "$DB_USERNAME" && -n "$DB_PASSWORD" ]] || { echo "Faltan credenciales PostgreSQL." >&2; exit 1; }
 
 mkdir -p "$BACKUP_ROOT"
 WORK_DIR="$(mktemp -d "${BACKUP_ROOT}/run.XXXXXX")"
@@ -34,9 +47,11 @@ fi
 
 echo "$(date --iso-8601=seconds) Inicio del respaldo clínico." >> "$LOG_FILE"
 
-# .backup crea una copia consistente aun si SQLite recibe una escritura.
-sqlite3 "$DATABASE_FILE" ".backup '$WORK_DIR/$DUMP_NAME'"
-sqlite3 "$WORK_DIR/$DUMP_NAME" 'PRAGMA integrity_check;' | grep -qx 'ok'
+# Formato custom: compacto, consistente y verificable mediante pg_restore.
+PGPASSWORD="$DB_PASSWORD" pg_dump \
+    -h "${DB_HOST:-127.0.0.1}" -p "${DB_PORT:-5432}" -U "$DB_USERNAME" \
+    --format=custom --no-owner --no-acl "$DB_DATABASE" > "$WORK_DIR/$DUMP_NAME"
+pg_restore --list "$WORK_DIR/$DUMP_NAME" > /dev/null
 
 gpg --batch --yes --pinentry-mode loopback --cipher-algo AES256 --compress-algo zlib \
     --passphrase-file "$PASSPHRASE_FILE" --symmetric \
@@ -66,8 +81,8 @@ REMOTE_SIZE="$(rclone lsl "$REMOTE_ROOT/diarios/$ENCRYPTED_NAME" | awk '{print $
 
 rclone copyto "$REMOTE_ROOT/diarios/$ENCRYPTED_NAME" "$WORK_DIR/remote-verify.gpg"
 gpg --batch --yes --pinentry-mode loopback --passphrase-file "$PASSPHRASE_FILE" \
-    --decrypt --output "$WORK_DIR/restore-test.sqlite" "$WORK_DIR/remote-verify.gpg"
-sqlite3 "$WORK_DIR/restore-test.sqlite" 'PRAGMA integrity_check;' | grep -qx 'ok'
+    --decrypt --output "$WORK_DIR/restore-test.dump" "$WORK_DIR/remote-verify.gpg"
+pg_restore --list "$WORK_DIR/restore-test.dump" > /dev/null
 
 rclone delete "$REMOTE_ROOT/diarios" --min-age 7d
 rclone delete "$REMOTE_ROOT/semanales" --min-age 84d
