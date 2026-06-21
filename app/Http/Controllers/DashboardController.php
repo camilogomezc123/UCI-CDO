@@ -90,15 +90,21 @@ class DashboardController extends Controller
         ];
 
         // ── Ocupación histórica ───────────────────────────────────────────────────
-        $ocupacionHistorica = CargaArchivo::select(
-                DB::raw('DATE(created_at) as fecha'),
-                DB::raw('SUM(nuevos + actualizados) as total')
+        $ocupacionHistorica = Snapshot::join('cargas_archivo', 'cargas_archivo.id', '=', 'snapshots.carga_id')
+            ->select(
+                DB::raw('DATE(snapshots.fecha_snapshot) as fecha'),
+                DB::raw('COUNT(DISTINCT snapshots.paciente_id) as total'),
+                DB::raw('MAX(cargas_archivo.created_at) as hora_carga')
             )
-            ->where('created_at', '>=', now()->subDays(30))
-            ->groupBy(DB::raw('DATE(created_at)'))
+            ->whereDate('snapshots.fecha_snapshot', '>=', now()->subDays(30)->toDateString())
+            ->groupBy(DB::raw('DATE(snapshots.fecha_snapshot)'))
             ->orderBy('fecha')
             ->get()
-            ->map(fn($r) => ['fecha' => $r->fecha, 'total' => (int)$r->total]);
+            ->map(fn($r) => [
+                'fecha'      => Carbon::parse($r->fecha)->format('Y-m-d'),
+                'total'      => (int) $r->total,
+                'hora_carga' => Carbon::parse($r->hora_carga)->format('H:i'),
+            ]);
 
         // ── VMI y vasopresor activos ──────────────────────────────────────────────
         $conVmiActivo = $snapshots->filter(fn($s) =>

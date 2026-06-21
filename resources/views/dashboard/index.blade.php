@@ -664,7 +664,18 @@ if (ctxO) {
         options: {
             responsive: true,
             scales: { y: { beginAtZero: false, ticks: { stepSize: 5 } }, x: { ticks: { maxTicksLimit: 10, maxRotation: 0 } } },
-            plugins: { legend: { display: false } }
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: items => {
+                            const corte = hist[items[0].dataIndex];
+                            return `${corte.fecha} · corte ${corte.hora_carga}`;
+                        },
+                        label: item => `${item.parsed.y} camas ocupadas`,
+                    }
+                }
+            }
         }
     });
 }
