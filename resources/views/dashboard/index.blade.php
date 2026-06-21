@@ -247,7 +247,7 @@
                     </div>
                     <div class="progress" style="height:6px;border-radius:4px;">
                         @if($cap > 0)
-                            <div class="progress-bar bg-primary" title="UCI: {{ $detalleSubunidad['uci'] }}" style="width:{{ min(100, $detalleSubunidad['uci'] / $cap * 100) }}%"></div>
+                            <div class="progress-bar bg-danger" title="UCI: {{ $detalleSubunidad['uci'] }}" style="width:{{ min(100, $detalleSubunidad['uci'] / $cap * 100) }}%"></div>
                             <div class="progress-bar bg-warning" title="UCIN/intermedio: {{ $detalleSubunidad['ucin'] }}" style="width:{{ min(100, $detalleSubunidad['ucin'] / $cap * 100) }}%"></div>
                             <div class="progress-bar bg-success" title="Traslado a piso/egreso: {{ $detalleSubunidad['traslado'] }}" style="width:{{ min(100, $detalleSubunidad['traslado'] / $cap * 100) }}%"></div>
                         @endif
@@ -284,41 +284,8 @@
             </div>
         </div>
 
-    </div>
-</div>
-
-<div class="row g-3 mb-4">
-    {{-- Soporte --}}
-    <div class="col-lg-4">
-        <div class="card h-100">
-            <div class="card-header d-flex align-items-center gap-2">
-                <i class="bi bi-lungs text-primary"></i> Soporte Activo
-            </div>
-            <div class="card-body">
-                <p class="text-muted mb-1" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;">Ventilatorio</p>
-                @forelse($porVentilatorio as $tipo => $cnt)
-                <div class="d-flex justify-content-between mb-2">
-                    <span style="font-size:0.82rem;">{{ $tipo }}</span>
-                    <span class="badge bg-primary rounded-pill">{{ $cnt }}</span>
-                </div>
-                @empty <p class="text-muted small">Sin datos</p> @endforelse
-                <hr class="my-2">
-                <p class="text-muted mb-1" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;">Hemodinámico</p>
-                @forelse($porHemodinamico as $tipo => $cnt)
-                <div class="d-flex justify-content-between mb-2">
-                    <span style="font-size:0.82rem;">{{ $tipo }}</span>
-                    <span class="badge bg-danger rounded-pill">{{ $cnt }}</span>
-                </div>
-                @empty <p class="text-muted small">Sin datos</p> @endforelse
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-8">
-        <div class="card h-100">
-            <div class="card-header d-flex align-items-center gap-2">
-                <i class="bi bi-pie-chart text-primary"></i> Por Criterio
-            </div>
+        <div class="card mt-3">
+            <div class="card-header d-flex align-items-center gap-2"><i class="bi bi-pie-chart text-primary"></i> Por Criterio</div>
             <div class="card-body d-flex align-items-center gap-4">
                 <canvas id="chartCriterio" style="max-height:210px;max-width:260px;"></canvas>
                 <div class="flex-grow-1">
@@ -333,8 +300,19 @@
 </div>
 
 <div class="row g-3 mb-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header d-flex align-items-center gap-2"><i class="bi bi-lungs text-primary"></i> Soporte Activo</div>
+            <div class="card-body">
+                <p class="text-muted mb-1" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;">Ventilatorio</p>
+                @forelse($porVentilatorio as $tipo => $cnt)<div class="d-flex justify-content-between mb-2"><span style="font-size:0.82rem;">{{ $tipo }}</span><span class="badge bg-primary rounded-pill">{{ $cnt }}</span></div>@empty <p class="text-muted small">Sin datos</p> @endforelse
+                <hr class="my-2"><p class="text-muted mb-1" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;">Hemodinámico</p>
+                @forelse($porHemodinamico as $tipo => $cnt)<div class="d-flex justify-content-between mb-2"><span style="font-size:0.82rem;">{{ $tipo }}</span><span class="badge bg-danger rounded-pill">{{ $cnt }}</span></div>@empty <p class="text-muted small">Sin datos</p> @endforelse
+            </div>
+        </div>
+    </div>
     {{-- Promedios escalas --}}
-    <div class="col-12">
+    <div class="col-lg-8">
         <div class="card h-100">
             <div class="card-header d-flex align-items-center gap-2">
                 <i class="bi bi-clipboard2-pulse text-primary"></i> Promedios Escalas Clínicas
