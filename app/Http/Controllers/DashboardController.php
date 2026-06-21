@@ -53,6 +53,11 @@ class DashboardController extends Controller
             ->groupBy('soporte_ventilatorio')->map->count();
         $porHemodinamico = $snapshots->filter(fn($s) => !empty($s->soporte_hemodinamico))
             ->groupBy('soporte_hemodinamico')->map->count();
+        $desgloseOcupacion = [
+            'uci' => $snapshots->filter(fn($s) => str_contains(strtoupper($s->criterio_atencion ?? ''), 'INTENSIVO'))->count(),
+            'ucin' => $snapshots->where('subunidad', 'UCIN')->count(),
+            'hospitalizados' => $snapshots->filter(fn($s) => str_contains(strtoupper($s->criterio_atencion ?? ''), 'HOSP') || str_contains(strtoupper($s->criterio_atencion ?? ''), 'ALTA'))->count(),
+        ];
 
         // ── Espera larga (> 4h) ───────────────────────────────────────────────────
         $pacientesEsperaLarga = Paciente::whereNotNull('salida_hospitalizacion')
@@ -106,6 +111,7 @@ class DashboardController extends Controller
                     'faltantes'   => $faltantes,
                     'confiable'   => empty($faltantes),
                     'estimado'    => false,
+                    'capacidad'   => $unidades->sum(fn($u) => $u->capacidadDisponibleEn($fecha)),
                 ];
             })
             ->sortBy('fecha')
@@ -239,7 +245,7 @@ class DashboardController extends Controller
 
         return view('dashboard.index', compact(
             'totalActivos', 'pendientesEgreso', 'ultimaCarga', 'cargaHoy',
-            'porCriterio', 'porSubunidad', 'porVentilatorio', 'porHemodinamico',
+            'porCriterio', 'porSubunidad', 'porVentilatorio', 'porHemodinamico', 'desgloseOcupacion',
             'pacientesEsperaLarga', 'capacidades', 'unidades', 'promedios', 'movilizacion',
             'alertasNews', 'alertasSofa', 'alertasDolor',
             'ocupacionHistorica', 'conVmiActivo', 'conVasopresorActivo',

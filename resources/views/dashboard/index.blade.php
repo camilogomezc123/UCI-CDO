@@ -225,9 +225,10 @@
 <div class="row g-3 mb-4">
     {{-- Ocupación por subunidad --}}
     <div class="col-lg-5">
-        <div class="card h-100">
+        <div class="card">
             <div class="card-header d-flex align-items-center gap-2">
                 <i class="bi bi-building text-primary"></i> Ocupación por Subunidad
+                <i class="bi bi-info-circle text-muted ms-auto" title="UCI: {{ $desgloseOcupacion['uci'] }} · UCIN: {{ $desgloseOcupacion['ucin'] }} · Hospitalizados/alta: {{ $desgloseOcupacion['hospitalizados'] }}"></i>
             </div>
             <div class="card-body">
                 @foreach($unidades as $unidad)
@@ -254,7 +255,7 @@
 
     {{-- Ocupación histórica últimos 30 días --}}
     <div class="col-lg-7">
-        <div class="card h-100">
+        <div class="card">
             <div class="card-header d-flex align-items-center gap-2">
                 <i class="bi bi-graph-up text-primary"></i> Ocupación Histórica (últimos 30 días)
             </div>
@@ -669,13 +670,21 @@ if (ctxO) {
                 pointRadius: hist.map(h => h.confiable ? 3 : 5),
                 pointBackgroundColor: hist.map(h => h.estimado ? '#fd7e14' : (h.confiable ? '#fff' : '#dc3545')),
                 pointBorderColor: hist.map(h => h.estimado ? '#fd7e14' : (h.confiable ? '#0d6efd' : '#dc3545')),
+            }, {
+                label: 'Capacidad habilitada (100%)',
+                data: hist.map(h => h.capacidad),
+                borderColor: '#198754',
+                borderDash: [6, 4],
+                borderWidth: 2,
+                pointRadius: 0,
+                fill: false,
             }]
         },
         options: {
             responsive: true,
             scales: { y: { beginAtZero: false, ticks: { stepSize: 5 } }, x: { ticks: { maxTicksLimit: 10, maxRotation: 0 } } },
             plugins: {
-                legend: { display: false },
+                legend: { display: true, position: 'bottom', labels: { boxWidth: 12 } },
                 tooltip: {
                     callbacks: {
                         title: items => {
@@ -686,7 +695,7 @@ if (ctxO) {
                         label: item => {
                             const corte = hist[item.dataIndex];
                             const faltantes = corte.faltantes.length ? ` · Faltan: ${corte.faltantes.join(', ')}` : '';
-                            return `${item.parsed.y} camas ocupadas${faltantes}`;
+                            return item.datasetIndex === 1 ? `${item.parsed.y} camas habilitadas (100%)` : `${item.parsed.y} camas ocupadas${faltantes}`;
                         },
                     }
                 }
