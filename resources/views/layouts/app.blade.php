@@ -121,7 +121,7 @@
 <!-- Sidebar -->
 <nav id="sidebar">
     <div class="sidebar-brand">
-        <img src="{{ asset('img/logo2.jpeg') }}" alt="CO">
+        <img src="{{ asset('img/logo2.webp') }}" alt="CO">
         <span>UCI Panel<br><small style="opacity:0.6;font-weight:400">Clínica de Occidente</small></span>
     </div>
 
