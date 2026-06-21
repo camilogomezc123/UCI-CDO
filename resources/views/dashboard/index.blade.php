@@ -225,12 +225,12 @@
 <div class="row g-3 mb-4">
     {{-- Ocupación por subunidad --}}
     <div class="col-lg-5">
-        <div class="card">
+        <div class="card h-100">
             <div class="card-header d-flex align-items-center gap-2">
                 <i class="bi bi-building text-primary"></i> Ocupación por Subunidad
                 <span class="ms-auto" style="font-size:0.68rem;"><span class="text-primary">■ UCI {{ $desgloseOcupacion['uci'] }}</span> <span class="text-warning">■ UCIN {{ $desgloseOcupacion['ucin'] }}</span> <span class="text-success">■ Traslado {{ $desgloseOcupacion['traslado'] }}</span></span>
             </div>
-            <div class="card-body">
+            <div class="card-body d-flex flex-column justify-content-center">
                 @foreach($unidades as $unidad)
                 @php
                     $sub = $unidad->nombre;
@@ -272,12 +272,12 @@
                         Sin datos suficientes. Se construirá con cargas diarias.
                     </div>
                 @else
-                    <canvas id="chartOcupacion" style="max-height:200px;"></canvas>
+                    <canvas id="chartOcupacion" style="max-height:155px;"></canvas>
                     @php $ocupacionNoConfiable = $ocupacionHistorica->where('confiable', false); @endphp
                     @if($ocupacionNoConfiable->isNotEmpty())
-                    <div class="alert alert-warning py-2 px-3 mt-3 mb-0" style="font-size:0.78rem;">
-                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                        <strong>Puntos naranjas:</strong> ocupación estimada por ingresos y egresos. Puntos rojos: carga incompleta sin estimación.
+                    <div class="ocupacion-alertas mt-2">
+                        <span class="ocupacion-alerta alerta-estimada"><i class="bi bi-circle-fill me-1"></i>Punto naranja: estimación por ingresos y egresos.</span>
+                        <span class="ocupacion-alerta alerta-incompleta"><i class="bi bi-circle-fill me-1"></i>Punto rojo: carga incompleta.</span>
                     </div>
                     @endif
                 @endif
@@ -286,9 +286,9 @@
 
         <div class="card mt-3">
             <div class="card-header d-flex align-items-center gap-2"><i class="bi bi-pie-chart text-primary"></i> Por Criterio</div>
-            <div class="card-body d-flex align-items-center gap-4">
-                <canvas id="chartCriterio" style="max-height:210px;max-width:260px;"></canvas>
-                <div class="flex-grow-1">
+            <div class="card-body d-flex align-items-center gap-3 flex-wrap criterio-body">
+                <canvas id="chartCriterio" style="max-height:165px;max-width:190px;"></canvas>
+                <div class="flex-grow-1 criterio-leyenda">
                     @php $criteriosVisuales = [['UCI','#dc3545',$desgloseOcupacion['uci']],['UCIN / Intermedio','#ffc107',$desgloseOcupacion['ucin']],['Traslado / otros','#198754',$desgloseOcupacion['traslado']]]; $totalCriterios = array_sum(array_column($criteriosVisuales, 2)); @endphp
                     @foreach($criteriosVisuales as [$nombre, $color, $n])
                     <div class="d-flex align-items-center gap-2 mb-2"><span style="width:10px;height:10px;border-radius:50%;background:{{ $color }};display:inline-block;flex-shrink:0;"></span><span style="font-size:0.85rem;">{{ $nombre }}</span><span class="ms-auto fw-bold">{{ $n }} <small class="text-muted">({{ $totalCriterios ? round($n / $totalCriterios * 100) : 0 }}%)</small></span></div>
@@ -617,6 +617,20 @@
 </div>
 
 @endsection
+
+@push('styles')
+<style>
+.ocupacion-alertas { display:flex; flex-wrap:wrap; gap:.4rem; }
+.ocupacion-alerta { display:inline-flex; align-items:center; padding:.25rem .5rem; border-radius:.4rem; font-size:.7rem; line-height:1.25; }
+.alerta-estimada { color:#9a5b00; background:#fff3cd; }
+.alerta-estimada .bi { color:#fd7e14; }
+.alerta-incompleta { color:#a52834; background:#f8d7da; }
+.alerta-incompleta .bi { color:#dc3545; }
+.criterio-body { min-height:190px; }
+.criterio-leyenda { min-width:150px; }
+@media (max-width: 575px) { .criterio-body { justify-content:center; } .criterio-leyenda { width:100%; } }
+</style>
+@endpush
 
 @push('scripts')
 <script>
