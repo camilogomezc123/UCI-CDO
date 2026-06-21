@@ -50,6 +50,12 @@ upload_tier() {
     rclone copyto "$WORK_DIR/${ENCRYPTED_NAME}.sha256" "$REMOTE_ROOT/$tier/${ENCRYPTED_NAME}.sha256"
 }
 
+# Crear los niveles también en días que no corresponden a copia semanal o
+# mensual: así la limpieza de retención es idempotente desde la primera corrida.
+rclone mkdir "$REMOTE_ROOT/diarios"
+rclone mkdir "$REMOTE_ROOT/semanales"
+rclone mkdir "$REMOTE_ROOT/mensuales"
+
 upload_tier diarios
 [[ "$(date '+%u')" == '7' ]] && upload_tier semanales
 [[ "$(date '+%d')" == '01' ]] && upload_tier mensuales
