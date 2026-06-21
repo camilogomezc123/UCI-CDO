@@ -228,7 +228,6 @@
         <div class="card h-100">
             <div class="card-header d-flex align-items-center gap-2">
                 <i class="bi bi-building text-primary"></i> Ocupación por Subunidad
-                <span class="ms-auto" style="font-size:0.68rem;"><span class="text-primary">■ UCI {{ $desgloseOcupacion['uci'] }}</span> <span class="text-warning">■ UCIN {{ $desgloseOcupacion['ucin'] }}</span> <span class="text-success">■ Traslado {{ $desgloseOcupacion['traslado'] }}</span></span>
             </div>
             <div class="card-body d-flex flex-column justify-content-center">
                 @foreach($unidades as $unidad)
