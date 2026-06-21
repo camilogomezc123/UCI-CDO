@@ -17,6 +17,7 @@ use App\Http\Controllers\ReingresosController;
 use App\Http\Controllers\TrazadorController;
 use App\Http\Controllers\TrazadorExportController;
 use App\Http\Controllers\IndicadoresCalidadController;
+use App\Http\Controllers\UnidadUciController;
 
 // Autenticación
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -92,5 +93,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/usuarios', [UsuarioController::class, 'store'])->name('usuarios.store');
         Route::patch('/usuarios/{usuario}/toggle', [UsuarioController::class, 'toggleActivo'])->name('usuarios.toggle');
         Route::patch('/usuarios/{usuario}/reset-password', [UsuarioController::class, 'resetPassword'])->name('usuarios.reset-password');
+        Route::get('/administracion/unidades-uci', [UnidadUciController::class, 'index'])->name('unidades-uci.index');
+        Route::patch('/administracion/unidades-uci/{unidad}', [UnidadUciController::class, 'update'])->name('unidades-uci.update');
     });
 });

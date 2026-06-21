@@ -7,6 +7,7 @@ use App\Models\Snapshot;
 use App\Models\CargaArchivo;
 use App\Models\TransfusionDiaria;
 use App\Models\CamUci;
+use App\Models\UnidadUci;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -61,12 +62,8 @@ class DashboardController extends Controller
             ->sortByDesc(fn($p) => $p->tiempoEsperaHoras());
 
         // ── Capacidades ───────────────────────────────────────────────────────────
-        $capacidades = [
-            'UCI Quirúrgica'     => 8,  'UCI Cardiovascular' => 7,
-            'UCI Respiratoria'   => 6,  'UCI General'        => 11,
-            'UCI Neurovascular'  => 8,  'UCIN'               => 6,
-            'UCI Torre C'        => 8,  'UCI Torre B'        => 20,
-        ];
+        $unidades = UnidadUci::orderBy('cama_desde')->get();
+        $capacidades = $unidades->filter(fn($u) => $u->estaHabilitadaEn(today()))->pluck('capacidad', 'nombre')->all();
         $totalCamas = array_sum($capacidades);
 
         // ── Promedios escalas ─────────────────────────────────────────────────────
@@ -91,12 +88,12 @@ class DashboardController extends Controller
 
         // ── Ocupación histórica ───────────────────────────────────────────────────
         $inicioHistorico = now()->subDays(30)->startOfDay();
-        $subunidadesEsperadas = array_values(array_filter(array_keys($capacidades), fn($subunidad) => $subunidad !== 'UCIN'));
         $ocupacionHistorica = Snapshot::join('cargas_archivo', 'cargas_archivo.id', '=', 'snapshots.carga_id')
             ->whereDate('snapshots.fecha_snapshot', '>=', $inicioHistorico->toDateString())
             ->get(['snapshots.fecha_snapshot', 'snapshots.paciente_id', 'snapshots.subunidad', 'cargas_archivo.created_at'])
             ->groupBy(fn($s) => Carbon::parse($s->fecha_snapshot)->toDateString())
-            ->map(function ($snapshotsDia, $fecha) use ($subunidadesEsperadas) {
+            ->map(function ($snapshotsDia, $fecha) use ($unidades) {
+                $subunidadesEsperadas = $unidades->filter(fn($u) => $u->nombre !== 'UCIN' && $u->estaHabilitadaEn($fecha))->pluck('nombre')->all();
                 $subunidades = $snapshotsDia->pluck('subunidad')->filter()->unique()->values()->all();
                 $faltantes = array_values(array_diff($subunidadesEsperadas, $subunidades));
                 $ultimaCarga = $snapshotsDia->max('created_at');

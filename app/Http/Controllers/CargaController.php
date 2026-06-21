@@ -6,16 +6,12 @@ use App\Services\ExcelImportService;
 use App\Models\CargaArchivo;
 use App\Models\Paciente;
 use App\Models\Snapshot;
+use App\Models\UnidadUci;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CargaController extends Controller
 {
-    private const SUBUNIDADES_ESPERADAS = [
-        'UCI Quirúrgica', 'UCI Cardiovascular', 'UCI Respiratoria', 'UCI General',
-        'UCI Neurovascular', 'UCI Torre C', 'UCI Torre B',
-    ];
-
     public function index()
     {
         $ultimaCarga = CargaArchivo::with('usuario')->latest()->first();
@@ -85,9 +81,11 @@ class CargaController extends Controller
         $faltantesPorFecha = collect($fechasCargadas)->unique()->map(function ($fecha) {
             $presentes = Snapshot::whereDate('fecha_snapshot', $fecha)
                 ->pluck('subunidad')->filter()->unique()->all();
+            $esperadas = UnidadUci::orderBy('cama_desde')->get()
+                ->filter(fn($u) => $u->nombre !== 'UCIN' && $u->estaHabilitadaEn($fecha))->pluck('nombre')->all();
             return [
                 'fecha' => $fecha,
-                'faltantes' => array_values(array_diff(self::SUBUNIDADES_ESPERADAS, $presentes)),
+                'faltantes' => array_values(array_diff($esperadas, $presentes)),
             ];
         })->filter(fn($cobertura) => !empty($cobertura['faltantes']));
 

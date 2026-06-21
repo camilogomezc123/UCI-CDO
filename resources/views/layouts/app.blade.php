@@ -217,6 +217,9 @@
         <a href="{{ route('usuarios.index') }}" class="sidebar-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
             <i class="bi bi-person-gear"></i> Usuarios
         </a>
+        <a href="{{ route('unidades-uci.index') }}" class="sidebar-link {{ request()->routeIs('unidades-uci.*') ? 'active' : '' }}">
+            <i class="bi bi-hospital"></i> Unidades UCI
+        </a>
         @endif
         @endif {{-- fin @if rol !== visual --}}
     </div>
