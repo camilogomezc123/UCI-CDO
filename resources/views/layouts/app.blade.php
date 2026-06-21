@@ -16,6 +16,7 @@
             --co-gris: #5a5a5a;
         }
         body { background: #f4f6f9; font-family: 'Segoe UI', sans-serif; }
+        body.sidebar-collapsed { --sidebar-width: 0px; }
 
         /* Sidebar */
         #sidebar {
@@ -23,11 +24,12 @@
             width: var(--sidebar-width);
             background: var(--sidebar-bg);
             z-index: 1040; display: flex; flex-direction: column;
-            transition: width 0.25s;
+            transition: width 0.25s ease;
             overflow: hidden;
         }
         .sidebar-brand {
-            padding: 1rem 1.25rem;
+            height: var(--topbar-height);
+            padding: 0 1.25rem;
             border-bottom: 1px solid rgba(255,255,255,0.08);
             display: flex; align-items: center; gap: 0.75rem;
         }
@@ -68,8 +70,11 @@
             padding: 0 1.5rem; gap: 1rem;
             z-index: 1030;
             box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            transition: left 0.25s ease;
         }
         .topbar-title { font-weight: 700; font-size: 1rem; color: #2d2d2d; flex: 1; }
+        #sidebar-toggle { border: 0; color: #495057; padding: 0.4rem 0.55rem; line-height: 1; }
+        #sidebar-toggle:hover { background: #eef2f7; color: #0d6efd; }
 
         /* Main content */
         #main-content {
@@ -77,6 +82,7 @@
             margin-top: var(--topbar-height);
             padding: 1.5rem;
             min-height: calc(100vh - var(--topbar-height));
+            transition: margin-left 0.25s ease;
         }
 
         /* Cards */
@@ -215,6 +221,9 @@
 
 <!-- Topbar -->
 <div id="topbar">
+    <button id="sidebar-toggle" class="btn btn-light" type="button" aria-label="Ocultar barra lateral" title="Ocultar barra lateral">
+        <i class="bi bi-list fs-5"></i>
+    </button>
     <div class="topbar-title">@yield('page-title', 'Dashboard')</div>
     <div class="d-flex align-items-center gap-3">
         <span class="text-muted" style="font-size:0.8rem;">
@@ -259,6 +268,28 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+(() => {
+    const toggle = document.getElementById('sidebar-toggle');
+    const key = 'uci-sidebar-collapsed';
+    const updateToggle = () => {
+        const collapsed = document.body.classList.contains('sidebar-collapsed');
+        toggle.setAttribute('aria-label', collapsed ? 'Mostrar barra lateral' : 'Ocultar barra lateral');
+        toggle.setAttribute('title', collapsed ? 'Mostrar barra lateral' : 'Ocultar barra lateral');
+        toggle.querySelector('i').className = collapsed ? 'bi bi-layout-sidebar-inset fs-5' : 'bi bi-list fs-5';
+    };
+
+    if (sessionStorage.getItem(key) === 'true') {
+        document.body.classList.add('sidebar-collapsed');
+    }
+    updateToggle();
+    toggle.addEventListener('click', () => {
+        document.body.classList.toggle('sidebar-collapsed');
+        sessionStorage.setItem(key, document.body.classList.contains('sidebar-collapsed'));
+        updateToggle();
+    });
+})();
+</script>
 @stack('scripts')
 </body>
 </html>
