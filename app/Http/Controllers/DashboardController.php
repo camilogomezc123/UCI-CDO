@@ -58,6 +58,13 @@ class DashboardController extends Controller
             'ucin' => $snapshots->where('subunidad', 'UCIN')->count(),
             'hospitalizados' => $snapshots->filter(fn($s) => str_contains(strtoupper($s->criterio_atencion ?? ''), 'HOSP') || str_contains(strtoupper($s->criterio_atencion ?? ''), 'ALTA'))->count(),
         ];
+        $porSubunidadDetalle = $snapshots->groupBy('subunidad')->map(function ($grupo) {
+            return [
+                'uci' => $grupo->filter(fn($s) => str_contains(strtoupper($s->criterio_atencion ?? ''), 'INTENSIVO'))->count(),
+                'ucin' => $grupo->filter(fn($s) => str_contains(strtoupper($s->criterio_atencion ?? ''), 'INTERMEDIO'))->count(),
+                'hospitalizacion' => $grupo->filter(fn($s) => str_contains(strtoupper($s->criterio_atencion ?? ''), 'HOSP') || str_contains(strtoupper($s->criterio_atencion ?? ''), 'ALTA'))->count(),
+            ];
+        });
 
         // ── Espera larga (> 4h) ───────────────────────────────────────────────────
         $pacientesEsperaLarga = Paciente::whereNotNull('salida_hospitalizacion')
@@ -245,7 +252,7 @@ class DashboardController extends Controller
 
         return view('dashboard.index', compact(
             'totalActivos', 'pendientesEgreso', 'ultimaCarga', 'cargaHoy',
-            'porCriterio', 'porSubunidad', 'porVentilatorio', 'porHemodinamico', 'desgloseOcupacion',
+            'porCriterio', 'porSubunidad', 'porSubunidadDetalle', 'porVentilatorio', 'porHemodinamico', 'desgloseOcupacion',
             'pacientesEsperaLarga', 'capacidades', 'unidades', 'promedios', 'movilizacion',
             'alertasNews', 'alertasSofa', 'alertasDolor',
             'ocupacionHistorica', 'conVmiActivo', 'conVasopresorActivo',

@@ -239,7 +239,8 @@
                     $pct = $cap > 0 ? round($ocu / $cap * 100) : 0;
                     $color = $pct >= 90 ? 'danger' : ($pct >= 70 ? 'warning' : 'success');
                 @endphp
-                <div class="mb-2 {{ $cap === 0 ? 'opacity-50' : '' }}">
+                @php $detalleSubunidad = $porSubunidadDetalle[$sub] ?? ['uci' => 0, 'ucin' => 0, 'hospitalizacion' => 0]; @endphp
+                <div class="mb-2 {{ $cap === 0 ? 'opacity-50' : '' }}" style="cursor:help;" title="{{ $sub }} — Criterio UCI: {{ $detalleSubunidad['uci'] }} · Intermedio/UCIN: {{ $detalleSubunidad['ucin'] }} · Hospitalización/alta: {{ $detalleSubunidad['hospitalizacion'] }}">
                     <div class="d-flex justify-content-between mb-1">
                         <span style="font-size:0.82rem;font-weight:600;">{{ $sub }}</span>
                         <span style="font-size:0.8rem;" class="text-{{ $color }}">{{ $cap === 0 ? 'Inhabilitada' : $ocu.'/'.$cap }}</span>
