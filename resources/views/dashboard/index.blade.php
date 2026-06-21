@@ -228,7 +228,7 @@
         <div class="card">
             <div class="card-header d-flex align-items-center gap-2">
                 <i class="bi bi-building text-primary"></i> Ocupación por Subunidad
-                <i class="bi bi-info-circle text-muted ms-auto" title="UCI: {{ $desgloseOcupacion['uci'] }} · UCIN: {{ $desgloseOcupacion['ucin'] }} · Hospitalizados/alta: {{ $desgloseOcupacion['hospitalizados'] }}"></i>
+                <span class="ms-auto" style="font-size:0.68rem;"><span class="text-primary">■ UCI {{ $desgloseOcupacion['uci'] }}</span> <span class="text-warning">■ UCIN {{ $desgloseOcupacion['ucin'] }}</span> <span class="text-success">■ Traslado {{ $desgloseOcupacion['traslado'] }}</span></span>
             </div>
             <div class="card-body">
                 @foreach($unidades as $unidad)
@@ -239,15 +239,20 @@
                     $pct = $cap > 0 ? round($ocu / $cap * 100) : 0;
                     $color = $pct >= 90 ? 'danger' : ($pct >= 70 ? 'warning' : 'success');
                 @endphp
-                @php $detalleSubunidad = $porSubunidadDetalle[$sub] ?? ['uci' => 0, 'ucin' => 0, 'hospitalizacion' => 0]; @endphp
-                <div class="mb-2 {{ $cap === 0 ? 'opacity-50' : '' }}" style="cursor:help;" title="{{ $sub }} — Criterio UCI: {{ $detalleSubunidad['uci'] }} · Intermedio/UCIN: {{ $detalleSubunidad['ucin'] }} · Hospitalización/alta: {{ $detalleSubunidad['hospitalizacion'] }}">
+                @php $detalleSubunidad = $porSubunidadDetalle[$sub] ?? ['uci' => 0, 'ucin' => 0, 'traslado' => 0]; @endphp
+                <div class="mb-2 {{ $cap === 0 ? 'opacity-50' : '' }}">
                     <div class="d-flex justify-content-between mb-1">
                         <span style="font-size:0.82rem;font-weight:600;">{{ $sub }}</span>
                         <span style="font-size:0.8rem;" class="text-{{ $color }}">{{ $cap === 0 ? 'Inhabilitada' : $ocu.'/'.$cap }}</span>
                     </div>
                     <div class="progress" style="height:6px;border-radius:4px;">
-                        <div class="progress-bar bg-{{ $color }}" style="width:{{ $pct }}%"></div>
+                        @if($cap > 0)
+                            <div class="progress-bar bg-primary" title="UCI: {{ $detalleSubunidad['uci'] }}" style="width:{{ min(100, $detalleSubunidad['uci'] / $cap * 100) }}%"></div>
+                            <div class="progress-bar bg-warning" title="UCIN/intermedio: {{ $detalleSubunidad['ucin'] }}" style="width:{{ min(100, $detalleSubunidad['ucin'] / $cap * 100) }}%"></div>
+                            <div class="progress-bar bg-success" title="Traslado a piso/egreso: {{ $detalleSubunidad['traslado'] }}" style="width:{{ min(100, $detalleSubunidad['traslado'] / $cap * 100) }}%"></div>
+                        @endif
                     </div>
+                    <div class="text-muted mt-1" style="font-size:0.68rem;">UCI {{ $detalleSubunidad['uci'] }} · UCIN {{ $detalleSubunidad['ucin'] }} · Traslado {{ $detalleSubunidad['traslado'] }}</div>
                 </div>
                 @endforeach
             </div>

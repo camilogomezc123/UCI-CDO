@@ -27,7 +27,7 @@ class DashboardController extends Controller
         $snapshots = Snapshot::joinSub($sub, 'lt', fn($j) => $j->on('snapshots.id', '=', 'lt.snap_id'))
             ->join('pacientes', 'pacientes.id', '=', 'snapshots.paciente_id')
             ->where('pacientes.activo', true)
-            ->select('snapshots.*')
+            ->select('snapshots.*', 'pacientes.salida_hospitalizacion', 'pacientes.egreso_uci')
             ->get();
 
         // ── Alertas clínicas ──────────────────────────────────────────────────────
@@ -53,18 +53,18 @@ class DashboardController extends Controller
             ->groupBy('soporte_ventilatorio')->map->count();
         $porHemodinamico = $snapshots->filter(fn($s) => !empty($s->soporte_hemodinamico))
             ->groupBy('soporte_hemodinamico')->map->count();
-        $desgloseOcupacion = [
-            'uci' => $snapshots->filter(fn($s) => str_contains(strtoupper($s->criterio_atencion ?? ''), 'INTENSIVO'))->count(),
-            'ucin' => $snapshots->where('subunidad', 'UCIN')->count(),
-            'hospitalizados' => $snapshots->filter(fn($s) => str_contains(strtoupper($s->criterio_atencion ?? ''), 'HOSP') || str_contains(strtoupper($s->criterio_atencion ?? ''), 'ALTA'))->count(),
-        ];
-        $porSubunidadDetalle = $snapshots->groupBy('subunidad')->map(function ($grupo) {
-            return [
-                'uci' => $grupo->filter(fn($s) => str_contains(strtoupper($s->criterio_atencion ?? ''), 'INTENSIVO'))->count(),
-                'ucin' => $grupo->filter(fn($s) => str_contains(strtoupper($s->criterio_atencion ?? ''), 'INTERMEDIO'))->count(),
-                'hospitalizacion' => $grupo->filter(fn($s) => str_contains(strtoupper($s->criterio_atencion ?? ''), 'HOSP') || str_contains(strtoupper($s->criterio_atencion ?? ''), 'ALTA'))->count(),
-            ];
+        $clasificarOcupacion = fn($s) => $s->salida_hospitalizacion && !$s->egreso_uci ? 'traslado'
+            : (str_contains(strtoupper($s->criterio_atencion ?? ''), 'INTERMEDIO') || $s->subunidad === 'UCIN' ? 'ucin' : 'uci');
+        $porSubunidadDetalle = $snapshots->groupBy('subunidad')->map(function ($grupo) use ($clasificarOcupacion) {
+            return $grupo->reduce(function ($totales, $snapshot) use ($clasificarOcupacion) {
+                $totales[$clasificarOcupacion($snapshot)]++;
+                return $totales;
+            }, ['uci' => 0, 'ucin' => 0, 'traslado' => 0]);
         });
+        $desgloseOcupacion = $snapshots->reduce(function ($totales, $snapshot) use ($clasificarOcupacion) {
+            $totales[$clasificarOcupacion($snapshot)]++;
+            return $totales;
+        }, ['uci' => 0, 'ucin' => 0, 'traslado' => 0]);
 
         // ── Espera larga (> 4h) ───────────────────────────────────────────────────
         $pacientesEsperaLarga = Paciente::whereNotNull('salida_hospitalizacion')
