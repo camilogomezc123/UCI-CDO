@@ -2,6 +2,17 @@
 @section('title', 'Pacientes')
 @section('page-title', 'Pacientes Activos en UCI')
 
+@push('styles')
+<style>
+    .pacientes-activos-table .col-expandible { display: none; }
+    body.sidebar-collapsed .pacientes-activos-table .col-expandible { display: table-cell; }
+    body.sidebar-collapsed .pacientes-activos-table .ubicacion-subunidad,
+    body.sidebar-collapsed .pacientes-activos-table .estancia-ingreso { display: none; }
+    .pacientes-activos-table .acciones-paciente { display: flex; flex-direction: column; gap: .3rem; }
+    .pacientes-activos-table .acciones-paciente .btn { width: 2rem; }
+</style>
+@endpush
+
 @section('content')
 <div class="card mb-3">
     <div class="card-body py-2">
@@ -65,12 +76,14 @@
             <table class="table table-hover mb-0 pacientes-activos-table">
                 <thead>
                     <tr>
-                        <th>Ubicación</th>
+                        <th title="Cama y subunidad">Ubicación</th>
+                        <th class="col-expandible">Subunidad</th>
                         <th>Paciente</th>
-                        <th>Clasificación</th>
-                        <th>Soporte</th>
-                        <th>Estancia</th>
-                        <th>Seguimiento</th>
+                        <th title="UCI, UCIN/intermedio o hospitalización/traslado">Clasificación</th>
+                        <th title="Soporte ventilatorio y hemodinámico">Soportes</th>
+                        <th title="Fecha de ingreso y tiempo transcurrido">Estancia UCI</th>
+                        <th class="col-expandible">Ingreso UCI</th>
+                        <th title="Estado de egreso y resultado CAM-UCI de hoy">Seguimiento</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -79,8 +92,9 @@
                     <tr>
                         <td class="text-nowrap">
                             <span class="badge bg-secondary rounded-pill" style="font-size:0.8rem;">{{ $p->ubicacion ?? '—' }}</span>
-                            <div class="text-muted mt-1" style="font-size:0.68rem;">{{ $p->subunidad ?? '—' }}</div>
+                            <div class="text-muted mt-1 ubicacion-subunidad" style="font-size:0.68rem;">{{ $p->subunidad ?? '—' }}</div>
                         </td>
+                        <td class="col-expandible" style="font-size:0.76rem;">{{ $p->subunidad ?? '—' }}</td>
                         <td>
                             <div class="fw-semibold" style="font-size:0.875rem;">{{ $p->nombre }}</div>
                             <div class="text-muted" style="font-size:0.72rem;">{{ $p->documento }}</div>
@@ -110,13 +124,16 @@
                         </td>
                         <td style="font-size:0.76rem;" class="text-nowrap">
                             @if($p->ingreso_uci)
-                                <div>{{ $p->ingreso_uci->format('d/m/y H:i') }}</div>
+                                <div class="estancia-ingreso">{{ $p->ingreso_uci->format('d/m/y H:i') }}</div>
                                 <div class="tiempo-uci">{{ $p->tiempoEnUciTexto() }}</div>
                             @else
                                 <span class="text-warning fw-semibold" style="font-size:0.75rem;">
                                     <i class="bi bi-exclamation-triangle-fill me-1"></i>Sin registrar
                                 </span>
                             @endif
+                        </td>
+                        <td class="col-expandible text-nowrap" style="font-size:0.76rem;">
+                            {{ $p->ingreso_uci?->format('d/m/Y H:i') ?? 'Sin registrar' }}
                         </td>
                         <td>
                             @if($p->egreso_uci)
@@ -151,7 +168,7 @@
                             </div>
                         </td>
                         <td>
-                            <div class="d-flex gap-1">
+                            <div class="acciones-paciente">
                             <a href="{{ route('pacientes.show', $p) }}" class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-eye"></i>
                             </a>
@@ -174,7 +191,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
+                        <td colspan="9" class="text-center text-muted py-4">
                             <i class="bi bi-people display-6 d-block mb-2 opacity-25"></i>
                             No hay pacientes que coincidan con el filtro.
                         </td>
