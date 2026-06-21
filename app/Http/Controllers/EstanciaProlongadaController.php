@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Paciente;
 use App\Models\Snapshot;
 use App\Models\CausaEstancia;
-use Illuminate\Support\Facades\DB;
 
 class EstanciaProlongadaController extends Controller
 {
@@ -23,7 +22,8 @@ class EstanciaProlongadaController extends Controller
             ->sortByDesc(fn($p) => $p->diasEnUci());
 
         // Distribución de causas para el gráfico
-        $causas = CausaEstancia::all();
+        // Solo las causas de pacientes actualmente en estancia prolongada.
+        $causas = CausaEstancia::whereIn('paciente_id', $pacientes->pluck('id'))->get();
         $distribucionCausas = [
             'Pendiente cirugía'          => $causas->where('pendiente_cirugia', true)->count(),
             'Condición clínica'          => $causas->where('condicion_clinica', true)->count(),
@@ -37,6 +37,7 @@ class EstanciaProlongadaController extends Controller
         $promedioPorSubunidad = Paciente::where('activo', false)
             ->whereNotNull('ingreso_uci')
             ->whereNotNull('egreso_uci')
+            ->with('ultimoSnapshot')
             ->get()
             ->map(fn($p) => [
                 'subunidad' => $p->ultimoSnapshot->subunidad ?? 'Desconocida',
