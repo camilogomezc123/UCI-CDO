@@ -214,13 +214,17 @@
         </div>
 
         @if(auth()->user()->esMaster())
-        <div class="sidebar-section">Administración</div>
-        <a href="{{ route('usuarios.index') }}" class="sidebar-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
-            <i class="bi bi-person-gear"></i> Usuarios
-        </a>
-        <a href="{{ route('unidades-uci.index') }}" class="sidebar-link {{ request()->routeIs('unidades-uci.*') ? 'active' : '' }}">
-            <i class="bi bi-hospital"></i> Unidades UCI
-        </a>
+        <button class="sidebar-section sidebar-group-toggle" type="button" data-group="administracion" aria-expanded="true">
+            <span>Administración</span><i class="bi bi-chevron-down"></i>
+        </button>
+        <div class="sidebar-group" id="sidebar-group-administracion">
+            <a href="{{ route('usuarios.index') }}" class="sidebar-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
+                <i class="bi bi-person-gear"></i> Usuarios
+            </a>
+            <a href="{{ route('unidades-uci.index') }}" class="sidebar-link {{ request()->routeIs('unidades-uci.*') ? 'active' : '' }}">
+                <i class="bi bi-hospital"></i> Unidades UCI
+            </a>
+        </div>
         @endif
         @endif {{-- fin @if rol !== visual --}}
     </div>
