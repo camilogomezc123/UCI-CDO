@@ -74,11 +74,12 @@
                         Sin pacientes egresados con fechas registradas aún.
                     </div>
                 @else
+                    @php $maxPromedioDias = $promedioPorSubunidad->max(); @endphp
                     @foreach($promedioPorSubunidad->sortByDesc(fn($v)=>$v) as $sub => $dias)
                     <div class="mb-2 d-flex align-items-center gap-3">
                         <span style="font-size:0.82rem;font-weight:600;min-width:160px;">{{ $sub }}</span>
                         <div class="progress flex-fill" style="height:18px;border-radius:6px;">
-                            <div class="progress-bar" style="width:{{ min($dias*3,100) }}%;background:#6f42c1;">
+                            <div class="progress-bar" style="width:{{ $maxPromedioDias > 0 ? round($dias / $maxPromedioDias * 100, 1) : 0 }}%;background:#6f42c1;">
                                 <span style="font-size:0.75rem;">{{ $dias }}d</span>
                             </div>
                         </div>
