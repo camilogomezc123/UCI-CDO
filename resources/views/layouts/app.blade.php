@@ -41,6 +41,15 @@
             font-size: 0.65rem; color: rgba(255,255,255,0.4);
             text-transform: uppercase; letter-spacing: 1px;
         }
+        .sidebar-group-toggle {
+            width: 100%; background: none; border: 0; text-align: left;
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer;
+        }
+        .sidebar-group-toggle:hover { color: rgba(255,255,255,0.7); }
+        .sidebar-group-toggle .bi { transition: transform 0.2s ease; }
+        .sidebar-group-toggle[aria-expanded="false"] .bi { transform: rotate(-90deg); }
+        .sidebar-group.is-collapsed { display: none; }
         .sidebar-link {
             display: flex; align-items: center; gap: 0.75rem;
             padding: 0.65rem 1.25rem;
@@ -75,6 +84,8 @@
         .topbar-title { font-weight: 700; font-size: 1rem; color: #2d2d2d; flex: 1; }
         #sidebar-toggle { border: 0; color: #495057; padding: 0.4rem 0.55rem; line-height: 1; }
         #sidebar-toggle:hover { background: #eef2f7; color: #0d6efd; }
+        #topbar-collapsed-logo { display: none; width: 38px; height: 38px; object-fit: contain; }
+        body.sidebar-collapsed #topbar-collapsed-logo { display: block; }
 
         /* Main content */
         #main-content {
@@ -138,36 +149,46 @@
         </a>
 
         @if(!auth()->user()->esVisual())
-        <div class="sidebar-section">Pacientes</div>
-        <a href="{{ route('pacientes.index') }}" class="sidebar-link {{ request()->routeIs('pacientes.index') ? 'active' : '' }}">
-            <i class="bi bi-people"></i> Pacientes activos
-        </a>
-        <a href="{{ route('estancias.index') }}" class="sidebar-link {{ request()->routeIs('estancias.*') ? 'active' : '' }}">
-            <i class="bi bi-calendar-x"></i> Estancias prolongadas
-            @php $nEst = \App\Models\Paciente::where('activo',true)->whereNotNull('ingreso_uci')->where('ingreso_uci','<=',now()->subDays(5))->count(); @endphp
-            @if($nEst > 0)<span class="sidebar-badge">{{ $nEst }}</span>@endif
-        </a>
-        <a href="{{ route('reingresos.index') }}" class="sidebar-link {{ request()->routeIs('reingresos.*') ? 'active' : '' }}">
-            <i class="bi bi-arrow-repeat"></i> Reingresos a UCI
-            @php $nRei = \Illuminate\Support\Facades\Schema::hasColumn('pacientes','numero_ingresos') ? \App\Models\Paciente::where('activo',true)->where('numero_ingresos','>',1)->count() : 0; @endphp
-            @if($nRei > 0)<span class="sidebar-badge" style="background:#dc3545;">{{ $nRei }}</span>@endif
-        </a>
+        <button class="sidebar-section sidebar-group-toggle" type="button" data-group="pacientes" aria-expanded="true">
+            <span>Pacientes</span><i class="bi bi-chevron-down"></i>
+        </button>
+        <div class="sidebar-group" id="sidebar-group-pacientes">
+            <a href="{{ route('pacientes.index') }}" class="sidebar-link {{ request()->routeIs('pacientes.index') ? 'active' : '' }}">
+                <i class="bi bi-people"></i> Pacientes activos
+            </a>
+            <a href="{{ route('estancias.index') }}" class="sidebar-link {{ request()->routeIs('estancias.*') ? 'active' : '' }}">
+                <i class="bi bi-calendar-x"></i> Estancias prolongadas
+                @php $nEst = \App\Models\Paciente::where('activo',true)->whereNotNull('ingreso_uci')->where('ingreso_uci','<=',now()->subDays(5))->count(); @endphp
+                @if($nEst > 0)<span class="sidebar-badge">{{ $nEst }}</span>@endif
+            </a>
+            <a href="{{ route('reingresos.index') }}" class="sidebar-link {{ request()->routeIs('reingresos.*') ? 'active' : '' }}">
+                <i class="bi bi-arrow-repeat"></i> Reingresos a UCI
+                @php $nRei = \Illuminate\Support\Facades\Schema::hasColumn('pacientes','numero_ingresos') ? \App\Models\Paciente::where('activo',true)->where('numero_ingresos','>',1)->count() : 0; @endphp
+                @if($nRei > 0)<span class="sidebar-badge" style="background:#dc3545;">{{ $nRei }}</span>@endif
+            </a>
+            <a href="{{ route('trazadores.index') }}" class="sidebar-link {{ request()->routeIs('trazadores.*') ? 'active' : '' }}">
+                <i class="bi bi-clipboard2-pulse"></i> Pacientes Trazadores
+                @php $nTrazActivos = \App\Models\Trazador::activos()->count(); @endphp
+                @if($nTrazActivos > 0)<span class="sidebar-badge">{{ $nTrazActivos }}</span>@endif
+            </a>
+        </div>
 
-        <a href="{{ route('trazadores.index') }}" class="sidebar-link {{ request()->routeIs('trazadores.*') ? 'active' : '' }}">
-            <i class="bi bi-clipboard2-pulse"></i> Pacientes Trazadores
-            @php $nTrazActivos = \App\Models\Trazador::activos()->count(); @endphp
-            @if($nTrazActivos > 0)<span class="sidebar-badge">{{ $nTrazActivos }}</span>@endif
-        </a>
+        <button class="sidebar-section sidebar-group-toggle" type="button" data-group="gestion" aria-expanded="true">
+            <span>Gestión</span><i class="bi bi-chevron-down"></i>
+        </button>
+        <div class="sidebar-group" id="sidebar-group-gestion">
+            <a href="{{ route('carga.index') }}" class="sidebar-link {{ request()->routeIs('carga.index') ? 'active' : '' }}">
+                <i class="bi bi-cloud-upload"></i> Cargar archivo
+            </a>
+            <a href="{{ route('carga.historial') }}" class="sidebar-link {{ request()->routeIs('carga.historial') ? 'active' : '' }}">
+                <i class="bi bi-clock-history"></i> Historial cargas
+            </a>
+        </div>
 
-        <div class="sidebar-section">Gestión</div>
-        <a href="{{ route('carga.index') }}" class="sidebar-link {{ request()->routeIs('carga.index') ? 'active' : '' }}">
-            <i class="bi bi-cloud-upload"></i> Cargar archivo
-        </a>
-        <a href="{{ route('carga.historial') }}" class="sidebar-link {{ request()->routeIs('carga.historial') ? 'active' : '' }}">
-            <i class="bi bi-clock-history"></i> Historial cargas
-        </a>
-
-        <div class="sidebar-section">Análisis</div>
+        <button class="sidebar-section sidebar-group-toggle" type="button" data-group="analisis" aria-expanded="true">
+            <span>Análisis</span><i class="bi bi-chevron-down"></i>
+        </button>
+        <div class="sidebar-group" id="sidebar-group-analisis">
         <a href="{{ route('epidemiologia.index') }}" class="sidebar-link {{ request()->routeIs('epidemiologia.*') ? 'active' : '' }}">
             <i class="bi bi-heart-pulse"></i> Perfil epidemiológico
         </a>
@@ -189,6 +210,7 @@
         <a href="{{ route('plantilla-diaria') }}" class="sidebar-link {{ request()->routeIs('plantilla-diaria') ? 'active' : '' }}" target="_blank">
             <i class="bi bi-clipboard2-pulse"></i> Registro diario
         </a>
+        </div>
 
         @if(auth()->user()->esMaster())
         <div class="sidebar-section">Administración</div>
@@ -221,6 +243,7 @@
 
 <!-- Topbar -->
 <div id="topbar">
+    <img id="topbar-collapsed-logo" src="{{ asset('img/logo2-gray.png') }}" alt="Clínica de Occidente">
     <button id="sidebar-toggle" class="btn btn-light" type="button" aria-label="Ocultar barra lateral" title="Ocultar barra lateral">
         <i class="bi bi-list fs-5"></i>
     </button>
@@ -287,6 +310,22 @@
         document.body.classList.toggle('sidebar-collapsed');
         sessionStorage.setItem(key, document.body.classList.contains('sidebar-collapsed'));
         updateToggle();
+    });
+
+    document.querySelectorAll('.sidebar-group-toggle').forEach((groupToggle) => {
+        const group = document.getElementById(`sidebar-group-${groupToggle.dataset.group}`);
+        const groupKey = `uci-sidebar-group-${groupToggle.dataset.group}-collapsed`;
+        const updateGroup = (collapsed) => {
+            group.classList.toggle('is-collapsed', collapsed);
+            groupToggle.setAttribute('aria-expanded', String(!collapsed));
+        };
+
+        updateGroup(sessionStorage.getItem(groupKey) === 'true');
+        groupToggle.addEventListener('click', () => {
+            const collapsed = !group.classList.contains('is-collapsed');
+            sessionStorage.setItem(groupKey, String(collapsed));
+            updateGroup(collapsed);
+        });
     });
 })();
 </script>
