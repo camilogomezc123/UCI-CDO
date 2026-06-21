@@ -2,6 +2,13 @@
 @section('title', 'Estancias Prolongadas')
 @section('page-title', 'Pacientes con Estancia Prolongada (>5 días)')
 
+@push('styles')
+<style>
+    .chart-causas-wrap { height: 300px; position: relative; }
+    .estancia-causas { flex: 1 1 260px; margin-left: 0 !important; padding-right: 1.5rem; }
+</style>
+@endpush
+
 @section('content')
 
 <div class="row g-3 mb-4">
@@ -51,7 +58,7 @@
                         Aún no hay causas registradas.
                     </div>
                 @else
-                    <canvas id="chartCausas" style="max-height:220px;"></canvas>
+                    <div class="chart-causas-wrap"><canvas id="chartCausas"></canvas></div>
                 @endif
             </div>
         </div>
@@ -85,9 +92,18 @@
 
 {{-- Tabla de pacientes --}}
 <div class="card">
-    <div class="card-header d-flex align-items-center justify-content-between">
+    <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
         <span><i class="bi bi-people me-2 text-primary"></i>{{ $pacientes->count() }} paciente(s) con estancia > 5 días</span>
-        <span class="text-muted" style="font-size:0.78rem;">Ordenados por mayor días en UCI</span>
+        <form method="GET" class="d-flex align-items-center gap-2">
+            <label for="causa" class="text-muted" style="font-size:0.78rem;">Filtrar causa:</label>
+            <select id="causa" name="causa" class="form-select form-select-sm" onchange="this.form.submit()" style="min-width:190px;">
+                <option value="todas" @selected($causaFiltro === 'todas')>Todas las causas</option>
+                <option value="sin_causa" @selected($causaFiltro === 'sin_causa')>Sin causa registrada</option>
+                @foreach($etiquetas as $campo => $info)
+                <option value="{{ $campo }}" @selected($causaFiltro === $campo)>{{ $info['label'] }}</option>
+                @endforeach
+            </select>
+        </form>
     </div>
     <div class="card-body p-0">
         <div class="accordion accordion-flush" id="acordeonEstancias">
@@ -114,7 +130,7 @@
                                     <span class="badge" style="background:#e8f0ff;color:#0d6efd;font-size:0.72rem;">{{ $p->ultimoSnapshot->subunidad ?? '—' }}</span>
                                 </div>
                             </div>
-                            <div class="ms-auto me-3 d-flex gap-1 flex-wrap">
+                            <div class="ms-auto me-3 d-flex gap-1 flex-wrap estancia-causas">
                                 @if($causa)
                                     @foreach($etiquetas as $campo => $info)
                                         @if($causa->$campo)
@@ -240,6 +256,7 @@ if (ctxCausas) {
         options: {
             indexAxis: 'y',
             responsive: true,
+            maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
         }
