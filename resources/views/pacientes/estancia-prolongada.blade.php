@@ -94,17 +94,17 @@
 {{-- Tabla de pacientes --}}
 <div class="card">
     <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
-        <span><i class="bi bi-people me-2 text-primary"></i>{{ $pacientes->count() }} paciente(s) con estancia > 5 días</span>
-        <form method="GET" class="d-flex align-items-center gap-2">
+        <span><i class="bi bi-people me-2 text-primary"></i><span id="contadorEstancias">{{ $pacientes->count() }}</span> paciente(s) con estancia > 5 días</span>
+        <div class="d-flex align-items-center gap-2">
             <label for="causa" class="text-muted" style="font-size:0.78rem;">Filtrar causa:</label>
-            <select id="causa" name="causa" class="form-select form-select-sm" onchange="this.form.submit()" style="min-width:190px;">
-                <option value="todas" @selected($causaFiltro === 'todas')>Todas las causas</option>
-                <option value="sin_causa" @selected($causaFiltro === 'sin_causa')>Sin causa registrada</option>
+            <select id="causa" class="form-select form-select-sm" style="min-width:190px;">
+                <option value="todas">Todas las causas</option>
+                <option value="sin_causa">Sin causa registrada</option>
                 @foreach($etiquetas as $campo => $info)
-                <option value="{{ $campo }}" @selected($causaFiltro === $campo)>{{ $info['label'] }}</option>
+                <option value="{{ $campo }}">{{ $info['label'] }}</option>
                 @endforeach
             </select>
-        </form>
+        </div>
     </div>
     <div class="card-body p-0">
         <div class="accordion accordion-flush" id="acordeonEstancias">
@@ -114,8 +114,9 @@
                 $etiquetas = \App\Models\CausaEstancia::etiquetas();
                 $diasUci = $p->diasEnUci();
                 $colorDias = $diasUci >= 15 ? 'danger' : ($diasUci >= 10 ? 'warning' : 'primary');
+                $causasPaciente = $causa ? collect($etiquetas)->filter(fn($info, $campo) => $causa->$campo)->keys()->implode(',') : '';
             @endphp
-            <div class="accordion-item">
+            <div class="accordion-item estancia-item" data-causas="{{ $causasPaciente }}">
                 <h2 class="accordion-header">
                     <button class="accordion-button collapsed py-3" type="button"
                             data-bs-toggle="collapse" data-bs-target="#est{{ $p->id }}">
@@ -261,6 +262,22 @@ if (ctxCausas) {
             plugins: { legend: { display: false } },
             scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
         }
+    });
+}
+
+const filtroCausa = document.getElementById('causa');
+const contadorEstancias = document.getElementById('contadorEstancias');
+if (filtroCausa && contadorEstancias) {
+    filtroCausa.addEventListener('change', () => {
+        const causa = filtroCausa.value;
+        let visibles = 0;
+        document.querySelectorAll('.estancia-item').forEach(item => {
+            const causas = item.dataset.causas ? item.dataset.causas.split(',') : [];
+            const mostrar = causa === 'todas' || (causa === 'sin_causa' ? causas.length === 0 : causas.includes(causa));
+            item.classList.toggle('d-none', !mostrar);
+            if (mostrar) visibles++;
+        });
+        contadorEstancias.textContent = visibles;
     });
 }
 </script>

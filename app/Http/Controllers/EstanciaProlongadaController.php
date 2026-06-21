@@ -5,29 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Paciente;
 use App\Models\Snapshot;
 use App\Models\CausaEstancia;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class EstanciaProlongadaController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         $etiquetas = CausaEstancia::etiquetas();
-        $causaFiltro = $request->get('causa', 'todas');
-        if ($causaFiltro !== 'todas' && $causaFiltro !== 'sin_causa' && !array_key_exists($causaFiltro, $etiquetas)) {
-            $causaFiltro = 'todas';
-        }
 
         // Pacientes activos con ingreso UCI hace más de 5 días
         $pacientesQuery = Paciente::where('activo', true)
             ->whereNotNull('ingreso_uci')
             ->where('ingreso_uci', '<=', now()->subDays(5));
-
-        if ($causaFiltro === 'sin_causa') {
-            $pacientesQuery->doesntHave('causaEstancia');
-        } elseif ($causaFiltro !== 'todas') {
-            $pacientesQuery->whereHas('causaEstancia', fn($q) => $q->where($causaFiltro, true));
-        }
 
         $pacientes = $pacientesQuery->with(['ultimoSnapshot', 'causaEstancia'])
             ->get()
@@ -57,7 +46,7 @@ class EstanciaProlongadaController extends Controller
             ->map(fn($g) => round($g->avg('dias'), 1));
 
         return view('pacientes.estancia-prolongada', compact(
-            'pacientes', 'distribucionCausas', 'promedioPorSubunidad', 'etiquetas', 'causaFiltro'
+            'pacientes', 'distribucionCausas', 'promedioPorSubunidad', 'etiquetas'
         ));
     }
 }
