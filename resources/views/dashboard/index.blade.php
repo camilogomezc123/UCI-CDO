@@ -322,10 +322,9 @@
             <div class="card-body d-flex align-items-center gap-4">
                 <canvas id="chartCriterio" style="max-height:210px;max-width:260px;"></canvas>
                 <div class="flex-grow-1">
-                    @php $cc = ['ESTANCIA EN UNIDAD CUIDADO INTENSIVO'=>['UCI Intensivo','#dc3545'],'ESTANCIA EN UNIDAD CUIDADO INTERMEDIO'=>['UCI Intermedio','#fd7e14'],'OTROS CRITERIOS(Hosp, Alta)'=>['Otros','#6c757d']]; @endphp
-                    @foreach($porCriterio as $c => $n)
-                    @php $i = $cc[$c] ?? [$c,'#aaa']; @endphp
-                    <div class="d-flex align-items-center gap-2 mb-2"><span style="width:10px;height:10px;border-radius:50%;background:{{ $i[1] }};display:inline-block;flex-shrink:0;"></span><span style="font-size:0.85rem;">{{ $i[0] }}</span><span class="ms-auto fw-bold">{{ $n }}</span></div>
+                    @php $criteriosVisuales = [['UCI','#dc3545',$desgloseOcupacion['uci']],['UCIN / Intermedio','#ffc107',$desgloseOcupacion['ucin']],['Traslado / otros','#198754',$desgloseOcupacion['traslado']]]; $totalCriterios = array_sum(array_column($criteriosVisuales, 2)); @endphp
+                    @foreach($criteriosVisuales as [$nombre, $color, $n])
+                    <div class="d-flex align-items-center gap-2 mb-2"><span style="width:10px;height:10px;border-radius:50%;background:{{ $color }};display:inline-block;flex-shrink:0;"></span><span style="font-size:0.85rem;">{{ $nombre }}</span><span class="ms-auto fw-bold">{{ $n }} <small class="text-muted">({{ $totalCriterios ? round($n / $totalCriterios * 100) : 0 }}%)</small></span></div>
                     @endforeach
                 </div>
             </div>
@@ -646,17 +645,21 @@
 // Gráfico criterios
 const ctxC = document.getElementById('chartCriterio');
 if (ctxC) {
+    const criterio = {!! json_encode([
+        ['label' => 'UCI', 'total' => $desgloseOcupacion['uci']],
+        ['label' => 'UCIN / Intermedio', 'total' => $desgloseOcupacion['ucin']],
+        ['label' => 'Traslado / otros', 'total' => $desgloseOcupacion['traslado']],
+    ]) !!};
     new Chart(ctxC, {
         type: 'doughnut',
         data: {
-            labels: {!! json_encode($porCriterio->keys()->map(fn($k) => match(true) {
-                str_contains($k,'INTENSIVO') => 'UCI Intensivo',
-                str_contains($k,'INTERMEDIO') => 'UCI Intermedio',
-                default => 'Otros'
-            })->values()) !!},
-            datasets: [{ data: {!! json_encode($porCriterio->values()) !!}, backgroundColor: ['#dc3545','#fd7e14','#6c757d'], borderWidth: 0 }]
+            labels: criterio.map(c => c.label),
+            datasets: [{ data: criterio.map(c => c.total), backgroundColor: ['#dc3545','#ffc107','#198754'], borderWidth: 0 }]
         },
-        options: { plugins: { legend: { display: false } }, cutout: '70%', responsive: true, maintainAspectRatio: true }
+        options: {
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: item => { const total = criterio.reduce((sum, c) => sum + c.total, 0); const porcentaje = total ? Math.round(item.parsed / total * 100) : 0; return `${item.label}: ${item.parsed} (${porcentaje}%)`; } } } },
+            cutout: '50%', responsive: true, maintainAspectRatio: true
+        }
     });
 }
 
