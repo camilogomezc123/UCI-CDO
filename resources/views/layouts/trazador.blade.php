@@ -100,7 +100,7 @@
 <!-- ── Topbar independiente del trazador ── -->
 <nav id="tz-topbar">
     <a class="tz-brand" href="{{ route('trazadores.index') }}">
-        <img src="{{ asset('img/logo2.webp') }}" alt="CO">
+        <img src="{{ asset('img/logo2-white.png') }}" alt="CO">
         <span class="tz-sep">|</span>
         <span>UCI Trazadores</span>
     </a>
