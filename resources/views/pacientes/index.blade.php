@@ -6,7 +6,7 @@
 <style>
     .pacientes-activos-table .col-expandible { display: none; }
     body.sidebar-collapsed .pacientes-activos-table .col-expandible { display: table-cell; }
-    body.sidebar-collapsed .pacientes-activos-table .ubicacion-subunidad,
+    body.sidebar-collapsed .pacientes-activos-table .cam-uci-resumen,
     body.sidebar-collapsed .pacientes-activos-table .estancia-ingreso { display: none; }
     .pacientes-activos-table .acciones-paciente { display: flex; flex-direction: column; gap: .3rem; }
     .pacientes-activos-table .acciones-paciente .btn { width: 2rem; }
@@ -77,14 +77,14 @@
                 <thead>
                     <tr>
                         <th title="Cama y subunidad">Ubicación</th>
-                        <th class="col-expandible">Subunidad</th>
                         <th>Paciente</th>
                         <th title="UCI, UCIN/intermedio o hospitalización/traslado">Clasificación</th>
                         <th title="Soporte ventilatorio y hemodinámico">Soportes</th>
                         <th title="Fecha de ingreso y tiempo transcurrido">Estancia UCI</th>
                         <th class="col-expandible">Ingreso UCI</th>
                         <th title="Estado de egreso y resultado CAM-UCI de hoy">Seguimiento</th>
-                        <th></th>
+                        <th class="col-expandible">CAM-UCI hoy</th>
+                        <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -92,9 +92,8 @@
                     <tr>
                         <td class="text-nowrap">
                             <span class="badge bg-secondary rounded-pill" style="font-size:0.8rem;">{{ $p->ubicacion ?? '—' }}</span>
-                            <div class="text-muted mt-1 ubicacion-subunidad" style="font-size:0.68rem;">{{ $p->subunidad ?? '—' }}</div>
+                            <div class="text-muted mt-1" style="font-size:0.68rem;">{{ $p->subunidad ?? '—' }}</div>
                         </td>
-                        <td class="col-expandible" style="font-size:0.76rem;">{{ $p->subunidad ?? '—' }}</td>
                         <td>
                             <div class="fw-semibold" style="font-size:0.875rem;">{{ $p->nombre }}</div>
                             <div class="text-muted" style="font-size:0.72rem;">{{ $p->documento }}</div>
@@ -136,6 +135,7 @@
                             {{ $p->ingreso_uci?->format('d/m/Y H:i') ?? 'Sin registrar' }}
                         </td>
                         <td>
+                            @php $cam = $camHoy[$p->id] ?? null; @endphp
                             @if($p->egreso_uci)
                                 <span class="badge bg-success">Egresado</span>
                             @elseif($p->salida_hospitalizacion)
@@ -146,8 +146,7 @@
                             @else
                                 <span class="badge bg-secondary">En UCI</span>
                             @endif
-                            <div class="mt-1">
-                            @php $cam = $camHoy[$p->id] ?? null; @endphp
+                            <div class="mt-1 cam-uci-resumen">
                             @if($cam === 'positivo')
                                 <span class="badge bg-danger" style="font-size:0.7rem;" title="Delirium presente">
                                     <i class="bi bi-exclamation-triangle-fill me-1"></i>POSITIVO
@@ -166,6 +165,17 @@
                                 </span>
                             @endif
                             </div>
+                        </td>
+                        <td class="col-expandible">
+                            @if($cam === 'positivo')
+                                <span class="badge bg-danger" style="font-size:0.7rem;">POSITIVO</span>
+                            @elseif($cam === 'negativo')
+                                <span class="badge bg-success" style="font-size:0.7rem;">NEGATIVO</span>
+                            @elseif($cam === 'no_evaluable')
+                                <span class="badge bg-secondary" style="font-size:0.7rem;">No eval.</span>
+                            @else
+                                <span class="text-muted" style="font-size:0.72rem;">Pendiente</span>
+                            @endif
                         </td>
                         <td>
                             <div class="acciones-paciente">
