@@ -32,15 +32,10 @@ class DispositivoController extends Controller
         ];
 
         // Días-dispositivo (denominadores para tasas IAAS)
-        $diasCvc = Dispositivo::where('tipo', 'cvc')
-            ->selectRaw('SUM(JULIANDAY(COALESCE(fecha_retiro, DATE("now"))) - JULIANDAY(fecha_inicio) + 1) as dias')
-            ->value('dias') ?? 0;
-        $diasVm  = Dispositivo::where('tipo', 'vm')
-            ->selectRaw('SUM(JULIANDAY(COALESCE(fecha_retiro, DATE("now"))) - JULIANDAY(fecha_inicio) + 1) as dias')
-            ->value('dias') ?? 0;
-        $diasSv  = Dispositivo::where('tipo', 'sonda_vesical')
-            ->selectRaw('SUM(JULIANDAY(COALESCE(fecha_retiro, DATE("now"))) - JULIANDAY(fecha_inicio) + 1) as dias')
-            ->value('dias') ?? 0;
+        // Aritmética de fechas compatible con PostgreSQL y MySQL
+        $diasCvc = $this->sumaDiasDispositivo('cvc');
+        $diasVm  = $this->sumaDiasDispositivo('vm');
+        $diasSv  = $this->sumaDiasDispositivo('sonda_vesical');
 
         // Tasas IAAS por 1000 días-dispositivo
         $tasas = [
@@ -102,5 +97,20 @@ class DispositivoController extends Controller
         ]);
         return redirect()->route('dispositivos.index')
             ->with('success', 'Evento IAAS registrado.');
+    }
+
+    // Suma de días-dispositivo compatible con PostgreSQL y MySQL
+    private function sumaDiasDispositivo(string $tipo): int
+    {
+        $driver = \Illuminate\Support\Facades\DB::getDriverName();
+
+        if ($driver === 'pgsql') {
+            $sql = "SUM(COALESCE(fecha_retiro, CURRENT_DATE) - fecha_inicio + 1)";
+        } else {
+            // MySQL / MariaDB
+            $sql = "SUM(DATEDIFF(COALESCE(fecha_retiro, CURDATE()), fecha_inicio) + 1)";
+        }
+
+        return (int) (Dispositivo::where('tipo', $tipo)->selectRaw("$sql as dias")->value('dias') ?? 0);
     }
 }
