@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "nombre": "Paciente Trazador — Post-paro cardíaco (ROSC)",
+    "descripcion": "Control de temperatura objetivo + neuropronóstico + cuidados post-resucitación",
+    "version": "1"
+  },
+  "catalogos": {
+    "SI_NO": ["Sí", "No"],
+    "SI_NO_NA": ["Sí", "No", "No aplica"],
+    "SI_NO_NE": ["Sí", "No", "No evidenciado"],
+    "SEXO": ["Masculino", "Femenino", "Otro"],
+    "DESENLACE": ["Vivo - egreso UCI", "Vivo - traslado", "Fallecido"],
+    "RITMO_PARO": ["FV/TV sin pulso", "AESP", "Asistolia", "FV primaria"],
+    "LUGAR_PARO": ["Intrahospitalario", "Extrahospitalario"],
+    "CAUSA_PARO": ["Cardíaca isquémica", "Cardíaca no isquémica", "Hipoxia/respiratoria", "Metabólica", "Trauma", "Desconocida", "Otra"],
+    "CPC": ["CPC 1 - Sin incapacidad", "CPC 2 - Incapacidad moderada", "CPC 3 - Incapacidad severa", "CPC 4 - Coma/estado vegetativo", "CPC 5 - Muerte cerebral/fallecido"],
+    "CUMPLIMIENTO": ["Cumple", "No cumple", "No aplica", "No evidenciado"],
+    "TEMP_RANGO": ["32-34°C", "35-37°C (normotermia activa)", "No controlada"]
+  },
+  "secciones": [
+    {
+      "id": "datos_paciente",
+      "titulo": "Datos del paciente",
+      "campos": [
+        {"id": "identificador", "label": "Identificador / Iniciales", "tipo": "text"},
+        {"id": "edad", "label": "Edad (años)", "tipo": "number"},
+        {"id": "sexo", "label": "Sexo", "tipo": "select", "catalogo": "SEXO"},
+        {"id": "fecha_ingreso_uci", "label": "Fecha ingreso UCI", "tipo": "date"},
+        {"id": "fecha_egreso_uci", "label": "Fecha egreso UCI", "tipo": "date"},
+        {"id": "desenlace", "label": "Desenlace", "tipo": "select", "catalogo": "DESENLACE"}
+      ]
+    },
+    {
+      "id": "evento_paro",
+      "titulo": "Evento del paro cardíaco",
+      "campos": [
+        {"id": "lugar_paro", "label": "Lugar del paro", "tipo": "select", "catalogo": "LUGAR_PARO"},
+        {"id": "ritmo_inicial", "label": "Ritmo inicial (desfibrilable vs no)", "tipo": "select", "catalogo": "RITMO_PARO"},
+        {"id": "causa_probable", "label": "Causa probable del paro", "tipo": "select", "catalogo": "CAUSA_PARO"},
+        {"id": "tiempo_sin_flujo_min", "label": "Tiempo sin flujo (minutos hasta CPR)", "tipo": "number"},
+        {"id": "tiempo_bajo_flujo_min", "label": "Tiempo bajo flujo (minutos de CPR)", "tipo": "number"},
+        {"id": "rosc_logrado", "label": "ROSC logrado en urgencias", "tipo": "select", "catalogo": "SI_NO"},
+        {"id": "rcp_calidad_ok", "label": "RCP de alta calidad documentada", "tipo": "select", "catalogo": "SI_NO_NE"}
+      ]
+    },
+    {
+      "id": "cuidados_post_rosc",
+      "titulo": "Cuidados post-ROSC (primeras 24h)",
+      "campos": [
+        {"id": "ctt_iniciado", "label": "Control de temperatura objetivo (CTT) iniciado", "tipo": "select", "catalogo": "SI_NO"},
+        {"id": "ctt_rango", "label": "Rango de temperatura objetivo", "tipo": "select", "catalogo": "TEMP_RANGO"},
+        {"id": "ctt_duracion_h", "label": "Duración CTT (horas)", "tipo": "number"},
+        {"id": "ctt_tiempo_meta_h", "label": "Tiempo hasta alcanzar temperatura meta (horas)", "tipo": "number"},
+        {"id": "coronariografia", "label": "Coronariografía realizada", "tipo": "select", "catalogo": "SI_NO_NA"},
+        {"id": "coronariografia_inmediata", "label": "Coronariografía inmediata (< 2h del ROSC)", "tipo": "select", "catalogo": "SI_NO_NA"},
+        {"id": "icp_realizada", "label": "ICP primaria realizada", "tipo": "select", "catalogo": "SI_NO_NA"},
+        {"id": "glucemia_controlada", "label": "Glucemia mantenida 140-180 mg/dL", "tipo": "select", "catalogo": "CUMPLIMIENTO"},
+        {"id": "presion_arterial_media", "label": "PAM objetivo ≥ 65 mmHg mantenida", "tipo": "select", "catalogo": "CUMPLIMIENTO"},
+        {"id": "convulsiones_tratadas", "label": "Convulsiones detectadas y tratadas (si aplica)", "tipo": "select", "catalogo": "SI_NO_NA"}
+      ]
+    },
+    {
+      "id": "neuropronostico",
+      "titulo": "Neuropronóstico (72h post-ROSC o > 24h post-CTT)",
+      "campos": [
+        {"id": "eeg_realizado", "label": "EEG realizado", "tipo": "select", "catalogo": "SI_NO"},
+        {"id": "eeg_resultado", "label": "Resultado EEG", "tipo": "text"},
+        {"id": "pupilometria_ok", "label": "Pupilas reactivas bilateralmente", "tipo": "select", "catalogo": "SI_NO_NA"},
+        {"id": "ssep_realizado", "label": "Potenciales evocados somatosensoriales (SSEP) realizados", "tipo": "select", "catalogo": "SI_NO_NA"},
+        {"id": "nse_valor", "label": "NSE (neurofilamentos) valor ng/mL", "tipo": "number"},
+        {"id": "gcs_72h", "label": "GCS a las 72h", "tipo": "number"},
+        {"id": "despertar_neurologico", "label": "Despertar neurológico dentro de las primeras 72h", "tipo": "select", "catalogo": "SI_NO"}
+      ]
+    },
+    {
+      "id": "desenlaces",
+      "titulo": "Desenlaces al egreso UCI",
+      "campos": [
+        {"id": "dias_vm", "label": "Días en VMI", "tipo": "number"},
+        {"id": "dias_uci", "label": "Días en UCI", "tipo": "number"},
+        {"id": "cpc_egreso", "label": "CPC al egreso UCI", "tipo": "select", "catalogo": "CPC"},
+        {"id": "retiro_vm_exitoso", "label": "Extubación exitosa", "tipo": "select", "catalogo": "SI_NO_NA"},
+        {"id": "complicacion_estado_convulsivo", "label": "Estado convulsivo refractario", "tipo": "select", "catalogo": "SI_NO"},
+        {"id": "complicacion_falla_multi", "label": "Falla multiorgánica (≥ 2 órganos)", "tipo": "select", "catalogo": "SI_NO"}
+      ]
+    }
+  ],
+  "indicadores": [
+    {"id": "CTT_OK",      "label": "CTT iniciado correctamente",          "campo": "ctt_iniciado",      "cumple": "Sí",     "meta_pct": 90},
+    {"id": "CORO_OK",     "label": "Coronariografía oportuna",           "campo": "coronariografia",   "cumple": "Sí",     "meta_pct": 80},
+    {"id": "GLUCO_OK",    "label": "Control glucémico 140-180 mg/dL",   "campo": "glucemia_controlada","cumple": "Cumple", "meta_pct": 85},
+    {"id": "PAM_OK",      "label": "PAM ≥ 65 mmHg mantenida",           "campo": "presion_arterial_media","cumple": "Cumple","meta_pct": 85},
+    {"id": "NEURO_OK",    "label": "Neuropronóstico evaluado a 72h",     "campo": "eeg_realizado",     "cumple": "Sí",     "meta_pct": 75}
+  ]
+}

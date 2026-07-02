@@ -1,0 +1,94 @@
+{
+  "meta": {
+    "nombre": "Paciente Trazador — SDRA (Síndrome de Dificultad Respiratoria Aguda)",
+    "descripcion": "Criterios Berlín 2011 + estrategia ventilatoria protectora + intervenciones de rescate",
+    "version": "1"
+  },
+  "catalogos": {
+    "SI_NO": ["Sí", "No"],
+    "SI_NO_NA": ["Sí", "No", "No aplica"],
+    "SI_NO_NE": ["Sí", "No", "No evidenciado"],
+    "SEXO": ["Masculino", "Femenino", "Otro"],
+    "DESENLACE": ["Vivo - egreso UCI", "Vivo - traslado", "Fallecido"],
+    "SEVERIDAD": ["Leve (P/F 200-300)", "Moderado (P/F 100-200)", "Severo (P/F < 100)"],
+    "CAUSA_SDRA": ["Neumonía", "Aspiración", "Sepsis", "Politrauma", "Pancreatitis", "COVID-19", "Inhalación humo", "Otra"],
+    "CUMPLIMIENTO": ["Cumple", "No cumple", "No aplica", "No evidenciado"],
+    "POSICION_PRONA": ["Primera vez", "Segunda vez o más", "No realizada", "Contraindicada"]
+  },
+  "secciones": [
+    {
+      "id": "datos_paciente",
+      "titulo": "Datos del paciente",
+      "campos": [
+        {"id": "identificador", "label": "Identificador / Iniciales", "tipo": "text"},
+        {"id": "edad", "label": "Edad (años)", "tipo": "number"},
+        {"id": "sexo", "label": "Sexo", "tipo": "select", "catalogo": "SEXO"},
+        {"id": "fecha_ingreso_uci", "label": "Fecha ingreso UCI", "tipo": "date"},
+        {"id": "fecha_egreso_uci", "label": "Fecha egreso UCI", "tipo": "date"},
+        {"id": "desenlace", "label": "Desenlace", "tipo": "select", "catalogo": "DESENLACE"}
+      ]
+    },
+    {
+      "id": "diagnostico",
+      "titulo": "Diagnóstico SDRA (Criterios Berlín 2011)",
+      "campos": [
+        {"id": "inicio_menos_7_dias", "label": "Inicio dentro de 7 días de evento conocido o empeoramiento respiratorio", "tipo": "select", "catalogo": "SI_NO"},
+        {"id": "infiltrados_bilaterales", "label": "Infiltrados bilaterales en Rx/TC (no explicados por derrames, atelectasias lobares, nódulos)", "tipo": "select", "catalogo": "SI_NO"},
+        {"id": "no_cardiogenico", "label": "No explicado por falla cardíaca o sobrecarga hídrica (eco si duda)", "tipo": "select", "catalogo": "SI_NO"},
+        {"id": "vm_o_vni", "label": "Requirió VMI o VNI con PEEP ≥ 5 cmH₂O", "tipo": "select", "catalogo": "SI_NO"},
+        {"id": "pf_ratio_inicial", "label": "P/F ratio al diagnóstico (mmHg)", "tipo": "number"},
+        {"id": "severidad", "label": "Severidad SDRA", "tipo": "select", "catalogo": "SEVERIDAD"},
+        {"id": "causa_sdra", "label": "Causa principal SDRA", "tipo": "select", "catalogo": "CAUSA_SDRA"}
+      ]
+    },
+    {
+      "id": "ventilacion_protectora",
+      "titulo": "Estrategia ventilatoria protectora (primeras 48h)",
+      "campos": [
+        {"id": "tv_6ml_kg", "label": "TV ≤ 6 mL/kg peso predicho implementado ≤ 6h del diagnóstico", "tipo": "select", "catalogo": "CUMPLIMIENTO"},
+        {"id": "tv_real_ml_kg", "label": "TV real utilizado (mL/kg peso predicho)", "tipo": "number"},
+        {"id": "pplat_menor_30", "label": "Pplat mantenida < 30 cmH₂O", "tipo": "select", "catalogo": "CUMPLIMIENTO"},
+        {"id": "pplat_valor", "label": "Pplat máxima registrada (cmH₂O)", "tipo": "number"},
+        {"id": "driving_pressure", "label": "Driving pressure (Pplat - PEEP) en cmH₂O", "tipo": "number"},
+        {"id": "peep_optimizado", "label": "PEEP optimizado según tabla ARDSnet o RM", "tipo": "select", "catalogo": "CUMPLIMIENTO"},
+        {"id": "peep_valor", "label": "PEEP utilizado (cmH₂O)", "tipo": "number"},
+        {"id": "fio2_valor", "label": "FiO₂ (%)", "tipo": "number"},
+        {"id": "ph_permisivo", "label": "Hipercapnia permisiva aceptada (pH ≥ 7.20)", "tipo": "select", "catalogo": "SI_NO_NA"}
+      ]
+    },
+    {
+      "id": "intervenciones_rescate",
+      "titulo": "Intervenciones de rescate",
+      "campos": [
+        {"id": "posicion_prona", "label": "Posición prona realizada", "tipo": "select", "catalogo": "POSICION_PRONA"},
+        {"id": "prona_horas", "label": "Horas en prono por sesión", "tipo": "number"},
+        {"id": "prona_indicacion_correcta", "label": "Indicación correcta: P/F < 150 en SDRA moderado-severo", "tipo": "select", "catalogo": "SI_NO_NA"},
+        {"id": "nmba", "label": "Bloqueo neuromuscular (cisatracurio u otro)", "tipo": "select", "catalogo": "SI_NO"},
+        {"id": "nmba_duracion_h", "label": "Duración NMBA (horas)", "tipo": "number"},
+        {"id": "corticosteroides", "label": "Corticosteroides (dexametasona/metilprednisolona) según protocolo", "tipo": "select", "catalogo": "SI_NO"},
+        {"id": "ecmo", "label": "ECMO indicada", "tipo": "select", "catalogo": "SI_NO"},
+        {"id": "ecmo_tipo", "label": "Tipo ECMO", "tipo": "text"},
+        {"id": "venovenosa_posicion", "label": "VNI/VNAF como puente o post-extubación", "tipo": "select", "catalogo": "SI_NO_NA"}
+      ]
+    },
+    {
+      "id": "desenlaces",
+      "titulo": "Desenlaces clínicos",
+      "campos": [
+        {"id": "dias_vm", "label": "Días totales en VMI", "tipo": "number"},
+        {"id": "dias_uci", "label": "Días totales en UCI", "tipo": "number"},
+        {"id": "pf_egreso", "label": "P/F ratio al egreso UCI", "tipo": "number"},
+        {"id": "extubacion_exitosa", "label": "Extubación exitosa (sin reintubación ≤ 48h)", "tipo": "select", "catalogo": "SI_NO_NA"},
+        {"id": "traqueo", "label": "Traqueostomía", "tipo": "select", "catalogo": "SI_NO"},
+        {"id": "complicacion_barotrauma", "label": "Barotrauma (neumotórax, neumomediastino, enfisema)", "tipo": "select", "catalogo": "SI_NO"},
+        {"id": "complicacion_vap", "label": "Neumonía asociada a VM (VAP)", "tipo": "select", "catalogo": "SI_NO"}
+      ]
+    }
+  ],
+  "indicadores": [
+    {"id": "TV_PROTECTOR", "label": "TV ≤ 6 mL/kg implementado", "campo": "tv_6ml_kg", "cumple": "Cumple", "meta_pct": 90},
+    {"id": "PPLAT_OK",     "label": "Pplat < 30 cmH₂O",          "campo": "pplat_menor_30", "cumple": "Cumple", "meta_pct": 85},
+    {"id": "PRONA_OK",     "label": "Prona en SDRA mod-severo",   "campo": "posicion_prona",  "cumple": "Primera vez", "meta_pct": 80},
+    {"id": "NMBA_OK",      "label": "NMBA en SDRA severo",        "campo": "nmba",            "cumple": "Sí", "meta_pct": 70}
+  ]
+}

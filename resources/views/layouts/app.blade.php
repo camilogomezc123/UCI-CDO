@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="{{ asset('img/favicon-clinica.png') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'UCI Panel') — Clínica de Occidente</title>
+    <title>@yield('title', 'UCI Panel') â€” ClÃ­nica de Occidente</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -141,7 +141,7 @@
 <nav id="sidebar">
     <div class="sidebar-brand">
         <img src="{{ asset('img/logo2-white.png') }}" alt="CO">
-        <span>UCI Panel<br><small style="opacity:0.6;font-weight:400">Clínica de Occidente</small></span>
+        <span>UCI Panel<br><small style="opacity:0.6;font-weight:400">ClÃ­nica de Occidente</small></span>
     </div>
 
     <div style="flex:1; overflow-y:auto; padding-top:0.5rem;">
@@ -176,7 +176,7 @@
         </div>
 
         <button class="sidebar-section sidebar-group-toggle" type="button" data-group="gestion" aria-expanded="true">
-            <span>Gestión</span><i class="bi bi-chevron-down"></i>
+            <span>GestiÃ³n</span><i class="bi bi-chevron-down"></i>
         </button>
         <div class="sidebar-group" id="sidebar-group-gestion">
             <a href="{{ route('carga.index') }}" class="sidebar-link {{ request()->routeIs('carga.index') ? 'active' : '' }}">
@@ -187,12 +187,51 @@
             </a>
         </div>
 
+        <div class="sidebar-section">ClÃ­nico</div>
+        <a href="{{ route('rondas-uci.index') }}" class="sidebar-link {{ request()->routeIs('rondas-uci.*') ? 'active' : '' }}">
+            <i class="bi bi-clipboard-heart"></i> Rondas UCI
+        </a>
+        <a href="{{ route('uci-liberation.index') }}" class="sidebar-link {{ request()->routeIs('uci-liberation.*') ? 'active' : '' }}">
+            <i class="bi bi-check2-square"></i> UCI Liberation (ABCDEF)
+        </a>
+        <a href="{{ route('goals-of-care.index') }}" class="sidebar-link {{ request()->routeIs('goals-of-care.*') ? 'active' : '' }}">
+            <i class="bi bi-heart"></i> Goals of Care / LET
+            @php
+                $sinGoc = \App\Models\Paciente::where('activo', true)
+                    ->whereNotNull('ingreso_uci')
+                    ->whereDoesntHave('goalsOfCare')
+                    ->count();
+            @endphp
+            @if($sinGoc > 0)<span class="sidebar-badge" style="background:#6c757d;">{{ $sinGoc }}</span>@endif
+        </a>
+
+        <div class="sidebar-section">Seguridad</div>
+        <a href="{{ route('dispositivos.index') }}" class="sidebar-link {{ request()->routeIs('dispositivos.*') ? 'active' : '' }}">
+            <i class="bi bi-usb-plug"></i> Dispositivos e IAAS
+        </a>
+        <a href="{{ route('balance-hidrico.index') }}" class="sidebar-link {{ request()->routeIs('balance-hidrico.*') ? 'active' : '' }}">
+            <i class="bi bi-droplet-half"></i> Balance hÃ­drico
+        </a>
+
+        <div class="sidebar-section">NutriciÃ³n</div>
+        <a href="{{ route('nutricion.index') }}" class="sidebar-link {{ request()->routeIs('nutricion.*') ? 'active' : '' }}">
+            <i class="bi bi-egg-fried"></i> NutriciÃ³n + AntibiÃ³ticos
+        </a>
+
+        <div class="sidebar-section">GestiÃ³n</div>
+        <a href="{{ route('carga.index') }}" class="sidebar-link {{ request()->routeIs('carga.index') ? 'active' : '' }}">
+            <i class="bi bi-cloud-upload"></i> Cargar archivo
+        </a>
+        <a href="{{ route('carga.historial') }}" class="sidebar-link {{ request()->routeIs('carga.historial') ? 'active' : '' }}">
+            <i class="bi bi-clock-history"></i> Historial cargas
+        </a>
+
         <button class="sidebar-section sidebar-group-toggle" type="button" data-group="analisis" aria-expanded="true">
-            <span>Análisis</span><i class="bi bi-chevron-down"></i>
+            <span>AnÃ¡lisis</span><i class="bi bi-chevron-down"></i>
         </button>
         <div class="sidebar-group" id="sidebar-group-analisis">
         <a href="{{ route('epidemiologia.index') }}" class="sidebar-link {{ request()->routeIs('epidemiologia.*') ? 'active' : '' }}">
-            <i class="bi bi-heart-pulse"></i> Perfil epidemiológico
+            <i class="bi bi-heart-pulse"></i> Perfil epidemiolÃ³gico
         </a>
         <a href="{{ route('indicadores.calidad') }}" class="sidebar-link {{ request()->routeIs('indicadores.*') ? 'active' : '' }}">
             <i class="bi bi-award"></i> Indicadores de calidad
@@ -204,7 +243,7 @@
             <i class="bi bi-bar-chart"></i> Reportes por subunidad
         </a>
         <a href="{{ route('reportes.periodicos') }}" class="sidebar-link {{ request()->routeIs('reportes.periodicos*') ? 'active' : '' }}">
-            <i class="bi bi-file-earmark-bar-graph"></i> Reportes periódicos
+            <i class="bi bi-file-earmark-bar-graph"></i> Reportes periÃ³dicos
         </a>
         <a href="{{ route('reportes.mortalidad') }}" class="sidebar-link {{ request()->routeIs('reportes.mortalidad') ? 'active' : '' }}">
             <i class="bi bi-person-x-fill"></i> Informe de mortalidad
@@ -219,7 +258,7 @@
 
         @if(auth()->user()->esMaster())
         <button class="sidebar-section sidebar-group-toggle" type="button" data-group="administracion" aria-expanded="true">
-            <span>Administración</span><i class="bi bi-chevron-down"></i>
+            <span>AdministraciÃ³n</span><i class="bi bi-chevron-down"></i>
         </button>
         <div class="sidebar-group" id="sidebar-group-administracion">
             <a href="{{ route('usuarios.index') }}" class="sidebar-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
@@ -247,7 +286,7 @@
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:0.8rem;padding:0;cursor:pointer;">
-                <i class="bi bi-box-arrow-left me-1"></i>Cerrar sesión
+                <i class="bi bi-box-arrow-left me-1"></i>Cerrar sesiÃ³n
             </button>
         </form>
     </div>
@@ -255,7 +294,7 @@
 
 <!-- Topbar -->
 <div id="topbar">
-    <img id="topbar-collapsed-logo" src="{{ asset('img/logo2-gray.png') }}" alt="Clínica de Occidente">
+    <img id="topbar-collapsed-logo" src="{{ asset('img/logo2-gray.png') }}" alt="ClÃ­nica de Occidente">
     <button id="sidebar-toggle" class="btn btn-light" type="button" aria-label="Ocultar barra lateral" title="Ocultar barra lateral">
         <i class="bi bi-list fs-5"></i>
     </button>

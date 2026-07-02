@@ -12,19 +12,24 @@ class BundleVentilacion extends Model
         'paciente_id', 'usuario_id', 'fecha',
         'cabecera_elevada', 'higiene_oral', 'vacacion_sedacion',
         'sbt', 'profilaxis_tvp', 'profilaxis_upp', 'familia_involucrada', 'observaciones',
+        'sat_resultado', 'sbt_resultado', 'nivel_movilizacion', 'motivo_no_movilizacion',
+        'rcsq_score', 'interrupciones_nocturnas', 'familia_reunion_clinica',
     ];
 
     protected function casts(): array
     {
         return [
             'fecha'               => 'date',
-            'cabecera_elevada'    => 'boolean',
-            'higiene_oral'        => 'boolean',
-            'vacacion_sedacion'   => 'boolean',
-            'sbt'                 => 'boolean',
-            'profilaxis_tvp'      => 'boolean',
-            'profilaxis_upp'      => 'boolean',
-            'familia_involucrada' => 'boolean',
+            'cabecera_elevada'       => 'boolean',
+            'higiene_oral'           => 'boolean',
+            'vacacion_sedacion'      => 'boolean',
+            'sbt'                    => 'boolean',
+            'profilaxis_tvp'         => 'boolean',
+            'profilaxis_upp'         => 'boolean',
+            'familia_involucrada'    => 'boolean',
+            'familia_reunion_clinica'=> 'boolean',
+            'interrupciones_nocturnas'=> 'integer',
+            'rcsq_score'             => 'integer',
         ];
     }
 

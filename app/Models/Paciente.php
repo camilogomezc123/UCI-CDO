@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
-// TransfusionDiaria is autoloaded via namespace
 
 class Paciente extends Model
 {
@@ -209,6 +208,36 @@ class Paciente extends Model
         if (!$s || !$s->sofa) return false;
         preg_match('/(\d+)/', $s->sofa, $m);
         return isset($m[1]) && (int)$m[1] >= 10;
+    }
+
+    public function goalOfCare()
+    {
+        return $this->hasOne(GoalOfCare::class)->latestOfMany('fecha_conversacion');
+    }
+
+    public function goalsOfCare()
+    {
+        return $this->hasMany(GoalOfCare::class)->orderByDesc('fecha_conversacion');
+    }
+
+    public function dispositivos()
+    {
+        return $this->hasMany(Dispositivo::class);
+    }
+
+    public function balancesHidricos()
+    {
+        return $this->hasMany(BalanceHidrico::class)->orderByDesc('fecha');
+    }
+
+    public function nutriciones()
+    {
+        return $this->hasMany(NutricionDiaria::class)->orderByDesc('fecha');
+    }
+
+    public function antibioticos()
+    {
+        return $this->hasMany(AntibioticosUci::class)->orderByDesc('fecha_inicio');
     }
 
     public function picsEvaluaciones()

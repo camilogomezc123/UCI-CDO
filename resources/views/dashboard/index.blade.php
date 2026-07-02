@@ -49,6 +49,64 @@
 </div>
 @endif
 
+{{-- Alertas proactivas de módulos clínicos --}}
+@if($sinCamHoyIds->count() > 0 || $balancePositivoAlto->count() > 0 || $iaasRecientes->count() > 0 || $sinGocCount > 0)
+<div class="row g-2 mb-3">
+    @if($sinCamHoyIds->count() > 0)
+    <div class="col-md-3">
+        <a href="{{ route('rondas-uci.index') }}" class="text-decoration-none">
+            <div class="alert alert-warning mb-0 py-2 d-flex align-items-center gap-2">
+                <i class="bi bi-brain fs-5"></i>
+                <div>
+                    <div class="fw-semibold" style="font-size:0.82rem;">Sin CAM-UCI hoy</div>
+                    <div style="font-size:1.2rem; font-weight:700;">{{ $sinCamHoyIds->count() }} pac.</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    @endif
+    @if($balancePositivoAlto->count() > 0)
+    <div class="col-md-3">
+        <a href="{{ route('balance-hidrico.index') }}" class="text-decoration-none">
+            <div class="alert alert-info mb-0 py-2 d-flex align-items-center gap-2">
+                <i class="bi bi-droplet-half fs-5"></i>
+                <div>
+                    <div class="fw-semibold" style="font-size:0.82rem;">Balance > +1000 mL</div>
+                    <div style="font-size:1.2rem; font-weight:700;">{{ $balancePositivoAlto->count() }} pac.</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    @endif
+    @if($iaasRecientes->count() > 0)
+    <div class="col-md-3">
+        <a href="{{ route('dispositivos.index') }}" class="text-decoration-none">
+            <div class="alert alert-danger mb-0 py-2 d-flex align-items-center gap-2">
+                <i class="bi bi-bug fs-5"></i>
+                <div>
+                    <div class="fw-semibold" style="font-size:0.82rem;">IAAS (últimos 7d)</div>
+                    <div style="font-size:1.2rem; font-weight:700;">{{ $iaasRecientes->count() }} evento(s)</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    @endif
+    @if($sinGocCount > 0)
+    <div class="col-md-3">
+        <a href="{{ route('goals-of-care.index') }}" class="text-decoration-none">
+            <div class="alert alert-secondary mb-0 py-2 d-flex align-items-center gap-2">
+                <i class="bi bi-heart fs-5"></i>
+                <div>
+                    <div class="fw-semibold" style="font-size:0.82rem;">Sin Goal of Care</div>
+                    <div style="font-size:1.2rem; font-weight:700;">{{ $sinGocCount }} pac.</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    @endif
+</div>
+@endif
+
 {{-- Alertas clínicas críticas --}}
 @if($alertasNews->count() > 0 || $alertasSofa->count() > 0)
 <div class="row g-2 mb-3">

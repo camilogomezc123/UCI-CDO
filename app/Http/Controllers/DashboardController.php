@@ -8,6 +8,8 @@ use App\Models\CargaArchivo;
 use App\Models\TransfusionDiaria;
 use App\Models\CamUci;
 use App\Models\UnidadUci;
+use App\Models\BalanceHidrico;
+use App\Models\Dispositivo;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -22,7 +24,7 @@ class DashboardController extends Controller
         $pendientesEgreso = Paciente::whereNotNull('salida_hospitalizacion')
             ->whereNull('egreso_uci')->where('activo', true)->count();
 
-        // Últimos snapshots de pacientes activos
+        // Ãšltimos snapshots de pacientes activos
         $sub = Snapshot::subqueryUltimoPorPaciente();
         $snapshots = Snapshot::joinSub($sub, 'lt', fn($j) => $j->on('snapshots.id', '=', 'lt.snap_id'))
             ->join('pacientes', 'pacientes.id', '=', 'snapshots.paciente_id')
@@ -30,7 +32,7 @@ class DashboardController extends Controller
             ->select('snapshots.*', 'pacientes.salida_hospitalizacion', 'pacientes.egreso_uci')
             ->get();
 
-        // ── Alertas clínicas ──────────────────────────────────────────────────────
+        // â”€â”€ Alertas clÃ­nicas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $alertasNews = $snapshots->filter(fn($s) => $s->news !== null && (float)$s->news >= 5)
             ->sortByDesc('news');
 
@@ -46,7 +48,7 @@ class DashboardController extends Controller
             ($s->bps !== null && (float)$s->bps > 6)
         )->sortByDesc(fn($s) => max((float)($s->eva ?? 0), (float)($s->bps ?? 0)));
 
-        // ── Estadísticas de distribución ─────────────────────────────────────────
+        // â”€â”€ EstadÃ­sticas de distribuciÃ³n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $porCriterio     = $snapshots->groupBy('criterio_atencion')->map->count();
         $porSubunidad    = $snapshots->groupBy('subunidad')->map->count()->sortKeys();
         $porVentilatorio = $snapshots->filter(fn($s) => !empty($s->soporte_ventilatorio))
@@ -66,22 +68,22 @@ class DashboardController extends Controller
             return $totales;
         }, ['uci' => 0, 'ucin' => 0, 'traslado' => 0]);
 
-        // ── Espera larga (> 4h) ───────────────────────────────────────────────────
+        // â”€â”€ Espera larga (> 4h) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $pacientesEsperaLarga = Paciente::whereNotNull('salida_hospitalizacion')
             ->whereNull('egreso_uci')->where('activo', true)
-            // Se filtra en la base de datos: evita cargar pacientes que todavía
+            // Se filtra en la base de datos: evita cargar pacientes que todavÃ­a
             // no cumplen cuatro horas de espera solo para descartarlos en PHP.
             ->where('salida_hospitalizacion', '<=', now()->subHours(4))
             ->with('ultimoSnapshot')
             ->orderBy('salida_hospitalizacion')
             ->get();
 
-        // ── Capacidades ───────────────────────────────────────────────────────────
+        // â”€â”€ Capacidades â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $unidades = UnidadUci::with('indisponibilidades')->orderBy('cama_desde')->get();
         $capacidades = $unidades->mapWithKeys(fn($u) => [$u->nombre => $u->capacidadDisponibleEn(today())])->all();
         $totalCamas = array_sum($capacidades);
 
-        // ── Promedios escalas ─────────────────────────────────────────────────────
+        // â”€â”€ Promedios escalas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $escalaAvg = fn(string $campo) => ($v = $snapshots->whereNotNull($campo)->avg($campo)) !== null
             ? round((float)$v, 1) : null;
         $promedios = [
@@ -92,20 +94,20 @@ class DashboardController extends Controller
             'BPS'     => $escalaAvg('bps'),
         ];
 
-        // ── Movilización temprana ─────────────────────────────────────────────────
+        // â”€â”€ MovilizaciÃ³n temprana â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $movilizacion = [
             'temprana' => $snapshots->filter(fn($s) => str_contains($s->movilizacion ?? '', '< 48')
                 || str_contains(strtolower($s->movilizacion ?? ''), 'precoz'))->count(),
             'tardia'   => $snapshots->filter(fn($s) => str_contains($s->movilizacion ?? '', '> 48')
-                || str_contains(strtolower($s->movilizacion ?? ''), 'tardía'))->count(),
+                || str_contains(strtolower($s->movilizacion ?? ''), 'tardÃ­a'))->count(),
             'sin_dato' => $snapshots->filter(fn($s) => empty($s->movilizacion))->count(),
         ];
 
-        // ── Ocupación histórica ───────────────────────────────────────────────────
+        // â”€â”€ OcupaciÃ³n histÃ³rica â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $inicioHistorico = now()->subDays(30)->startOfDay();
         $ocupacionHistorica = Snapshot::join('cargas_archivo', 'cargas_archivo.id', '=', 'snapshots.carga_id')
             // fecha_snapshot es siempre el corte de medianoche; no usar DATE()
-            // permite que SQLite/PostgreSQL aprovechen el índice por fecha.
+            // permite que SQLite/PostgreSQL aprovechen el Ã­ndice por fecha.
             ->where('snapshots.fecha_snapshot', '>=', $inicioHistorico->toDateString())
             ->get(['snapshots.fecha_snapshot', 'snapshots.paciente_id', 'snapshots.subunidad', 'cargas_archivo.created_at'])
             ->groupBy(fn($s) => Carbon::parse($s->fecha_snapshot)->toDateString())
@@ -149,7 +151,7 @@ class DashboardController extends Controller
         unset($dia);
         $ocupacionHistorica = collect($ocupacionHistorica);
 
-        // ── VMI y vasopresor activos ──────────────────────────────────────────────
+        // â”€â”€ VMI y vasopresor activos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $conVmiActivo = $snapshots->filter(fn($s) =>
             !empty($s->soporte_ventilatorio) &&
             (str_contains(strtolower($s->soporte_ventilatorio), 'vmi') ||
@@ -162,7 +164,7 @@ class DashboardController extends Controller
              str_contains(strtolower($s->soporte_hemodinamico), 'norepinefrina'))
         )->count();
 
-        // ── KPIs clínicos (últimos 30 días) ──────────────────────────────────────
+        // â”€â”€ KPIs clÃ­nicos (Ãºltimos 30 dÃ­as) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $fechaInicio = now()->subDays(30);
         $egresosRecientes = Paciente::whereNotNull('egreso_uci')
             ->where('egreso_uci', '>=', $fechaInicio)->get();
@@ -180,14 +182,14 @@ class DashboardController extends Controller
         $giroCama     = $totalCamas > 0 ? round($totalEgresos / $totalCamas, 1) : null;
         $ratioVmUci   = $totalActivos > 0 ? round($conVmiActivo / $totalActivos * 100) : null;
 
-        // ── Distribución de riesgos ───────────────────────────────────────────────
+        // â”€â”€ DistribuciÃ³n de riesgos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $categoriesRiesgo = [
-            'Caída'            => ['caída','caida'],
-            'UPP'              => ['upp','úlcera presión','ulcera presion','úlcera por presión','ulcera por presion'],
+            'CaÃ­da'            => ['caÃ­da','caida'],
+            'UPP'              => ['upp','Ãºlcera presiÃ³n','ulcera presion','Ãºlcera por presiÃ³n','ulcera por presion'],
             'TVP / Trombosis'  => ['tvp','trombosis','trombo'],
-            'Infección / IAAS' => ['infección','infeccion','iaas'],
+            'InfecciÃ³n / IAAS' => ['infecciÃ³n','infeccion','iaas'],
             'Delirium'         => ['delirium','delirio'],
-            'Broncoaspiración' => ['broncoaspiración','broncoaspiracion','broncoaspir'],
+            'BroncoaspiraciÃ³n' => ['broncoaspiraciÃ³n','broncoaspiracion','broncoaspir'],
             'Flebitis'         => ['flebitis','flebit'],
             'Hemorragia'       => ['hemorragia','sangrado'],
         ];
@@ -207,17 +209,44 @@ class DashboardController extends Controller
         }
         uasort($porRiesgo, fn($a, $b) => $b['count'] - $a['count']);
 
-        // ── CAM-UCI hoy ───────────────────────────────────────────────────────────
+        // â”€â”€ CAM-UCI hoy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $camRegistrosHoy    = CamUci::whereDate('fecha', today())->with('paciente')->get();
         $camPositivosHoy    = $camRegistrosHoy->where('resultado', 'positivo');
         $camTotalHoy        = $camRegistrosHoy->count();
         $camPctHoy          = $camTotalHoy > 0 ? round($camPositivosHoy->count() / $camTotalHoy * 100, 1) : 0;
 
-        // ── Transfusiones ─────────────────────────────────────────────────────────
+        // â”€â”€ Transfusiones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $transfusionesHoy         = TransfusionDiaria::whereDate('fecha', today())->count();
         $transfusionesSemana      = TransfusionDiaria::where('fecha', '>=', now()->subDays(7))->count();
 
-        // ── Soporte prolongado > 2 días ───────────────────────────────────────────
+        // â”€â”€ Alertas proactivas de nuevos mÃ³dulos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        $pacientesActivos = Paciente::where('activo', true)->whereNotNull('ingreso_uci')->pluck('id');
+
+        // Pacientes sin CAM-UCI hoy
+        $conCamHoy = CamUci::whereDate('fecha', today())->pluck('paciente_id');
+        $sinCamHoyIds = $pacientesActivos->diff($conCamHoy);
+
+        // Balance hÃ­drico: positivo > 1000 mL hoy
+        $balancePositivoAlto = BalanceHidrico::whereDate('fecha', today())
+            ->whereIn('paciente_id', $pacientesActivos)
+            ->get()
+            ->filter(fn($b) => $b->balance() > 1000)
+            ->map(fn($b) => ['balance' => $b, 'paciente' => Paciente::find($b->paciente_id)]);
+
+        // IAAS registradas en los Ãºltimos 7 dÃ­as
+        $iaasRecientes = Dispositivo::where('evento_iaas', true)
+            ->where('updated_at', '>=', now()->subDays(7))
+            ->with('paciente')
+            ->orderByDesc('updated_at')
+            ->get();
+
+        // Pacientes sin Goal of Care registrado
+        $sinGocIds = $pacientesActivos->diff(
+            DB::table('goals_of_care')->whereIn('paciente_id', $pacientesActivos)->pluck('paciente_id')
+        );
+        $sinGocCount = $sinGocIds->count();
+
+        // â”€â”€ Soporte prolongado > 2 dÃ­as â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $subSql = "
             SELECT p.id, p.nombre, p.documento,
                 COUNT(DISTINCT CASE WHEN s.soporte_ventilatorio LIKE '%VMI%'
@@ -266,7 +295,8 @@ class DashboardController extends Controller
             'ratioVmUci', 'totalEgresos', 'totalCamas',
             'porRiesgo',
             'transfusionesHoy', 'transfusionesSemana',
-            'camPositivosHoy', 'camTotalHoy', 'camPctHoy'
+            'camPositivosHoy', 'camTotalHoy', 'camPctHoy',
+            'sinCamHoyIds', 'balancePositivoAlto', 'iaasRecientes', 'sinGocCount'
         ));
     }
 }

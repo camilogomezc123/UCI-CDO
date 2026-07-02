@@ -19,6 +19,12 @@ use App\Http\Controllers\TrazadorExportController;
 use App\Http\Controllers\IndicadoresCalidadController;
 use App\Http\Controllers\UnidadUciController;
 use App\Http\Controllers\PicsController;
+use App\Http\Controllers\UciLiberationController;
+use App\Http\Controllers\RondasUciController;
+use App\Http\Controllers\DispositivoController;
+use App\Http\Controllers\BalanceHidricoController;
+use App\Http\Controllers\NutricionController;
+use App\Http\Controllers\GoalOfCareController;
 
 // AutenticaciÃ³n
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -95,6 +101,34 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pics/{paciente}/{momento}', [PicsController::class, 'create'])->name('pics.create');
     Route::post('/pics/{paciente}/{momento}', [PicsController::class, 'store'])->name('pics.store');
     Route::get('/pics/evaluacion/{evaluacion}', [PicsController::class, 'show'])->name('pics.show');
+
+    // UCI Liberation (ABCDEF bundle)
+    Route::get('/uci-liberation', [UciLiberationController::class, 'index'])->name('uci-liberation.index');
+
+    // Rondas UCI
+    Route::get('/rondas-uci', [RondasUciController::class, 'index'])->name('rondas-uci.index');
+    Route::post('/rondas-uci/guardar', [RondasUciController::class, 'guardar'])->name('rondas-uci.guardar');
+
+    // Dispositivos e IAAS
+    Route::get('/dispositivos', [DispositivoController::class, 'index'])->name('dispositivos.index');
+    Route::post('/dispositivos', [DispositivoController::class, 'store'])->name('dispositivos.store');
+    Route::patch('/dispositivos/{dispositivo}/retirar', [DispositivoController::class, 'retirar'])->name('dispositivos.retirar');
+    Route::patch('/dispositivos/{dispositivo}/iaas', [DispositivoController::class, 'registrarIaas'])->name('dispositivos.iaas');
+
+    // Balance hídrico
+    Route::get('/balance-hidrico', [BalanceHidricoController::class, 'index'])->name('balance-hidrico.index');
+    Route::post('/balance-hidrico', [BalanceHidricoController::class, 'store'])->name('balance-hidrico.store');
+
+    // Nutrición + ATB Stewardship
+    Route::get('/nutricion', [NutricionController::class, 'index'])->name('nutricion.index');
+    Route::post('/nutricion/nutricion', [NutricionController::class, 'storeNutricion'])->name('nutricion.store');
+    Route::post('/nutricion/atb', [NutricionController::class, 'storeAtb'])->name('nutricion.atb.store');
+    Route::patch('/nutricion/atb/{atb}/suspender', [NutricionController::class, 'suspenderAtb'])->name('nutricion.atb.suspender');
+
+    // Goals of Care / LET
+    Route::get('/goals-of-care', [GoalOfCareController::class, 'index'])->name('goals-of-care.index');
+    Route::post('/goals-of-care', [GoalOfCareController::class, 'store'])->name('goals-of-care.store');
+    Route::patch('/goals-of-care/{goc}', [GoalOfCareController::class, 'update'])->name('goals-of-care.update');
 
     // Usuarios (solo master)
     Route::middleware(['rol:master'])->group(function () {

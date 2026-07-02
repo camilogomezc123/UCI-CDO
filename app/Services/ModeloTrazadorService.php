@@ -8,10 +8,24 @@ class ModeloTrazadorService
 {
     private array $modelo;
 
-    public function __construct()
+    private static array $archivos = [
+        'sepsis'    => 'modelo_trazador_sepsis.json',
+        'sdra'      => 'modelo_trazador_sdra.json',
+        'post_paro' => 'modelo_trazador_post_paro.json',
+    ];
+
+    public function __construct(string $tipo = 'sepsis')
     {
-        // Carga el JSON una vez por request (o desde cache en producción)
-        $ruta = base_path('modelo_trazador_sepsis.json');
+        $this->cargarTipo($tipo);
+    }
+
+    public function cargarTipo(string $tipo): void
+    {
+        $archivo = self::$archivos[$tipo] ?? self::$archivos['sepsis'];
+        $ruta    = base_path($archivo);
+        if (!file_exists($ruta)) {
+            $ruta = base_path(self::$archivos['sepsis']);
+        }
         $this->modelo = json_decode(file_get_contents($ruta), true);
     }
 

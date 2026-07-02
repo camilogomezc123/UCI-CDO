@@ -26,7 +26,11 @@ class TrazadorController extends Controller
 
         // ── Catálogo de patologías activas (extensible sin tocar código) ──────
         $tiposActivos = Trazador::distinct()->pluck('tipo_trazador')->sort()->values();
-        $etiquetas = ['sepsis' => 'Sepsis']; // registro de nombres amigables
+        $etiquetas = [
+            'sepsis'    => 'Sepsis',
+            'sdra'      => 'SDRA',
+            'post_paro' => 'Post-paro cardíaco',
+        ];
 
         // ── Datos agrupados por patología ────────────────────────────────────
         $grupos = [];
@@ -197,11 +201,13 @@ class TrazadorController extends Controller
 
     public function edit(Trazador $trazador)
     {
-        $modelo     = $this->modelo->modelo();
-        $catalogos  = $this->modelo->catalogos();
-        $paciente   = $trazador->paciente;
+        $this->modelo->cargarTipo($trazador->tipo_trazador);
+        $modelo    = $this->modelo->modelo();
+        $catalogos = $this->modelo->catalogos();
+        $paciente  = $trazador->paciente;
+        $viewBase  = $this->viewBase($trazador->tipo_trazador);
 
-        return view('trazadores.sepsis.form', compact('trazador', 'modelo', 'catalogos', 'paciente'));
+        return view("{$viewBase}.form", compact('trazador', 'modelo', 'catalogos', 'paciente'));
     }
 
     // ─── Guardar parte inicial → SEGUIMIENTO_90D ─────────────────────────────
@@ -230,23 +236,26 @@ class TrazadorController extends Controller
 
     public function show(Trazador $trazador)
     {
+        $this->modelo->cargarTipo($trazador->tipo_trazador);
         $modelo    = $this->modelo->modelo();
         $catalogos = $this->modelo->catalogos();
         $paciente  = $trazador->paciente;
+        $viewBase  = $this->viewBase($trazador->tipo_trazador);
 
-        return view('trazadores.sepsis.show', compact('trazador', 'modelo', 'catalogos', 'paciente'));
+        return view("{$viewBase}.show", compact('trazador', 'modelo', 'catalogos', 'paciente'));
     }
 
     // ─── Formulario Encuesta DESPUÉS ─────────────────────────────────────────
 
     public function editDespues(Trazador $trazador)
     {
-        // Solo disponible en PENDIENTE_DESPUES (o edición de CERRADO)
+        $this->modelo->cargarTipo($trazador->tipo_trazador);
         $modelo    = $this->modelo->modelo();
         $catalogos = $this->modelo->catalogos();
         $paciente  = $trazador->paciente;
+        $viewBase  = $this->viewBase($trazador->tipo_trazador);
 
-        return view('trazadores.sepsis.despues', compact('trazador', 'modelo', 'catalogos', 'paciente'));
+        return view("{$viewBase}.despues", compact('trazador', 'modelo', 'catalogos', 'paciente'));
     }
 
     // ─── Guardar Encuesta DESPUÉS → CERRADO ──────────────────────────────────
@@ -284,5 +293,16 @@ class TrazadorController extends Controller
 
         return redirect()->route('trazadores.show', $trazador)
             ->with('success', 'Trazador actualizado. Indicadores recalculados.');
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    private function viewBase(string $tipo): string
+    {
+        return match($tipo) {
+            'sdra'      => 'trazadores.sdra',
+            'post_paro' => 'trazadores.post-paro',
+            default     => 'trazadores.sepsis',
+        };
     }
 }
