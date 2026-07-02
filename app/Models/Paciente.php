@@ -210,4 +210,14 @@ class Paciente extends Model
         preg_match('/(\d+)/', $s->sofa, $m);
         return isset($m[1]) && (int)$m[1] >= 10;
     }
+
+    public function picsEvaluaciones()
+    {
+        return $this->hasMany(PicsEvaluacion::class)->orderBy('fecha_evaluacion');
+    }
+
+    public function picsRiesgo()
+    {
+        return $this->hasOne(PicsRiesgo::class);
+    }
 }

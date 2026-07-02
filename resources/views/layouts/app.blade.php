@@ -197,6 +197,9 @@
         <a href="{{ route('indicadores.calidad') }}" class="sidebar-link {{ request()->routeIs('indicadores.*') ? 'active' : '' }}">
             <i class="bi bi-award"></i> Indicadores de calidad
         </a>
+        <a href="{{ route('pics.index') }}" class="sidebar-link {{ request()->routeIs('pics.*') ? 'active' : '' }}">
+            <i class="bi bi-person-heart"></i> Seguimiento post-UCI (PICS)
+        </a>
         <a href="{{ route('reportes.index') }}" class="sidebar-link {{ request()->routeIs('reportes.index') ? 'active' : '' }}">
             <i class="bi bi-bar-chart"></i> Reportes por subunidad
         </a>

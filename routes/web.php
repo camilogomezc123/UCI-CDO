@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -18,8 +18,9 @@ use App\Http\Controllers\TrazadorController;
 use App\Http\Controllers\TrazadorExportController;
 use App\Http\Controllers\IndicadoresCalidadController;
 use App\Http\Controllers\UnidadUciController;
+use App\Http\Controllers\PicsController;
 
-// Autenticación
+// AutenticaciÃ³n
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -66,7 +67,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reingresos', [ReingresosController::class, 'index'])->name('reingresos.index');
     Route::get('/reingresos/descargar', [ReingresosController::class, 'descargar'])->name('reingresos.descargar');
 
-    // Epidemiología
+    // EpidemiologÃ­a
     Route::get('/epidemiologia', [EpidemiologiaController::class, 'index'])->name('epidemiologia.index');
 
     // Indicadores de Calidad UCI
@@ -87,6 +88,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/trazadores/{trazador}/despues', [TrazadorController::class, 'storeDespues'])->name('trazadores.despues.store');
     Route::patch('/trazadores/{trazador}', [TrazadorController::class, 'update'])->name('trazadores.update');
 
+    // PICS Â· Seguimiento Post-UCI
+    Route::get('/pics', [PicsController::class, 'index'])->name('pics.index');
+    Route::post('/pics/riesgo/{paciente}', [PicsController::class, 'calcularRiesgo'])->name('pics.calcularRiesgo');
+    Route::get('/pics/{paciente}/{momento}/familia', [PicsController::class, 'createFamilia'])->name('pics.create.familia');
+    Route::get('/pics/{paciente}/{momento}', [PicsController::class, 'create'])->name('pics.create');
+    Route::post('/pics/{paciente}/{momento}', [PicsController::class, 'store'])->name('pics.store');
+    Route::get('/pics/evaluacion/{evaluacion}', [PicsController::class, 'show'])->name('pics.show');
+
     // Usuarios (solo master)
     Route::middleware(['rol:master'])->group(function () {
         Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
@@ -98,3 +107,4 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/administracion/indisponibilidades-uci/{indisponibilidad}/habilitar', [UnidadUciController::class, 'habilitar'])->name('unidades-uci.habilitar');
     });
 });
+
