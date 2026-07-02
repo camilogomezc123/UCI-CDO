@@ -11,6 +11,7 @@ class Paciente extends Model
         'documento', 'nombre', 'edad', 'sexo', 'eapb',
         'ingreso_uci', 'salida_hospitalizacion', 'egreso_uci', 'tipo_egreso',
         'activo', 'numero_ingresos',
+        'rass_objetivo', 'nutric_score',
     ];
 
     protected function casts(): array
